@@ -86,11 +86,12 @@
     <h2>Panel de Proyectos</h2>
 
     <label>Seleccionar Proyecto</label>
-    <select id="proyecto">
+    <select id="proyecto" onchange="cargarProyecto(this.value)">
         <option value="Proyecto A">Proyecto A</option>
         <option value="Proyecto B">Proyecto B</option>
         <option value="Proyecto C">Proyecto C</option>
     </select>
+
 
     <!-- PSR -->
    <div class="meter" id="psr">
@@ -155,6 +156,8 @@
   // Importar Firebase
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
   import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+  import { getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
 
   // CONFIGURACIÓN (PEGA AQUÍ LA TUYA)
   const firebaseConfig = {
@@ -173,31 +176,30 @@
 
   // FUNCIÓN GUARDAR
   window.guardar = async function () {
-    const proyecto = document.getElementById("proyecto").value;
+  const proyecto = document.getElementById("proyecto").value;
 
-    const obtenerPorcentaje = (tipo) => {
-  const contenedor = document.getElementById(tipo);
-  const checkboxes = contenedor.querySelectorAll('input[type="checkbox"]');
-  const marcados = [...checkboxes].filter(c => c.checked).length;
-  return Math.round((marcados / checkboxes.length) * 100);
+  const obtenerEstado = (tipo) => {
+    const contenedor = document.getElementById(tipo);
+    const checkboxes = contenedor.querySelectorAll('input[type="checkbox"]');
+    return [...checkboxes].map(c => c.checked);
+  };
+
+  const datos = {
+    psr: obtenerEstado("psr"),
+    kpi: obtenerEstado("kpi"),
+    plan: obtenerEstado("plan"),
+    fecha: new Date()
+  };
+
+  try {
+    await setDoc(doc(db, "proyectos", proyecto), datos);
+    alert("Proyecto guardado correctamente ✅");
+  } catch (e) {
+    console.error(e);
+    alert("Error al guardar ❌");
+  }
 };
 
-
-    const datos = {
-      proyecto: proyecto,
-      psr: obtenerPorcentaje("psr"),
-      kpi: obtenerPorcentaje("kpi"),
-      plan: obtenerPorcentaje("plan"),
-      fecha: new Date()
-    };
-
-    try {
-      await setDoc(doc(db, "proyectos", proyecto), datos);
-      alert("Datos guardados en Firebase ✅");
-    } catch (error) {
-      console.error(error);
-      alert("Error al guardar ❌");
-    }
   };
     window.actualizar = function (tipo) {
   const contenedor = document.getElementById(tipo);
@@ -212,12 +214,39 @@
   document.getElementById(`${tipo}-percent`).textContent = porcentaje + "%";
 }
 
+async function cargarProyecto(nombre) {
+  const ref = doc(db, "proyectos", nombre);
+  const snap = await getDoc(ref);
 
+  const aplicarEstado = (tipo, estados) => {
+    const contenedor = document.getElementById(tipo);
+    const checkboxes = contenedor.querySelectorAll('input[type="checkbox"]');
+
+    checkboxes.forEach((c, i) => {
+      c.checked = estados ? estados[i] : false;
+    });
+
+    actualizar(tipo);
+  };
+
+  if (snap.exists()) {
+    const data = snap.data();
+    aplicarEstado("psr", data.psr);
+    aplicarEstado("kpi", data.kpi);
+    aplicarEstado("plan", data.plan);
+  } else {
+    aplicarEstado("psr", null);
+    aplicarEstado("kpi", null);
+    aplicarEstado("plan", null);
+  }
+}
+window.cargarProyecto = cargarProyecto;
 </script>
 
 
 </body>
 </html>
+
 
 
 
