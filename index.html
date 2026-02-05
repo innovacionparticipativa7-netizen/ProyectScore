@@ -93,49 +93,58 @@
     </select>
 
     <!-- PSR -->
-    <div class="meter">
-        <div class="meter-title">PSR</div>
-        <div class="checkboxes">
-            <label><input type="checkbox" onchange="actualizar('psr')"> Requisito 1</label>
-            <label><input type="checkbox" onchange="actualizar('psr')"> Requisito 2</label>
-            <label><input type="checkbox" onchange="actualizar('psr')"> Requisito 3</label>
-        </div>
-        <div class="progress">
-            <div class="progress-bar" id="psr-bar"></div>
-        </div>
-        <div class="percentage" id="psr-percent">0%</div>
-    </div>
+   <div class="meter" id="psr">
+  <div class="meter-title">PSR</div>
+
+  <div class="checkboxes">
+    <label><input type="checkbox" onchange="actualizar('psr')"> Requisito 1</label>
+    <label><input type="checkbox" onchange="actualizar('psr')"> Requisito 2</label>
+    <label><input type="checkbox" onchange="actualizar('psr')"> Requisito 3</label>
+  </div>
+
+  <div class="progress">
+    <div class="progress-bar" id="psr-bar"></div>
+  </div>
+
+  <div class="percentage" id="psr-percent">0%</div>
+</div>
+
 
     <!-- KPI -->
-    <div class="meter">
-        <div class="meter-title">KPI</div>
-        <div class="checkboxes">
-            <label><input type="checkbox" onchange="actualizar('kpi')"> Indicador 1</label>
-            <label><input type="checkbox" onchange="actualizar('kpi')"> Indicador 2</label>
-            <label><input type="checkbox" onchange="actualizar('kpi')"> Indicador 3</label>
-        </div>
-        <div class="progress">
-            <div class="progress-bar" id="kpi-bar"></div>
-        </div>
-        <div class="percentage" id="kpi-percent">0%</div>
-    </div>
+    <div class="meter" id="kpi">
+  <div class="meter-title">KPI</div>
+
+  <div class="checkboxes">
+    <label><input type="checkbox" onchange="actualizar('kpi')"> Requisito 1</label>
+    <label><input type="checkbox" onchange="actualizar('kpi')"> Requisito 2</label>
+    <label><input type="checkbox" onchange="actualizar('kpi')"> Requisito 3</label>
+  </div>
+
+  <div class="progress">
+    <div class="progress-bar" id="kpi-bar"></div>
+  </div>
+
+  <div class="percentage" id="kpi-percent">0%</div>
+</div>
+
 
     <!-- PLAN -->
-    <div class="meter">
-        <div class="meter-title">PLAN</div>
-        <div class="checkboxes">
-            <label><input type="checkbox" onchange="actualizar('plan')"> Tarea 1</label>
-            <label><input type="checkbox" onchange="actualizar('plan')"> Tarea 2</label>
-            <label><input type="checkbox" onchange="actualizar('plan')"> Tarea 3</label>
-        </div>
-        <div class="progress">
-            <div class="progress-bar" id="plan-bar"></div>
-        </div>
-        <div class="percentage" id="plan-percent">0%</div>
-    </div>
+    <div class="meter" id="plan">
+  <div class="meter-title">PSR</div>
 
-    <button onclick="guardar()">Guardar</button>
+  <div class="checkboxes">
+    <label><input type="checkbox" onchange="actualizar('plan')"> Requisito 1</label>
+    <label><input type="checkbox" onchange="actualizar('plan')"> Requisito 2</label>
+    <label><input type="checkbox" onchange="actualizar('plan')"> Requisito 3</label>
+  </div>
+
+  <div class="progress">
+    <div class="progress-bar" id="plan-bar"></div>
+  </div>
+
+  <div class="percentage" id="plan-percent">0%</div>
 </div>
+
 
 <script type="module">
   // Importar Firebase
@@ -185,11 +194,25 @@
       alert("Error al guardar ❌");
     }
   };
+    function actualizar(tipo) {
+  const contenedor = document.getElementById(tipo);
+  const checkboxes = contenedor.querySelectorAll('input[type="checkbox"]');
+
+  const total = checkboxes.length;
+  const marcados = [...checkboxes].filter(c => c.checked).length;
+
+  const porcentaje = Math.round((marcados / total) * 100);
+
+  document.getElementById(`${tipo}-bar`).style.width = porcentaje + "%";
+  document.getElementById(`${tipo}-percent`).textContent = porcentaje + "%";
+}
+
 </script>
 
 
 </body>
 </html>
+
 
 
 
