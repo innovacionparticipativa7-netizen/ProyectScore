@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Dashboard</title>
+</head>
+<body>
+
+<h1>Dashboard</h1>
+<p id="rol"></p>
+
+<script>
+  const rol = localStorage.getItem("rol");
+  document.getElementById("rol").textContent =
+    rol === "admin" ? "Administrador" : "Usuario";
+</script>
+
+</body>
+</html>
