@@ -1,252 +1,76 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <title>Medidores por Casillas</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background: #f4f6f8;
-            padding: 40px;
-        }
-
-        .container {
-            max-width: 650px;
-            background: white;
-            padding: 25px;
-            border-radius: 10px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-            margin: auto;
-        }
-
-        h2 {
-            text-align: center;
-        }
-
-        select {
-            width: 100%;
-            padding: 8px;
-            margin-bottom: 25px;
-        }
-
-        .meter {
-            margin-bottom: 30px;
-        }
-
-        .meter-title {
-            font-weight: bold;
-            margin-bottom: 8px;
-        }
-
-        .checkboxes label {
-            display: block;
-            margin-bottom: 5px;
-        }
-
-        .progress {
-            height: 20px;
-            background: #ddd;
-            border-radius: 10px;
-            overflow: hidden;
-            margin-top: 10px;
-        }
-
-        .progress-bar {
-            height: 100%;
-            width: 0%;
-            background: #007bff;
-            transition: width 0.3s;
-        }
-
-        .percentage {
-            text-align: right;
-            font-size: 14px;
-            margin-top: 5px;
-        }
-
-        button {
-            width: 100%;
-            padding: 12px;
-            font-size: 16px;
-            background: #28a745;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-        }
-
-        button:hover {
-            background: #218838;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <title>Login</title>
+  <style>
+    body {
+      font-family: Arial;
+      background:#f4f6f8;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      height:100vh;
+    }
+    .login {
+      background:white;
+      padding:30px;
+      border-radius:10px;
+      width:300px;
+      box-shadow:0 4px 10px rgba(0,0,0,.1);
+    }
+    input, button {
+      width:100%;
+      padding:10px;
+      margin-top:10px;
+    }
+    button {
+      background:#007bff;
+      color:white;
+      border:none;
+      cursor:pointer;
+    }
+  </style>
 </head>
 <body>
 
-<div class="container">
-    <h2>Panel de Proyectos</h2>
-
-    <label>Seleccionar Proyecto</label>
-    <select id="proyecto" onchange="cargarProyecto(this.value)">
-        <option value="Proyecto A">Proyecto A</option>
-        <option value="Proyecto B">Proyecto B</option>
-        <option value="Proyecto C">Proyecto C</option>
-    </select>
-
-    <!-- AQUÍ SE DIBUJA TODO DINÁMICAMENTE -->
-    <div id="secciones"></div>
-
-    <button onclick="agregarSeccion()">➕ Agregar sección</button>
-    <button onclick="guardar()">💾 Guardar</button>
+<div class="login">
+  <h2>Iniciar sesión</h2>
+  <input id="email" placeholder="Email">
+  <input id="password" type="password" placeholder="Contraseña">
+  <button onclick="login()">Entrar</button>
 </div>
 
-</body>
-
-
+<script type="module" src="firebase.js"></script>
 <script type="module">
-/* ================= FIREBASE ================= */
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+  import { auth, db } from "./firebase.js";
+  import { signInWithEmailAndPassword } from
+    "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+  import { doc, getDoc } from
+    "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-const firebaseConfig = {
-  apiKey: "AIzaSyAoVH8wQ2ofolAaJYdFnu1COcwI-xvaNnM",
-  authDomain: "panel-proyectos-f119f.firebaseapp.com",
-  projectId: "panel-proyectos-f119f",
-};
+  window.login = async function () {
+    const email = email.value;
+    const password = password.value;
 
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+    try {
+      const cred = await signInWithEmailAndPassword(auth, email, password);
+      const uid = cred.user.uid;
 
-/* ================= ESTADO ================= */
-let data = {};
+      const snap = await getDoc(doc(db, "users", uid));
+      localStorage.setItem("rol", snap.data().rol);
+      localStorage.setItem("uid", uid);
 
-/* ================= UTILIDADES ================= */
-function uid() {
-  return crypto.randomUUID();
-}
-
-/* ================= RENDER ================= */
-function render() {
-  const cont = document.getElementById("secciones");
-  cont.innerHTML = "";
-
-  Object.values(data).forEach(sec => {
-    const div = document.createElement("div");
-    div.className = "meter";
-
-    const porcentaje = calcularPorcentaje(sec);
-
-    div.innerHTML = `
-      <input value="${sec.nombre}" 
-             oninput="editarSeccion('${sec.id}', this.value)"
-             style="font-weight:bold; width:100%; margin-bottom:8px">
-
-      ${sec.requisitos.map(r => `
-        <div style="display:flex; gap:5px; margin-bottom:5px">
-          <input type="checkbox" ${r.ok ? "checked" : ""} 
-            onchange="toggleReq('${sec.id}','${r.id}', this.checked)">
-          <input value="${r.texto}" 
-            oninput="editarReq('${sec.id}','${r.id}', this.value)">
-          <input type="number" value="${r.valor}" style="width:60px"
-            oninput="editarValor('${sec.id}','${r.id}', this.value)">
-          <button onclick="eliminarReq('${sec.id}','${r.id}')">✖</button>
-        </div>
-      `).join("")}
-
-      <button onclick="agregarReq('${sec.id}')">➕ Requisito</button>
-
-      <div class="progress">
-        <div class="progress-bar" style="width:${porcentaje}%"></div>
-      </div>
-      <div class="percentage">${porcentaje}%</div>
-
-      <button onclick="eliminarSeccion('${sec.id}')" style="background:#dc3545">
-        Eliminar sección
-      </button>
-    `;
-
-    cont.appendChild(div);
-  });
-}
-
-/* ================= LOGICA ================= */
-function calcularPorcentaje(sec) {
-  return sec.requisitos
-    .filter(r => r.ok)
-    .reduce((a,b) => a + Number(b.valor || 0), 0);
-}
-
-/* ================= SECCIONES ================= */
-window.agregarSeccion = function () {
-  const id = uid();
-  data[id] = {
-    id,
-    nombre: "Nueva sección",
-    requisitos: []
+      window.location = "dashboard.html";
+    } catch (e) {
+      alert("Error de login");
+    }
   };
-  render();
-};
-
-window.editarSeccion = function (id, nombre) {
-  data[id].nombre = nombre;
-};
-
-window.eliminarSeccion = function (id) {
-  delete data[id];
-  render();
-};
-
-/* ================= REQUISITOS ================= */
-window.agregarReq = function (secId) {
-  data[secId].requisitos.push({
-    id: uid(),
-    texto: "Nuevo requisito",
-    valor: 10,
-    ok: false
-  });
-  render();
-};
-
-window.editarReq = function (secId, reqId, texto) {
-  data[secId].requisitos.find(r => r.id === reqId).texto = texto;
-};
-
-window.editarValor = function (secId, reqId, val) {
-  data[secId].requisitos.find(r => r.id === reqId).valor = val;
-  render();
-};
-
-window.toggleReq = function (secId, reqId, estado) {
-  data[secId].requisitos.find(r => r.id === reqId).ok = estado;
-  render();
-};
-
-window.eliminarReq = function (secId, reqId) {
-  data[secId].requisitos =
-    data[secId].requisitos.filter(r => r.id !== reqId);
-  render();
-};
-
-/* ================= FIREBASE ================= */
-window.guardar = async function () {
-  const proyecto = document.getElementById("proyecto").value;
-  await setDoc(doc(db, "proyectos", proyecto), data);
-  alert("Guardado ✅");
-};
-
-window.cargarProyecto = async function (nombre) {
-  const ref = doc(db, "proyectos", nombre);
-  const snap = await getDoc(ref);
-
-  data = snap.exists() ? snap.data() : {};
-  render();
-};
-
-/* ================= INIT ================= */
-cargarProyecto(document.getElementById("proyecto").value);
 </script>
 
 </body>
 </html>
+
 
 
 
