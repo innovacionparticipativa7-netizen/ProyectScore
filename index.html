@@ -92,170 +92,162 @@
         <option value="Proyecto C">Proyecto C</option>
     </select>
 
+    <!-- AQUÍ SE DIBUJA TODO DINÁMICAMENTE -->
+    <div id="secciones"></div>
 
-    <!-- PSR -->
-   <div class="meter" id="psr">
-  <div class="meter-title">PSR</div>
-
-  <div class="checkboxes" id="psr-list"></div>
-
-  <button onclick="agregarRequisito('psr')">+ Agregar requisito</button>
-
-  <div class="progress">
-    <div class="progress-bar" id="psr-bar"></div>
-  </div>
-
-  <div class="percentage" id="psr-percent">0%</div>
+    <button onclick="agregarSeccion()">➕ Agregar sección</button>
+    <button onclick="guardar()">💾 Guardar</button>
 </div>
 
-    
-
-
-
-    <!-- KPI -->
-    <div class="meter" id="kpi">
-  <div class="meter-title">KPI</div>
-
-  <div class="checkboxes" id="psr-list"></div>
-
-  <button onclick="agregarRequisito('kpi')">+ Agregar requisito</button>
-
-  <div class="progress">
-    <div class="progress-bar" id="kpi-bar"></div>
-  </div>
-
-  <div class="percentage" id="kpi-percent">0%</div>
-</div>
-
-
-
-    <!-- PLAN -->
-    <div class="meter" id="plan">
-  <div class="meter-title">PLAN</div>
-
-  <div class="checkboxes" id="plan-list"></div>
-
-  <button onclick="agregarRequisito('plan')">+ Agregar requisito</button>
-
-  <div class="progress">
-    <div class="progress-bar" id="plan-bar"></div>
-  </div>
-
-  <div class="percentage" id="plan-percent">0%</div>
-</div>
-
-    
+</body>
 
 
 <script type="module">
-  // Importar Firebase
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-  import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-  import { getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+/* ================= FIREBASE ================= */
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-
-  // CONFIGURACIÓN (PEGA AQUÍ LA TUYA)
-  const firebaseConfig = {
+const firebaseConfig = {
   apiKey: "AIzaSyAoVH8wQ2ofolAaJYdFnu1COcwI-xvaNnM",
   authDomain: "panel-proyectos-f119f.firebaseapp.com",
   projectId: "panel-proyectos-f119f",
-  storageBucket: "panel-proyectos-f119f.firebasestorage.app",
-  messagingSenderId: "780366850885",
-  appId: "1:780366850885:web:fa282efbac6b3b51dcec2c",
-  measurementId: "G-RV3YHXWQ0J"
 };
 
-  // Inicializar Firebase
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
 
-  // FUNCIÓN GUARDAR
-  window.guardar = async function () {
-  const proyecto = document.getElementById("proyecto").value;
+/* ================= ESTADO ================= */
+let data = {};
 
-  const obtenerDatos = (tipo) => {
-    const labels = document.querySelectorAll(`#${tipo}-list label`);
-    return [...labels].map(l => ({
-      texto: l.textContent.trim(),
-      checked: l.querySelector("input").checked
-    }));
-  };
-
-  const datos = {
-    psr: obtenerDatos("psr"),
-    kpi: obtenerDatos("kpi"),
-    plan: obtenerDatos("plan"),
-    fecha: new Date()
-  };
-
-  await setDoc(doc(db, "proyectos", proyecto), datos);
-  alert("Proyecto guardado ✅");
-};
-
-
-    window.actualizar = function (tipo) {
-  const contenedor = document.getElementById(`${tipo}-list`);
-  const checks = contenedor.querySelectorAll('input[type="checkbox"]');
-
-  const total = checks.length || 1;
-  const marcados = [...checks].filter(c => c.checked).length;
-  const porcentaje = Math.round((marcados / total) * 100);
-
-  document.getElementById(`${tipo}-bar`).style.width = porcentaje + "%";
-  document.getElementById(`${tipo}-percent`).textContent = porcentaje + "%";
-};
-
-
-async function cargarProyecto(nombre) {
-  const snap = await getDoc(doc(db, "proyectos", nombre));
-
-  const cargar = (tipo, data) => {
-    const contenedor = document.getElementById(`${tipo}-list`);
-    contenedor.innerHTML = "";
-
-    if (!data) return actualizar(tipo);
-
-    data.forEach(r =>
-      agregarRequisito(tipo, r.texto, r.checked)
-    );
-
-    actualizar(tipo);
-  };
-
-  if (snap.exists()) {
-    const d = snap.data();
-    cargar("psr", d.psr);
-    cargar("kpi", d.kpi);
-    cargar("plan", d.plan);
-  } else {
-    cargar("psr");
-    cargar("kpi");
-    cargar("plan");
-  }
+/* ================= UTILIDADES ================= */
+function uid() {
+  return crypto.randomUUID();
 }
 
-    window.agregarRequisito = function (tipo, texto = "Nuevo requisito", checked = false) {
-  const contenedor = document.getElementById(`${tipo}-list`);
+/* ================= RENDER ================= */
+function render() {
+  const cont = document.getElementById("secciones");
+  cont.innerHTML = "";
 
-  const label = document.createElement("label");
-  const checkbox = document.createElement("input");
+  Object.values(data).forEach(sec => {
+    const div = document.createElement("div");
+    div.className = "meter";
 
-  checkbox.type = "checkbox";
-  checkbox.checked = checked;
-  checkbox.onchange = () => actualizar(tipo);
+    const porcentaje = calcularPorcentaje(sec);
 
-  label.appendChild(checkbox);
-  label.append(" " + texto);
+    div.innerHTML = `
+      <input value="${sec.nombre}" 
+             oninput="editarSeccion('${sec.id}', this.value)"
+             style="font-weight:bold; width:100%; margin-bottom:8px">
 
-  contenedor.appendChild(label);
+      ${sec.requisitos.map(r => `
+        <div style="display:flex; gap:5px; margin-bottom:5px">
+          <input type="checkbox" ${r.ok ? "checked" : ""} 
+            onchange="toggleReq('${sec.id}','${r.id}', this.checked)">
+          <input value="${r.texto}" 
+            oninput="editarReq('${sec.id}','${r.id}', this.value)">
+          <input type="number" value="${r.valor}" style="width:60px"
+            oninput="editarValor('${sec.id}','${r.id}', this.value)">
+          <button onclick="eliminarReq('${sec.id}','${r.id}')">✖</button>
+        </div>
+      `).join("")}
+
+      <button onclick="agregarReq('${sec.id}')">➕ Requisito</button>
+
+      <div class="progress">
+        <div class="progress-bar" style="width:${porcentaje}%"></div>
+      </div>
+      <div class="percentage">${porcentaje}%</div>
+
+      <button onclick="eliminarSeccion('${sec.id}')" style="background:#dc3545">
+        Eliminar sección
+      </button>
+    `;
+
+    cont.appendChild(div);
+  });
+}
+
+/* ================= LOGICA ================= */
+function calcularPorcentaje(sec) {
+  return sec.requisitos
+    .filter(r => r.ok)
+    .reduce((a,b) => a + Number(b.valor || 0), 0);
+}
+
+/* ================= SECCIONES ================= */
+window.agregarSeccion = function () {
+  const id = uid();
+  data[id] = {
+    id,
+    nombre: "Nueva sección",
+    requisitos: []
+  };
+  render();
 };
 
-window.cargarProyecto = cargarProyecto;
-</script>
+window.editarSeccion = function (id, nombre) {
+  data[id].nombre = nombre;
+};
 
+window.eliminarSeccion = function (id) {
+  delete data[id];
+  render();
+};
+
+/* ================= REQUISITOS ================= */
+window.agregarReq = function (secId) {
+  data[secId].requisitos.push({
+    id: uid(),
+    texto: "Nuevo requisito",
+    valor: 10,
+    ok: false
+  });
+  render();
+};
+
+window.editarReq = function (secId, reqId, texto) {
+  data[secId].requisitos.find(r => r.id === reqId).texto = texto;
+};
+
+window.editarValor = function (secId, reqId, val) {
+  data[secId].requisitos.find(r => r.id === reqId).valor = val;
+  render();
+};
+
+window.toggleReq = function (secId, reqId, estado) {
+  data[secId].requisitos.find(r => r.id === reqId).ok = estado;
+  render();
+};
+
+window.eliminarReq = function (secId, reqId) {
+  data[secId].requisitos =
+    data[secId].requisitos.filter(r => r.id !== reqId);
+  render();
+};
+
+/* ================= FIREBASE ================= */
+window.guardar = async function () {
+  const proyecto = document.getElementById("proyecto").value;
+  await setDoc(doc(db, "proyectos", proyecto), data);
+  alert("Guardado ✅");
+};
+
+window.cargarProyecto = async function (nombre) {
+  const ref = doc(db, "proyectos", nombre);
+  const snap = await getDoc(ref);
+
+  data = snap.exists() ? snap.data() : {};
+  render();
+};
+
+/* ================= INIT ================= */
+cargarProyecto(document.getElementById("proyecto").value);
+</script>
 
 </body>
 </html>
+
 
 
 
