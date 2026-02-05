@@ -130,7 +130,7 @@
 
     <!-- PLAN -->
     <div class="meter" id="plan">
-  <div class="meter-title">PSR</div>
+  <div class="meter-title">PLAN</div>
 
   <div class="checkboxes">
     <label><input type="checkbox" onchange="actualizar('plan')"> Requisito 1</label>
@@ -171,12 +171,12 @@
     const proyecto = document.getElementById("proyecto").value;
 
     const obtenerPorcentaje = (tipo) => {
-      const checkboxes = document.querySelectorAll(
-        `.meter:has(#${tipo}-bar) input[type="checkbox"]`
-      );
-      const marcados = [...checkboxes].filter(c => c.checked).length;
-      return Math.round((marcados / checkboxes.length) * 100);
-    };
+  const contenedor = document.getElementById(tipo);
+  const checkboxes = contenedor.querySelectorAll('input[type="checkbox"]');
+  const marcados = [...checkboxes].filter(c => c.checked).length;
+  return Math.round((marcados / checkboxes.length) * 100);
+};
+
 
     const datos = {
       proyecto: proyecto,
@@ -194,7 +194,7 @@
       alert("Error al guardar ❌");
     }
   };
-    function actualizar(tipo) {
+    window.actualizar = function (tipo) {
   const contenedor = document.getElementById(tipo);
   const checkboxes = contenedor.querySelectorAll('input[type="checkbox"]');
 
@@ -207,11 +207,13 @@
   document.getElementById(`${tipo}-percent`).textContent = porcentaje + "%";
 }
 
+
 </script>
 
 
 </body>
 </html>
+
 
 
 
