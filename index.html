@@ -97,11 +97,9 @@
    <div class="meter" id="psr">
   <div class="meter-title">PSR</div>
 
-  <div class="checkboxes">
-    <label><input type="checkbox" onchange="actualizar('psr')"> Requisito 1</label>
-    <label><input type="checkbox" onchange="actualizar('psr')"> Requisito 2</label>
-    <label><input type="checkbox" onchange="actualizar('psr')"> Requisito 3</label>
-  </div>
+  <div class="checkboxes" id="psr-list"></div>
+
+  <button onclick="agregarRequisito('psr')">+ Agregar requisito</button>
 
   <div class="progress">
     <div class="progress-bar" id="psr-bar"></div>
@@ -109,6 +107,7 @@
 
   <div class="percentage" id="psr-percent">0%</div>
 </div>
+
     
 
 
@@ -117,11 +116,9 @@
     <div class="meter" id="kpi">
   <div class="meter-title">KPI</div>
 
-  <div class="checkboxes">
-    <label><input type="checkbox" onchange="actualizar('kpi')"> Requisito 1</label>
-    <label><input type="checkbox" onchange="actualizar('kpi')"> Requisito 2</label>
-    <label><input type="checkbox" onchange="actualizar('kpi')"> Requisito 3</label>
-  </div>
+  <div class="checkboxes" id="psr-list"></div>
+
+  <button onclick="agregarRequisito('kpi')">+ Agregar requisito</button>
 
   <div class="progress">
     <div class="progress-bar" id="kpi-bar"></div>
@@ -131,24 +128,22 @@
 </div>
 
 
+
     <!-- PLAN -->
     <div class="meter" id="plan">
   <div class="meter-title">PLAN</div>
 
-  <div class="checkboxes">
-    <label><input type="checkbox" onchange="actualizar('plan')"> Requisito 1</label>
-    <label><input type="checkbox" onchange="actualizar('plan')"> Requisito 2</label>
-    <label><input type="checkbox" onchange="actualizar('plan')"> Requisito 3</label>
-  </div>
+  <div class="checkboxes" id="plan-list"></div>
+
+  <button onclick="agregarRequisito('plan')">+ Agregar requisito</button>
 
   <div class="progress">
     <div class="progress-bar" id="plan-bar"></div>
   </div>
 
   <div class="percentage" id="plan-percent">0%</div>
-
-        <button onclick="guardar()">Guardar</button>
 </div>
+
     
 
 
@@ -178,73 +173,90 @@
   window.guardar = async function () {
   const proyecto = document.getElementById("proyecto").value;
 
-  const obtenerEstado = (tipo) => {
-    const contenedor = document.getElementById(tipo);
-    const checkboxes = contenedor.querySelectorAll('input[type="checkbox"]');
-    return [...checkboxes].map(c => c.checked);
+  const obtenerDatos = (tipo) => {
+    const labels = document.querySelectorAll(`#${tipo}-list label`);
+    return [...labels].map(l => ({
+      texto: l.textContent.trim(),
+      checked: l.querySelector("input").checked
+    }));
   };
 
   const datos = {
-    psr: obtenerEstado("psr"),
-    kpi: obtenerEstado("kpi"),
-    plan: obtenerEstado("plan"),
+    psr: obtenerDatos("psr"),
+    kpi: obtenerDatos("kpi"),
+    plan: obtenerDatos("plan"),
     fecha: new Date()
   };
 
-  try {
-    await setDoc(doc(db, "proyectos", proyecto), datos);
-    alert("Proyecto guardado correctamente ✅");
-  } catch (e) {
-    console.error(e);
-    alert("Error al guardar ❌");
-  }
+  await setDoc(doc(db, "proyectos", proyecto), datos);
+  alert("Proyecto guardado ✅");
 };
 
+
     window.actualizar = function (tipo) {
-  const contenedor = document.getElementById(tipo);
-  const checkboxes = contenedor.querySelectorAll('input[type="checkbox"]');
+  const contenedor = document.getElementById(`${tipo}-list`);
+  const checks = contenedor.querySelectorAll('input[type="checkbox"]');
 
-  const total = checkboxes.length;
-  const marcados = [...checkboxes].filter(c => c.checked).length;
-
+  const total = checks.length || 1;
+  const marcados = [...checks].filter(c => c.checked).length;
   const porcentaje = Math.round((marcados / total) * 100);
 
   document.getElementById(`${tipo}-bar`).style.width = porcentaje + "%";
   document.getElementById(`${tipo}-percent`).textContent = porcentaje + "%";
-}
+};
+
 
 async function cargarProyecto(nombre) {
-  const ref = doc(db, "proyectos", nombre);
-  const snap = await getDoc(ref);
+  const snap = await getDoc(doc(db, "proyectos", nombre));
 
-  const aplicarEstado = (tipo, estados) => {
-    const contenedor = document.getElementById(tipo);
-    const checkboxes = contenedor.querySelectorAll('input[type="checkbox"]');
+  const cargar = (tipo, data) => {
+    const contenedor = document.getElementById(`${tipo}-list`);
+    contenedor.innerHTML = "";
 
-    checkboxes.forEach((c, i) => {
-      c.checked = estados ? estados[i] : false;
-    });
+    if (!data) return actualizar(tipo);
+
+    data.forEach(r =>
+      agregarRequisito(tipo, r.texto, r.checked)
+    );
 
     actualizar(tipo);
   };
 
   if (snap.exists()) {
-    const data = snap.data();
-    aplicarEstado("psr", data.psr);
-    aplicarEstado("kpi", data.kpi);
-    aplicarEstado("plan", data.plan);
+    const d = snap.data();
+    cargar("psr", d.psr);
+    cargar("kpi", d.kpi);
+    cargar("plan", d.plan);
   } else {
-    aplicarEstado("psr", null);
-    aplicarEstado("kpi", null);
-    aplicarEstado("plan", null);
+    cargar("psr");
+    cargar("kpi");
+    cargar("plan");
   }
 }
+
+    window.agregarRequisito = function (tipo, texto = "Nuevo requisito", checked = false) {
+  const contenedor = document.getElementById(`${tipo}-list`);
+
+  const label = document.createElement("label");
+  const checkbox = document.createElement("input");
+
+  checkbox.type = "checkbox";
+  checkbox.checked = checked;
+  checkbox.onchange = () => actualizar(tipo);
+
+  label.appendChild(checkbox);
+  label.append(" " + texto);
+
+  contenedor.appendChild(label);
+};
+
 window.cargarProyecto = cargarProyecto;
 </script>
 
 
 </body>
 </html>
+
 
 
 
