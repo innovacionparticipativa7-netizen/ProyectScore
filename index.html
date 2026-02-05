@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Gestión de Proyectos</title>
+    <title>Medidores por Casillas</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -11,7 +11,7 @@
         }
 
         .container {
-            max-width: 600px;
+            max-width: 650px;
             background: white;
             padding: 25px;
             border-radius: 10px;
@@ -20,47 +20,63 @@
         }
 
         h2 {
-            margin-bottom: 20px;
             text-align: center;
         }
 
-        label {
-            font-weight: bold;
-        }
-
-        select, input[type="range"] {
+        select {
             width: 100%;
-            margin: 10px 0 20px 0;
+            padding: 8px;
+            margin-bottom: 25px;
         }
 
         .meter {
-            margin-bottom: 20px;
+            margin-bottom: 30px;
         }
 
-        .meter span {
+        .meter-title {
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        .checkboxes label {
             display: block;
             margin-bottom: 5px;
         }
 
-        .value {
+        .progress {
+            height: 20px;
+            background: #ddd;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+
+        .progress-bar {
+            height: 100%;
+            width: 0%;
+            background: #007bff;
+            transition: width 0.3s;
+        }
+
+        .percentage {
             text-align: right;
             font-size: 14px;
-            color: #555;
+            margin-top: 5px;
         }
 
         button {
             width: 100%;
             padding: 12px;
-            background: #007bff;
+            font-size: 16px;
+            background: #28a745;
             color: white;
             border: none;
             border-radius: 6px;
-            font-size: 16px;
             cursor: pointer;
         }
 
         button:hover {
-            background: #0056b3;
+            background: #218838;
         }
     </style>
 </head>
@@ -69,83 +85,84 @@
 <div class="container">
     <h2>Panel de Proyectos</h2>
 
-    <!-- Pestaña desplegable -->
-    <label for="proyecto">Seleccionar Proyecto</label>
+    <label>Seleccionar Proyecto</label>
     <select id="proyecto">
         <option value="Proyecto A">Proyecto A</option>
         <option value="Proyecto B">Proyecto B</option>
         <option value="Proyecto C">Proyecto C</option>
     </select>
 
-    <!-- Medidores -->
+    <!-- PSR -->
     <div class="meter">
-        <span>PSR</span>
-        <input type="range" id="psr" min="0" max="100">
-        <div class="value" id="psrValue">0%</div>
+        <div class="meter-title">PSR</div>
+        <div class="checkboxes">
+            <label><input type="checkbox" onchange="actualizar('psr')"> Requisito 1</label>
+            <label><input type="checkbox" onchange="actualizar('psr')"> Requisito 2</label>
+            <label><input type="checkbox" onchange="actualizar('psr')"> Requisito 3</label>
+        </div>
+        <div class="progress">
+            <div class="progress-bar" id="psr-bar"></div>
+        </div>
+        <div class="percentage" id="psr-percent">0%</div>
     </div>
 
+    <!-- KPI -->
     <div class="meter">
-        <span>KPI</span>
-        <input type="range" id="kpi" min="0" max="100">
-        <div class="value" id="kpiValue">0%</div>
+        <div class="meter-title">KPI</div>
+        <div class="checkboxes">
+            <label><input type="checkbox" onchange="actualizar('kpi')"> Indicador 1</label>
+            <label><input type="checkbox" onchange="actualizar('kpi')"> Indicador 2</label>
+            <label><input type="checkbox" onchange="actualizar('kpi')"> Indicador 3</label>
+        </div>
+        <div class="progress">
+            <div class="progress-bar" id="kpi-bar"></div>
+        </div>
+        <div class="percentage" id="kpi-percent">0%</div>
     </div>
 
+    <!-- PLAN -->
     <div class="meter">
-        <span>PLAN</span>
-        <input type="range" id="plan" min="0" max="100">
-        <div class="value" id="planValue">0%</div>
+        <div class="meter-title">PLAN</div>
+        <div class="checkboxes">
+            <label><input type="checkbox" onchange="actualizar('plan')"> Tarea 1</label>
+            <label><input type="checkbox" onchange="actualizar('plan')"> Tarea 2</label>
+            <label><input type="checkbox" onchange="actualizar('plan')"> Tarea 3</label>
+        </div>
+        <div class="progress">
+            <div class="progress-bar" id="plan-bar"></div>
+        </div>
+        <div class="percentage" id="plan-percent">0%</div>
     </div>
 
-    <!-- Botón guardar -->
-    <button onclick="guardarDatos()">Guardar</button>
+    <button onclick="guardar()">Guardar</button>
 </div>
 
 <script>
-    const proyectoSelect = document.getElementById("proyecto");
+    function actualizar(tipo) {
+        const meter = document.querySelectorAll(`.meter input[type="checkbox"]`);
+        const checks = Array.from(
+            document.querySelectorAll(`#${tipo}-bar`)
+        );
 
-    const psr = document.getElementById("psr");
-    const kpi = document.getElementById("kpi");
-    const plan = document.getElementById("plan");
+        const checkboxes = document.querySelectorAll(
+            `.meter:has(#${tipo}-bar) input[type="checkbox"]`
+        );
 
-    const psrValue = document.getElementById("psrValue");
-    const kpiValue = document.getElementById("kpiValue");
-    const planValue = document.getElementById("planValue");
+        const total = checkboxes.length;
+        const marcados = Array.from(checkboxes).filter(c => c.checked).length;
 
-    function actualizarValores() {
-        psrValue.textContent = psr.value + "%";
-        kpiValue.textContent = kpi.value + "%";
-        planValue.textContent = plan.value + "%";
+        const porcentaje = Math.round((marcados / total) * 100);
+
+        document.getElementById(`${tipo}-bar`).style.width = porcentaje + "%";
+        document.getElementById(`${tipo}-percent`).textContent = porcentaje + "%";
     }
 
-    psr.oninput = kpi.oninput = plan.oninput = actualizarValores;
-
-    function guardarDatos() {
-        const datos = {
-            proyecto: proyectoSelect.value,
-            psr: psr.value,
-            kpi: kpi.value,
-            plan: plan.value
-        };
-
-        localStorage.setItem(proyectoSelect.value, JSON.stringify(datos));
+    function guardar() {
         alert("Datos guardados correctamente ✅");
     }
-
-    proyectoSelect.onchange = function () {
-        const datosGuardados = localStorage.getItem(this.value);
-        if (datosGuardados) {
-            const datos = JSON.parse(datosGuardados);
-            psr.value = datos.psr;
-            kpi.value = datos.kpi;
-            plan.value = datos.plan;
-        } else {
-            psr.value = kpi.value = plan.value = 0;
-        }
-        actualizarValores();
-    };
-
-    actualizarValores();
 </script>
 
 </body>
 </html>
+
+
