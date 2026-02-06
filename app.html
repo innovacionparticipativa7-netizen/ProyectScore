@@ -12,99 +12,92 @@
 <div id="admin"></div>
 <hr>
 <div id="proyectos"></div>
+  
+<h3>Nuevo Proyecto</h3>
+<input type="text" id="nombreProyecto" placeholder="Nombre del proyecto">
+<button onclick="crearProyecto()">Crear Proyecto</button>
+
+<hr>
+
+<h3>Proyectos</h3>
+<ul id="listaProyectos"></ul>
+
+
+
+
+  
 
 <script type="module">
-import { db } from "./firebase.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import {
-  collection, doc, getDocs, getDoc, setDoc, updateDoc
+  getFirestore,
+  collection,
+  addDoc,
+  getDocs,
+  doc,
+  getDoc
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-const uid = localStorage.getItem("uid");
-const rol = localStorage.getItem("rol");
-document.getElementById("rol").textContent = `Rol: ${rol}`;
+/* CONFIG */
+const firebaseConfig = {
+  apiKey: "AIzaSyAoVH8wQ2ofolAaJYdFnu1COcwI-xvaNnM",
+  authDomain: "panel-proyectos-f119f.firebaseapp.com",
+  projectId: "panel-proyectos-f119f"
+};
 
-/* ================= ADMIN ================= */
-if (rol === "admin") {
-  document.getElementById("admin").innerHTML = `
-    <h3>Admin</h3>
-    <input id="nuevoProyecto" placeholder="Nombre proyecto">
-    <button onclick="crearProyecto()">Crear Proyecto</button>
-  `;
-}
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
 
+/* CREAR PROYECTO */
 window.crearProyecto = async () => {
-  const nombre = nuevoProyecto.value;
-  await setDoc(doc(db, "proyectos", nombre), {
-    nombre,
-    requisitos: []
-  });
-  cargar();
-};
-
-/* ================= PROYECTOS ================= */
-async function cargar() {
-  const cont = document.getElementById("proyectos");
-  cont.innerHTML = "";
-
-  const snaps = await getDocs(collection(db, "proyectos"));
-  snaps.forEach(docu => {
-    const p = docu.data();
-
-    const div = document.createElement("div");
-    div.innerHTML = `
-      <h3>${p.nombre}</h3>
-      <div>
-        ${p.requisitos.map((r,i) => `
-          <label>
-            <input type="checkbox"
-              ${r.estados?.[uid] ? "checked" : ""}
-              onchange="toggle('${p.nombre}',${i},this.checked)">
-            ${r.texto} (${r.valor}%)
-          </label>
-        `).join("")}
-      </div>
-
-      ${rol === "admin" ? `
-        <input id="r-${p.nombre}" placeholder="Requisito">
-        <input id="v-${p.nombre}" type="number" value="10">
-        <button onclick="addReq('${p.nombre}')">Agregar</button>
-      ` : ""}
-      <hr>
-    `;
-    cont.appendChild(div);
-  });
-}
-
-window.addReq = async (proyecto) => {
-  const ref = doc(db, "proyectos", proyecto);
-  const snap = await getDoc(ref);
-  const data = snap.data();
-
-  data.requisitos.push({
-    texto: document.getElementById(`r-${proyecto}`).value,
-    valor: Number(document.getElementById(`v-${proyecto}`).value),
-    estados: {}
-  });
-
-  await updateDoc(ref, { requisitos: data.requisitos });
-  cargar();
-};
-
-window.toggle = async (proyecto, index, estado) => {
-  const ref = doc(db, "proyectos", proyecto);
-  const snap = await getDoc(ref);
-  const data = snap.data();
-
-  if (!data.requisitos[index].estados) {
-    data.requisitos[index].estados = {};
+  const nombre = document.getElementById("nombreProyecto").value.trim();
+  if (!nombre) {
+    alert("Escribe un nombre");
+    return;
   }
 
-  data.requisitos[index].estados[uid] = estado;
-  await updateDoc(ref, { requisitos: data.requisitos });
+  await addDoc(collection(db, "proyectos"), {
+    nombre,
+    creado: new Date(),
+    requisitos: []
+  });
+
+  document.getElementById("nombreProyecto").value = "";
+  cargarProyectos();
 };
 
-cargar();
+/* LISTAR PROYECTOS */
+async function cargarProyectos() {
+  const lista = document.getElementById("listaProyectos");
+  lista.innerHTML = "";
+
+  const snap = await getDocs(collection(db, "proyectos"));
+  snap.forEach(docu => {
+    const li = document.createElement("li");
+    li.textContent = docu.data().nombre;
+    li.style.cursor = "pointer";
+
+    li.onclick = () => cargarProyecto(docu.id);
+
+    lista.appendChild(li);
+  });
+}
+
+/* CARGAR UN PROYECTO */
+async function cargarProyecto(id) {
+  const ref = doc(db, "proyectos", id);
+  const snap = await getDoc(ref);
+
+  if (snap.exists()) {
+    alert("Proyecto cargado: " + snap.data().nombre);
+    // aquí luego cargaremos requisitos
+  }
+}
+
+/* INIT */
+cargarProyectos();
 </script>
 
 </body>
 </html>
+
