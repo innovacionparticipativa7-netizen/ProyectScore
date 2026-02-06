@@ -25,6 +25,14 @@
 <hr>
 
 <h3 id="tituloProyecto">Proyecto seleccionado</h3>
+  <h4>Progreso del proyecto</h4>
+<div style="width:300px; border:1px solid #000;">
+  <div id="barraProgreso"
+       style="height:20px; width:0%; background:green; color:white; text-align:center;">
+    0%
+  </div>
+</div>
+
 
 <div>
   <select id="tipoReq">
@@ -168,6 +176,16 @@ function renderRequisitos(requisitos) {
       lista.appendChild(li);
     });
   });
+  const progreso = calcularProgreso(requisitos);
+const barra = document.getElementById("barraProgreso");
+
+barra.style.width = progreso + "%";
+barra.textContent = progreso + "%";
+
+if (progreso < 40) barra.style.background = "red";
+else if (progreso < 70) barra.style.background = "orange";
+else barra.style.background = "green";
+
 }
 
 
@@ -261,6 +279,23 @@ window.toggleRequisito = async (tipo, index) => {
     requisitos: data.requisitos
   });
 };
+function calcularProgreso(requisitos) {
+  let totalPeso = 0;
+  let pesoCumplido = 0;
+
+  ["psr", "kpi", "plan"].forEach(tipo => {
+    (requisitos[tipo] || []).forEach(req => {
+      totalPeso += req.peso;
+      if (req.cumplido) {
+        pesoCumplido += req.peso;
+      }
+    });
+  });
+
+  if (totalPeso === 0) return 0;
+
+  return Math.round((pesoCumplido / totalPeso) * 100);
+}
 
 
 /* INIT */
@@ -270,6 +305,7 @@ cargarProyectos();
 
 </body>
 </html>
+
 
 
 
