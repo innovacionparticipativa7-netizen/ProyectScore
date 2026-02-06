@@ -286,7 +286,10 @@ window.editarTexto = async (tipo, index, valor) => {
   await updateDoc(ref, {
     requisitos: data.requisitos
   });
+
+  renderRequisitos(data.requisitos); // 
 };
+
 
 /* EDITAR PESO */
 window.editarPeso = async (tipo, index, valor) => {
@@ -299,7 +302,10 @@ window.editarPeso = async (tipo, index, valor) => {
   await updateDoc(ref, {
     requisitos: data.requisitos
   });
+
+  renderRequisitos(data.requisitos); // actualiza tabla
 };
+
 
 /* TOGGLE */
 window.toggleRequisito = async (tipo, index) => {
@@ -313,7 +319,10 @@ window.toggleRequisito = async (tipo, index) => {
   await updateDoc(ref, {
     requisitos: data.requisitos
   });
+
+  renderRequisitos(data.requisitos); // aqui actualiza las tablas
 };
+
 function calcularProgreso(requisitos) {
   let totalPeso = 0;
   let pesoCumplido = 0;
@@ -352,6 +361,7 @@ cargarProyectos();
 
 </body>
 </html>
+
 
 
 
