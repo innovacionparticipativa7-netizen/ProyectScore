@@ -27,6 +27,12 @@
 <h3 id="tituloProyecto">Proyecto seleccionado</h3>
 
 <div>
+  <select id="tipoReq">
+  <option value="psr">PSR</option>
+  <option value="kpi">KPI</option>
+  <option value="plan">PLAN</option>
+</select>
+
   <input type="text" id="reqTexto" placeholder="Requisito">
   <input type="number" id="reqPeso" placeholder="Peso %" min="1" max="100">
   <button onclick="agregarRequisito()">Agregar requisito</button>
@@ -35,6 +41,14 @@
 <ul id="listaRequisitos"></ul>
 
 
+<h4>PSR</h4>
+<ul id="lista-psr"></ul>
+
+<h4>KPI</h4>
+<ul id="lista-kpi"></ul>
+
+<h4>PLAN</h4>
+<ul id="lista-plan"></ul>
 
   
 
@@ -75,10 +89,15 @@ window.crearProyecto = async () => {
   }
 
   await addDoc(collection(db, "proyectos"), {
-    nombre,
-    creado: new Date(),
-    requisitos: []
-  });
+  nombre,
+  creado: new Date(),
+  requisitos: {
+    psr: [],
+    kpi: [],
+    plan: []
+  }
+});
+
 
   document.getElementById("nombreProyecto").value = "";
   cargarProyectos();
@@ -114,7 +133,10 @@ async function cargarProyecto(id) {
   document.getElementById("tituloProyecto").textContent =
     "Proyecto: " + data.nombre;
 
-  renderRequisitos(data.requisitos || []);
+  renderRequisitos(
+  data.requisitos || { psr: [], kpi: [], plan: [] }
+);
+
 }
 
 /* ==========================
@@ -122,28 +144,32 @@ async function cargarProyecto(id) {
 ========================== */
 
 function renderRequisitos(requisitos) {
-  const lista = document.getElementById("listaRequisitos");
-  lista.innerHTML = "";
+  ["psr", "kpi", "plan"].forEach(tipo => {
+    const lista = document.getElementById(`lista-${tipo}`);
+    lista.innerHTML = "";
 
-  requisitos.forEach((req, index) => {
-    const li = document.createElement("li");
+    (requisitos[tipo] || []).forEach((req, index) => {
+      const li = document.createElement("li");
 
-    li.innerHTML = `
-      <input type="checkbox" ${req.cumplido ? "checked" : ""}
-        onchange="toggleRequisito(${index})">
+      li.innerHTML = `
+        <input type="checkbox" ${req.cumplido ? "checked" : ""}
+          onchange="toggleRequisito('${tipo}', ${index})">
 
-      <input type="text" value="${req.texto}"
-        onchange="editarTexto(${index}, this.value)">
+        <input type="text" value="${req.texto}"
+          onchange="editarTexto('${tipo}', ${index}, this.value)">
 
-      <input type="number" value="${req.peso}" min="1" max="100"
-        onchange="editarPeso(${index}, this.value)">
+        <input type="number" value="${req.peso}" min="1" max="100"
+          onchange="editarPeso('${tipo}', ${index}, this.value)">
 
-      <button onclick="eliminarRequisito(${index})">❌</button>
-    `;
+        <button onclick="eliminarRequisito('${tipo}', ${index})">❌</button>
+      `;
 
-    lista.appendChild(li);
+      lista.appendChild(li);
+    });
   });
 }
+
+
 
 /* AGREGAR */
 window.agregarRequisito = async () => {
@@ -154,6 +180,7 @@ window.agregarRequisito = async () => {
 
   const texto = document.getElementById("reqTexto").value.trim();
   const peso = Number(document.getElementById("reqPeso").value);
+  const tipo = document.getElementById("tipoReq").value;
 
   if (!texto || !peso) {
     alert("Completa texto y peso");
@@ -164,7 +191,7 @@ window.agregarRequisito = async () => {
   const snap = await getDoc(ref);
   const data = snap.data();
 
-  data.requisitos.push({
+  data.requisitos[tipo].push({
     texto,
     peso,
     cumplido: false
@@ -178,48 +205,49 @@ window.agregarRequisito = async () => {
   renderRequisitos(data.requisitos);
 };
 
+
 /* ELIMINAR */
-window.eliminarRequisito = async (index) => {
+window.eliminarRequisito = async (tipo, index) => {
   const ref = doc(db, "proyectos", proyectoActualId);
   const snap = await getDoc(ref);
   const data = snap.data();
 
-  data.requisitos.splice(index, 1);
+  data.requisitos[tipo].splice(index, 1);
   await setDoc(ref, data);
 
   renderRequisitos(data.requisitos);
 };
-
 /* EDITAR TEXTO */
-window.editarTexto = async (index, valor) => {
+window.editarTexto = async (tipo, index, valor) => {
   const ref = doc(db, "proyectos", proyectoActualId);
   const snap = await getDoc(ref);
   const data = snap.data();
 
-  data.requisitos[index].texto = valor;
+  data.requisitos[tipo][index].texto = valor;
   await setDoc(ref, data);
 };
 
 /* EDITAR PESO */
-window.editarPeso = async (index, valor) => {
+window.editarPeso = async (tipo, index, valor) => {
   const ref = doc(db, "proyectos", proyectoActualId);
   const snap = await getDoc(ref);
   const data = snap.data();
 
-  data.requisitos[index].peso = Number(valor);
+  data.requisitos[tipo][index].peso = Number(valor);
   await setDoc(ref, data);
 };
 
 /* TOGGLE */
-window.toggleRequisito = async (index) => {
+window.toggleRequisito = async (tipo, index) => {
   const ref = doc(db, "proyectos", proyectoActualId);
   const snap = await getDoc(ref);
   const data = snap.data();
 
-  data.requisitos[index].cumplido = !data.requisitos[index].cumplido;
+  data.requisitos[tipo][index].cumplido =
+    !data.requisitos[tipo][index].cumplido;
+
   await setDoc(ref, data);
 };
-
 /* INIT */
 cargarProyectos();
 </script>
@@ -227,5 +255,6 @@ cargarProyectos();
 
 </body>
 </html>
+
 
 
