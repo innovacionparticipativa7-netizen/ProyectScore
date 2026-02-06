@@ -61,8 +61,9 @@ import {
   getDocs,
   doc,
   getDoc,
-  setDoc
+  updateDoc
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
 
 /* CONFIG */
 const firebaseConfig = {
@@ -191,18 +192,18 @@ window.agregarRequisito = async () => {
   const snap = await getDoc(ref);
   const data = snap.data();
 
-  data.requisitos[tipo].push({
-    texto,
-    peso,
-    cumplido: false
-  });
+data.requisitos[tipo].push({
+  texto,
+  peso,
+  cumplido: false
+});
 
-  await setDoc(ref, data);
+await updateDoc(ref, {
+  requisitos: data.requisitos
+});
 
-  document.getElementById("reqTexto").value = "";
-  document.getElementById("reqPeso").value = "";
+renderRequisitos(data.requisitos);
 
-  renderRequisitos(data.requisitos);
 };
 
 
@@ -213,10 +214,14 @@ window.eliminarRequisito = async (tipo, index) => {
   const data = snap.data();
 
   data.requisitos[tipo].splice(index, 1);
-  await setDoc(ref, data);
+
+  await updateDoc(ref, {
+    requisitos: data.requisitos
+  });
 
   renderRequisitos(data.requisitos);
 };
+
 /* EDITAR TEXTO */
 window.editarTexto = async (tipo, index, valor) => {
   const ref = doc(db, "proyectos", proyectoActualId);
@@ -224,7 +229,10 @@ window.editarTexto = async (tipo, index, valor) => {
   const data = snap.data();
 
   data.requisitos[tipo][index].texto = valor;
-  await setDoc(ref, data);
+
+  await updateDoc(ref, {
+    requisitos: data.requisitos
+  });
 };
 
 /* EDITAR PESO */
@@ -234,7 +242,10 @@ window.editarPeso = async (tipo, index, valor) => {
   const data = snap.data();
 
   data.requisitos[tipo][index].peso = Number(valor);
-  await setDoc(ref, data);
+
+  await updateDoc(ref, {
+    requisitos: data.requisitos
+  });
 };
 
 /* TOGGLE */
@@ -246,8 +257,12 @@ window.toggleRequisito = async (tipo, index) => {
   data.requisitos[tipo][index].cumplido =
     !data.requisitos[tipo][index].cumplido;
 
-  await setDoc(ref, data);
+  await updateDoc(ref, {
+    requisitos: data.requisitos
+  });
 };
+
+
 /* INIT */
 cargarProyectos();
 </script>
@@ -255,6 +270,7 @@ cargarProyectos();
 
 </body>
 </html>
+
 
 
 
