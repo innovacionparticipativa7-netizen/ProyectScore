@@ -4,6 +4,56 @@
 <meta charset="UTF-8">
 <title>Proyectos</title>
 </head>
+
+<style>
+body {
+  font-family: Arial, sans-serif;
+  background: #f4f6f8;
+}
+
+.card {
+  width: 320px;
+  background: #fff;
+  padding: 16px;
+  border-radius: 10px;
+  box-shadow: 0 4px 10px rgba(0,0,0,.1);
+}
+
+.card h3 {
+  margin-top: 0;
+  text-align: center;
+}
+
+ul {
+  padding-left: 18px;
+}
+
+.bloque-barra {
+  margin-top: 12px;
+}
+
+.barra-bg {
+  background: #ddd;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.barra {
+  height: 18px;
+  text-align: center;
+  color: white;
+  font-size: 12px;
+  transition: width .3s ease;
+}
+
+.psr { background: #2196f3; }
+.kpi { background: #ff9800; }
+.plan { background: #4caf50; }
+</style>
+
+
+
+  
 <body>
 
 <h2>Gestor de Proyectos</h2>
@@ -72,6 +122,32 @@
   </div>
 </div>
 
+<div class="card">
+  <h3 id="nombreProyectoUser">Proyecto</h3>
+
+  <ul id="listaUser"></ul>
+
+  <div class="bloque-barra">
+    <span>PSR</span>
+    <div class="barra-bg">
+      <div id="barra-psr" class="barra psr">0%</div>
+    </div>
+  </div>
+
+  <div class="bloque-barra">
+    <span>KPI</span>
+    <div class="barra-bg">
+      <div id="barra-kpi" class="barra kpi">0%</div>
+    </div>
+  </div>
+
+  <div class="bloque-barra">
+    <span>PLAN</span>
+    <div class="barra-bg">
+      <div id="barra-plan" class="barra plan">0%</div>
+    </div>
+  </div>
+</div>
 
 
 
@@ -162,6 +238,7 @@ async function cargarProyecto(id) {
   renderRequisitos(
   data.requisitos || { psr: [], kpi: [], plan: [] }
 );
+renderVistaUser(data);
 
 }
 
@@ -350,6 +427,25 @@ function calcularProgresoTipo(lista) {
   return Math.round((cumplido / total) * 100);
 }
 
+function renderVistaUser(proyecto) {
+  document.getElementById("nombreProyectoUser").textContent =
+    proyecto.nombre;
+
+  const lista = document.getElementById("listaUser");
+  lista.innerHTML = "";
+
+  ["psr", "kpi", "plan"].forEach(tipo => {
+    (proyecto.requisitos[tipo] || []).forEach(req => {
+      const li = document.createElement("li");
+      li.textContent = `• ${req.texto}`;
+      lista.appendChild(li);
+    });
+  });
+
+  actualizarBarra("psr", calcularProgresoTipo(proyecto.requisitos.psr));
+  actualizarBarra("kpi", calcularProgresoTipo(proyecto.requisitos.kpi));
+  actualizarBarra("plan", calcularProgresoTipo(proyecto.requisitos.plan));
+}
 
 /* INIT */
 cargarProyectos();
@@ -358,6 +454,7 @@ cargarProyectos();
 
 </body>
 </html>
+
 
 
 
