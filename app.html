@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Proyectos</title>
+</head>
+<body>
+
+<h2>Gestor de Proyectos</h2>
+<p id="rol"></p>
+
+<div id="admin"></div>
+<hr>
+<div id="proyectos"></div>
+
+<script type="module">
+import { db } from "./firebase.js";
+import {
+  collection, doc, getDocs, getDoc, setDoc, updateDoc
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+const uid = localStorage.getItem("uid");
+const rol = localStorage.getItem("rol");
+document.getElementById("rol").textContent = `Rol: ${rol}`;
+
+/* ================= ADMIN ================= */
+if (rol === "admin") {
+  document.getElementById("admin").innerHTML = `
+    <h3>Admin</h3>
+    <input id="nuevoProyecto" placeholder="Nombre proyecto">
+    <button onclick="crearProyecto()">Crear Proyecto</button>
+  `;
+}
+
+window.crearProyecto = async () => {
+  const nombre = nuevoProyecto.value;
+  await setDoc(doc(db, "proyectos", nombre), {
+    nombre,
+    requisitos: []
+  });
+  cargar();
+};
+
+/* ================= PROYECTOS ================= */
+async function cargar() {
+  const cont = document.getElementById("proyectos");
+  cont.innerHTML = "";
+
+  const snaps = await getDocs(collection(db, "proyectos"));
+  snaps.forEach(docu => {
+    const p = docu.data();
+
+    const div = document.createElement("div");
+    div.innerHTML = `
+      <h3>${p.nombre}</h3>
+      <div>
+        ${p.requisitos.map((r,i) => `
+          <label>
+            <input type="checkbox"
+              ${r.estados?.[uid] ? "checked" : ""}
+              onchange="toggle('${p.nombre}',${i},this.checked)">
+            ${r.texto} (${r.valor}%)
+          </label>
+        `).join("")}
+      </div>
+
+      ${rol === "admin" ? `
+        <input id="r-${p.nombre}" placeholder="Requisito">
+        <input id="v-${p.nombre}" type="number" value="10">
+        <button onclick="addReq('${p.nombre}')">Agregar</button>
+      ` : ""}
+      <hr>
+    `;
+    cont.appendChild(div);
+  });
+}
+
+window.addReq = async (proyecto) => {
+  const ref = doc(db, "proyectos", proyecto);
+  const snap = await getDoc(ref);
+  const data = snap.data();
+
+  data.requisitos.push({
+    texto: document.getElementById(`r-${proyecto}`).value,
+    valor: Number(document.getElementById(`v-${proyecto}`).value),
+    estados: {}
+  });
+
+  await updateDoc(ref, { requisitos: data.requisitos });
+  cargar();
+};
+
+window.toggle = async (proyecto, index, estado) => {
+  const ref = doc(db, "proyectos", proyecto);
+  const snap = await getDoc(ref);
+  const data = snap.data();
+
+  if (!data.requisitos[index].estados) {
+    data.requisitos[index].estados = {};
+  }
+
+  data.requisitos[index].estados[uid] = estado;
+  await updateDoc(ref, { requisitos: data.requisitos });
+};
+
+cargar();
+</script>
+
+</body>
+</html>
