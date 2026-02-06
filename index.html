@@ -22,7 +22,7 @@ window.login = async () => {
   const user = document.getElementById("user").value.trim();
   const pass = document.getElementById("pass").value;
 
-  const emailFake = `${user}@empresa.local`;
+  const emailFake = `${user}@proyects.com`;
 
   try {
     const cred = await signInWithEmailAndPassword(auth, emailFake, pass);
@@ -41,6 +41,7 @@ window.login = async () => {
 
 </body>
 </html>
+
 
 
 
