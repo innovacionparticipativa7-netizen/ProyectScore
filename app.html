@@ -22,6 +22,17 @@
 <h3>Proyectos</h3>
 <ul id="listaProyectos"></ul>
 
+<hr>
+
+<h3 id="tituloProyecto">Proyecto seleccionado</h3>
+
+<div>
+  <input type="text" id="reqTexto" placeholder="Requisito">
+  <input type="number" id="reqPeso" placeholder="Peso %" min="1" max="100">
+  <button onclick="agregarRequisito()">Agregar requisito</button>
+</div>
+
+<ul id="listaRequisitos"></ul>
 
 
 
@@ -35,7 +46,8 @@ import {
   addDoc,
   getDocs,
   doc,
-  getDoc
+  getDoc,
+  setDoc
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 /* CONFIG */
@@ -47,6 +59,12 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+
+/* ==========================
+   PROYECTOS
+========================== */
+
+let proyectoActualId = null;
 
 /* CREAR PROYECTO */
 window.crearProyecto = async () => {
@@ -83,21 +101,131 @@ async function cargarProyectos() {
   });
 }
 
-/* CARGAR UN PROYECTO */
+/* CARGAR PROYECTO */
 async function cargarProyecto(id) {
+  proyectoActualId = id;
+
   const ref = doc(db, "proyectos", id);
   const snap = await getDoc(ref);
 
-  if (snap.exists()) {
-    alert("Proyecto cargado: " + snap.data().nombre);
-    // aquí luego cargaremos requisitos
-  }
+  if (!snap.exists()) return;
+
+  const data = snap.data();
+  document.getElementById("tituloProyecto").textContent =
+    "Proyecto: " + data.nombre;
+
+  renderRequisitos(data.requisitos || []);
 }
+
+/* ==========================
+   REQUISITOS
+========================== */
+
+function renderRequisitos(requisitos) {
+  const lista = document.getElementById("listaRequisitos");
+  lista.innerHTML = "";
+
+  requisitos.forEach((req, index) => {
+    const li = document.createElement("li");
+
+    li.innerHTML = `
+      <input type="checkbox" ${req.cumplido ? "checked" : ""}
+        onchange="toggleRequisito(${index})">
+
+      <input type="text" value="${req.texto}"
+        onchange="editarTexto(${index}, this.value)">
+
+      <input type="number" value="${req.peso}" min="1" max="100"
+        onchange="editarPeso(${index}, this.value)">
+
+      <button onclick="eliminarRequisito(${index})">❌</button>
+    `;
+
+    lista.appendChild(li);
+  });
+}
+
+/* AGREGAR */
+window.agregarRequisito = async () => {
+  if (!proyectoActualId) {
+    alert("Selecciona un proyecto");
+    return;
+  }
+
+  const texto = document.getElementById("reqTexto").value.trim();
+  const peso = Number(document.getElementById("reqPeso").value);
+
+  if (!texto || !peso) {
+    alert("Completa texto y peso");
+    return;
+  }
+
+  const ref = doc(db, "proyectos", proyectoActualId);
+  const snap = await getDoc(ref);
+  const data = snap.data();
+
+  data.requisitos.push({
+    texto,
+    peso,
+    cumplido: false
+  });
+
+  await setDoc(ref, data);
+
+  document.getElementById("reqTexto").value = "";
+  document.getElementById("reqPeso").value = "";
+
+  renderRequisitos(data.requisitos);
+};
+
+/* ELIMINAR */
+window.eliminarRequisito = async (index) => {
+  const ref = doc(db, "proyectos", proyectoActualId);
+  const snap = await getDoc(ref);
+  const data = snap.data();
+
+  data.requisitos.splice(index, 1);
+  await setDoc(ref, data);
+
+  renderRequisitos(data.requisitos);
+};
+
+/* EDITAR TEXTO */
+window.editarTexto = async (index, valor) => {
+  const ref = doc(db, "proyectos", proyectoActualId);
+  const snap = await getDoc(ref);
+  const data = snap.data();
+
+  data.requisitos[index].texto = valor;
+  await setDoc(ref, data);
+};
+
+/* EDITAR PESO */
+window.editarPeso = async (index, valor) => {
+  const ref = doc(db, "proyectos", proyectoActualId);
+  const snap = await getDoc(ref);
+  const data = snap.data();
+
+  data.requisitos[index].peso = Number(valor);
+  await setDoc(ref, data);
+};
+
+/* TOGGLE */
+window.toggleRequisito = async (index) => {
+  const ref = doc(db, "proyectos", proyectoActualId);
+  const snap = await getDoc(ref);
+  const data = snap.data();
+
+  data.requisitos[index].cumplido = !data.requisitos[index].cumplido;
+  await setDoc(ref, data);
+};
 
 /* INIT */
 cargarProyectos();
 </script>
 
+
 </body>
 </html>
+
 
