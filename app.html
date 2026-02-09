@@ -161,11 +161,16 @@ ul {
     <div id="user-barra-plan" class="barra plan">0%</div>
   </div>
 </div>
+  <button onclick="guardarCambiosUser()">
+  💾 Guardar cambios
+</button>
+
 </div>
 
 
 
 <script type="module">
+  let proyectoTemporal = null;
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import {
   getFirestore,
@@ -293,24 +298,17 @@ async function cargarProyectos() {
 }
 
 /* CARGAR PROYECTO */
-async function cargarProyecto(id) {
-  proyectoActualId = id;
-
+async function cargarProyectoUser(id) {
   const ref = doc(db, "proyectos", id);
   const snap = await getDoc(ref);
-
   if (!snap.exists()) return;
 
-  const data = snap.data();
-  document.getElementById("tituloProyecto").textContent =
-    "Proyecto: " + data.nombre;
+  // 🔴 LO IMPORTANTE
+  proyectoTemporal = structuredClone(snap.data());
 
-  renderRequisitos(
-  data.requisitos || { psr: [], kpi: [], plan: [] }
-);
-if (ROL === "admin") {
-  renderVistaUser(data);
+  renderVistaUser(proyectoTemporal);
 }
+
 
 
 }
@@ -583,26 +581,23 @@ function actualizarBarraUser(tipo, valor) {
   barra.style.width = valor + "%";
   barra.textContent = valor + "%";
 }
-window.toggleRequisitoUser = async (tipo, index, checked) => {
+window.toggleRequisitoUser = (tipo, index, checked) => {
+  if (!proyectoTemporal) return;
+
+  proyectoTemporal.requisitos[tipo][index].cumplido = checked;
+
+  renderVistaUser(proyectoTemporal);
+};
+
+window.guardarCambiosUser = async () => {
   const proyectoId = document.getElementById("selectProyectoUser").value;
-  if (!proyectoId) return;
+  if (!proyectoId || !proyectoTemporal) return;
 
-  const ref = doc(db, "proyectos", proyectoId);
-  const snap = await getDoc(ref);
-  if (!snap.exists()) return;
-
-  const data = snap.data();
-
-  // actualiza estado
-  data.requisitos[tipo][index].cumplido = checked;
-
-  // guarda en firebase
-  await updateDoc(ref, {
-    requisitos: data.requisitos
+  await updateDoc(doc(db, "proyectos", proyectoId), {
+    requisitos: proyectoTemporal.requisitos
   });
 
-  // 🔄 vuelve a renderizar TODO (listas + barras)
-  renderVistaUser(data);
+  alert("Cambios guardados ✅");
 };
 
 
@@ -613,6 +608,7 @@ window.toggleRequisitoUser = async (tipo, index, checked) => {
 
 </body>
 </html>
+
 
 
 
