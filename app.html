@@ -170,6 +170,7 @@ ul {
 
 
 <script type="module">
+  let proyectoTemporalId = null;
   let proyectoTemporal = null;
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import {
@@ -303,9 +304,12 @@ async function cargarProyectoUser(id) {
   const snap = await getDoc(ref);
   if (!snap.exists()) return;
 
+  proyectoTemporalId = id;
   proyectoTemporal = structuredClone(snap.data());
+
   renderVistaUser(proyectoTemporal);
 }
+
 
 
 
@@ -579,10 +583,12 @@ window.toggleRequisitoUser = (tipo, index, checked) => {
 };
 
 window.guardarCambiosUser = async () => {
-  const proyectoId = document.getElementById("selectProyectoUser").value;
-  if (!proyectoId || !proyectoTemporal) return;
+  if (!proyectoTemporal || !proyectoTemporalId) {
+    alert("No hay proyecto cargado");
+    return;
+  }
 
-  await updateDoc(doc(db, "proyectos", proyectoId), {
+  await updateDoc(doc(db, "proyectos", proyectoTemporalId), {
     requisitos: proyectoTemporal.requisitos
   });
 
@@ -592,11 +598,13 @@ window.guardarCambiosUser = async () => {
 
 
 
+
 </script>
 
 
 </body>
 </html>
+
 
 
 
