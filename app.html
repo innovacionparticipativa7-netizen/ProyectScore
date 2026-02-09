@@ -280,6 +280,24 @@ window.crearProyecto = async () => {
   document.getElementById("nombreProyecto").value = "";
   cargarProyectos();
 };
+async function cargarProyecto(id) {
+  proyectoActualId = id; // 👈 CLAVE
+  proyectoTemporalId = id;
+
+  const ref = doc(db, "proyectos", id);
+  const snap = await getDoc(ref);
+  if (!snap.exists()) return;
+
+  const data = snap.data();
+
+  document.getElementById("tituloProyecto").textContent =
+    "Proyecto: " + data.nombre;
+
+  renderRequisitos(data.requisitos);
+
+  // sincroniza vista usuario si está abierta
+  renderVistaUser(data);
+}
 
 /* LISTAR PROYECTOS */
 async function cargarProyectos() {
@@ -583,16 +601,15 @@ window.toggleRequisitoUser = (tipo, index, checked) => {
 };
 
 window.guardarCambiosUser = async () => {
-  if (!proyectoTemporal || !proyectoTemporalId) {
-    alert("No hay proyecto cargado");
-    return;
+  try {
+    await updateDoc(doc(db, "proyectos", proyectoTemporalId), {
+      requisitos: proyectoTemporal.requisitos
+    });
+    alert("Cambios guardados ✅");
+  } catch (e) {
+    console.error("ERROR GUARDANDO:", e);
+    alert("No tienes permisos para guardar ❌");
   }
-
-  await updateDoc(doc(db, "proyectos", proyectoTemporalId), {
-    requisitos: proyectoTemporal.requisitos
-  });
-
-  alert("Cambios guardados ✅");
 };
 
 
@@ -604,6 +621,7 @@ window.guardarCambiosUser = async () => {
 
 </body>
 </html>
+
 
 
 
