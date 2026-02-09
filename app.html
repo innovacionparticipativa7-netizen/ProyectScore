@@ -305,6 +305,11 @@ ul {
   height: 54px;
   --color: #2196f3;
 }
+  #vista-user ul {
+  margin-top: 6px;
+  margin-bottom: 12px;
+}
+
 
 .circle.small::before {
   width: 40px;
@@ -424,29 +429,38 @@ ul {
     <!-- PSR -->
     <div class="titulo-seccion">
   <h4>PSR</h4>
-  <div id="circle-psr" class="circle small">
+  <div id="circle-psr" class="circle small psr">
     <span>0%</span>
   </div>
 </div>
+
+<ul id="user-lista-psr"></ul>
+
 
 
 
     <!-- KPI -->
-    <div class="titulo-seccion">
+   <div class="titulo-seccion">
   <h4>KPI</h4>
-  <div id="circle-kpi" class="circle small">
+  <div id="circle-kpi" class="circle small kpi">
     <span>0%</span>
   </div>
 </div>
+
+<ul id="user-lista-kpi"></ul>
+
 
 
     <!-- PLAN -->
    <div class="titulo-seccion">
   <h4>PLAN</h4>
-  <div id="circle-plan" class="circle small">
+  <div id="circle-plan" class="circle small plan">
     <span>0%</span>
   </div>
 </div>
+
+<ul id="user-lista-plan"></ul>
+
 
 
     <!-- ✅ BOTÓN GUARDAR -->
@@ -930,6 +944,7 @@ window.guardarCambiosUser = async () => {
 
 </body>
 </html>
+
 
 
 
