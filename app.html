@@ -563,14 +563,15 @@ function renderListaUser(tipo, lista) {
     const li = document.createElement("li");
 
     li.innerHTML = `
-      <label>
-       <input type="checkbox"
-        ${r.cumplido ? "checked" : ""}
-        ${r.peso <= 0 ? "disabled" : ""}
-        onchange="toggleRequisitoUser('${tipo}', ${index}, this.checked)">
+  <label style="display:flex; align-items:center; gap:8px;">
+    <input type="checkbox"
+      ${r.cumplido ? "checked" : ""}
+      ${r.peso <= 0 ? "disabled" : ""}
+      onchange="toggleRequisitoUser('${tipo}', ${index}, this.checked)">
+    <span>${r.texto}</span>
+  </label>
+`;
 
-      </label>
-    `;
 
     ul.appendChild(li);
   });
@@ -591,14 +592,19 @@ window.toggleRequisitoUser = async (tipo, index, checked) => {
   if (!snap.exists()) return;
 
   const data = snap.data();
+
+  // actualiza estado
   data.requisitos[tipo][index].cumplido = checked;
 
+  // guarda en firebase
   await updateDoc(ref, {
     requisitos: data.requisitos
   });
 
+  // 🔄 vuelve a renderizar TODO (listas + barras)
   renderVistaUser(data);
 };
+
 
 
 
@@ -607,6 +613,7 @@ window.toggleRequisitoUser = async (tipo, index, checked) => {
 
 </body>
 </html>
+
 
 
 
