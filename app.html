@@ -229,9 +229,7 @@ onAuthStateChanged(auth, async (user) => {
   cargarProyectosUser();
 });
 
-
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+  
 function aplicarRol() {
   const rolEl = document.getElementById("rol");
 
@@ -252,8 +250,6 @@ function aplicarRol() {
 /* ==========================
    PROYECTOS
 ========================== */
-
-let proyectoActualId = null;
 
 /* CREAR PROYECTO */
 window.crearProyecto = async () => {
@@ -604,11 +600,6 @@ window.toggleRequisitoUser = async (tipo, index, checked) => {
   renderVistaUser(data);
 };
 
-  
-/* INIT */
-aplicarRol();
-cargarProyectos();
-cargarProyectosUser();
 
 
 </script>
@@ -616,6 +607,7 @@ cargarProyectosUser();
 
 </body>
 </html>
+
 
 
 
