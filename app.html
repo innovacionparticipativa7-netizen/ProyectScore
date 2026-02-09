@@ -877,21 +877,26 @@ document.getElementById("selectProyectoUser")
     cargarProyectoUser(e.target.value);
   });
 function renderListaUser(tipo, lista) {
-  const ul = document.getElementById(`user-${tipo}`);
+  const ul = document.getElementById(`user-lista-${tipo}`);
+  if (!ul) return;
+
   ul.innerHTML = "";
 
   (lista || []).forEach((r, index) => {
     const li = document.createElement("li");
 
     li.innerHTML = `
-  <label style="display:flex; align-items:center; gap:8px;">
-    <input type="checkbox"
-      ${r.cumplido ? "checked" : ""}
-      ${r.peso <= 0 ? "disabled" : ""}
-      onchange="toggleRequisitoUser('${tipo}', ${index}, this.checked)">
-    <span>${r.texto}</span>
-  </label>
-`;
+      <label style="display:flex; align-items:center; gap:8px;">
+        <input type="checkbox"
+          ${r.cumplido ? "checked" : ""}
+          onchange="toggleRequisitoUser('${tipo}', ${index}, this.checked)">
+        <span>${r.texto}</span>
+      </label>
+    `;
+
+    ul.appendChild(li);
+  });
+}
 
 
     ul.appendChild(li);
@@ -944,6 +949,7 @@ window.guardarCambiosUser = async () => {
 
 </body>
 </html>
+
 
 
 
