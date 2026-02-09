@@ -129,6 +129,47 @@ ul {
 #vista-user li:hover {
   background: #f1f1f1;
 }
+.user-wrapper {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 16px;
+  box-sizing: border-box;
+}
+  .card {
+  width: 100%;
+  max-width: 380px;
+  background: #fff;
+  padding: 16px;
+  border-radius: 14px;
+  box-shadow: 0 6px 16px rgba(0,0,0,.12);
+}
+
+#vista-user h2 {
+  text-align: center;
+  margin-bottom: 12px;
+}
+
+.card h4 {
+  margin-top: 16px;
+  margin-bottom: 6px;
+}
+#vista-user label {
+  padding: 6px 4px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+#vista-user input[type="checkbox"] {
+  transform: scale(1.2);
+  cursor: pointer;
+}
+.barra-bg {
+  height: 18px;
+  margin-top: 4px;
+}
 
 </style>
 
@@ -207,7 +248,8 @@ ul {
 <hr>
 </div>
  <!------------------------------- SOLO LA VISTA USUARIO -->
-<div id="vista-user" style="display:none;">
+<div id="vista-user" class="user-wrapper" style="display:none;">
+
   <h2>Vista Usuario</h2>
 
 <div class="select-container">
@@ -699,6 +741,7 @@ window.guardarCambiosUser = async () => {
 
 </body>
 </html>
+
 
 
 
