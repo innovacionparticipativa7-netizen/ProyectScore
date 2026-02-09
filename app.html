@@ -303,15 +303,12 @@ async function cargarProyectoUser(id) {
   const snap = await getDoc(ref);
   if (!snap.exists()) return;
 
-  // 🔴 LO IMPORTANTE
   proyectoTemporal = structuredClone(snap.data());
-
   renderVistaUser(proyectoTemporal);
 }
 
 
 
-}
 
 /* ==========================
    REQUISITOS
@@ -545,14 +542,6 @@ document.getElementById("selectProyectoUser")
   .addEventListener("change", e => {
     cargarProyectoUser(e.target.value);
   });
-  async function cargarProyectoUser(id) {
-  const ref = doc(db, "proyectos", id);
-  const snap = await getDoc(ref);
-  if (!snap.exists()) return;
-
-  renderVistaUser(snap.data());
-}
-
 function renderListaUser(tipo, lista) {
   const ul = document.getElementById(`user-${tipo}`);
   ul.innerHTML = "";
@@ -608,6 +597,7 @@ window.guardarCambiosUser = async () => {
 
 </body>
 </html>
+
 
 
 
