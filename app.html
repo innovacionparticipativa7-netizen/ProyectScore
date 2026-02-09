@@ -170,6 +170,88 @@ ul {
   height: 18px;
   margin-top: 4px;
 }
+.admin-wrapper {
+  min-height: 100vh;
+  padding: 16px;
+}
+
+.admin-header {
+  background: #fff;
+  padding: 16px;
+  border-radius: 14px;
+  box-shadow: 0 4px 12px rgba(0,0,0,.1);
+  margin-bottom: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.admin-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 16px;
+}
+
+.admin-card {
+  background: #fff;
+  padding: 16px;
+  border-radius: 14px;
+  box-shadow: 0 4px 12px rgba(0,0,0,.1);
+}
+
+.admin-card.full {
+  grid-column: 1 / -1;
+}
+
+.admin-card h3 {
+  margin-top: 0;
+}
+
+.lista-proyectos li {
+  padding: 8px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.lista-proyectos li:hover {
+  background: #f1f1f1;
+}
+
+.form-row {
+  display: grid;
+  gap: 8px;
+}
+
+.req-grid {
+  margin-top: 16px;
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #4caf50, #2e7d32);
+  color: white;
+  border: none;
+  padding: 10px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.btn-secondary {
+  background: #2196f3;
+  color: white;
+  border: none;
+  padding: 10px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.sub {
+  font-size: 13px;
+  color: #666;
+  margin-bottom: 6px;
+}
 
 </style>
 
@@ -178,75 +260,81 @@ ul {
   
 <body>
   <!------------------------------------- VISTA DEL ADMIN -->
-<div id="vista-admin" style="display:none;">
-  <h2>Gestor de Proyectos</h2>
-<p id="rol"></p>
+<div id="vista-admin" class="admin-wrapper" style="display:none;">
 
-<div id="admin"></div>
-<hr>
-<div id="proyectos"></div>
-  
-<h3>Nuevo Proyecto</h3>
-<input type="text" id="nombreProyecto" placeholder="Nombre del proyecto">
-<button onclick="crearProyecto()">Crear Proyecto</button>
+  <!-- HEADER -->
+  <header class="admin-header">
+    <h2>📊 Gestor de Proyectos</h2>
+    <span id="rol"></span>
+  </header>
 
-<hr>
+  <!-- CONTENIDO -->
+  <div class="admin-grid">
 
-<h3>Proyectos</h3>
-<ul id="listaProyectos"></ul>
+    <!-- CREAR PROYECTO -->
+    <div class="admin-card">
+      <h3>➕ Nuevo proyecto</h3>
+      <input type="text" id="nombreProyecto" placeholder="Nombre del proyecto">
+      <button class="btn-primary" onclick="crearProyecto()">Crear</button>
+    </div>
 
-<hr>
+    <!-- LISTA PROYECTOS -->
+    <div class="admin-card">
+      <h3>📁 Proyectos</h3>
+      <ul id="listaProyectos" class="lista-proyectos"></ul>
+    </div>
 
-<h3 id="tituloProyecto">Proyecto seleccionado</h3>
-  <h4>Progreso del proyecto</h4>
-<div style="width:300px; border:1px solid #000;">
-  <div id="barraProgreso"
-       style="height:20px; width:0%; background:green; color:white; text-align:center;">
-    0%
+    <!-- PROYECTO ACTUAL -->
+    <div class="admin-card full">
+      <h3 id="tituloProyecto">Proyecto seleccionado</h3>
+
+      <p class="sub">Progreso total</p>
+      <div class="barra-bg">
+        <div id="barraProgreso" class="barra plan">0%</div>
+      </div>
+
+      <hr>
+
+      <!-- AGREGAR REQUISITO -->
+      <h4>➕ Agregar requisito</h4>
+      <div class="form-row">
+        <select id="tipoReq">
+          <option value="psr">PSR</option>
+          <option value="kpi">KPI</option>
+          <option value="plan">PLAN</option>
+        </select>
+
+        <input type="text" id="reqTexto" placeholder="Descripción">
+        <input type="number" id="reqPeso" placeholder="Peso %" min="1" max="100">
+
+        <button class="btn-secondary" onclick="agregarRequisito()">Agregar</button>
+      </div>
+
+      <!-- REQUISITOS -->
+      <div class="req-grid">
+        <div>
+          <h4>PSR</h4>
+          <ul id="lista-psr"></ul>
+          <div class="barra-bg"><div id="barra-psr" class="barra psr">0%</div></div>
+        </div>
+
+        <div>
+          <h4>KPI</h4>
+          <ul id="lista-kpi"></ul>
+          <div class="barra-bg"><div id="barra-kpi" class="barra kpi">0%</div></div>
+        </div>
+
+        <div>
+          <h4>PLAN</h4>
+          <ul id="lista-plan"></ul>
+          <div class="barra-bg"><div id="barra-plan" class="barra plan">0%</div></div>
+        </div>
+      </div>
+
+    </div>
   </div>
 </div>
 
-
-<div>
-  <select id="tipoReq">
-  <option value="psr">PSR</option>
-  <option value="kpi">KPI</option>
-  <option value="plan">PLAN</option>
-</select>
-
-  <input type="text" id="reqTexto" placeholder="Requisito">
-  <input type="number" id="reqPeso" placeholder="Peso %" min="1" max="100">
-  <button onclick="agregarRequisito()">Agregar requisito</button>
-</div>
-
-<ul id="listaRequisitos"></ul>
-
-
-<h4>PSR</h4>
-<ul id="lista-psr"></ul>
-<div>
-  <div style="width:300px; border:1px solid #000;">
-    <div id="barra-psr" style="height:18px; width:0%; background:#2196f3; color:white; text-align:center;">0%</div>
-  </div>
-</div>
-
-<h4>KPI</h4>
-<ul id="lista-kpi"></ul>
-<div>
-  <div style="width:300px; border:1px solid #000;">
-    <div id="barra-kpi" style="height:18px; width:0%; background:#ff9800; color:white; text-align:center;">0%</div>
-  </div>
-</div>
-<h4>PLAN</h4>
-<ul id="lista-plan"></ul>
-<div>
-  <div style="width:300px; border:1px solid #000;">
-    <div id="barra-plan" style="height:18px; width:0%; background:#4caf50; color:white; text-align:center;">0%</div>
-  </div>
-</div>
-
-<hr>
-</div>
  <!------------------------------- SOLO LA VISTA USUARIO -->
 <div id="vista-user" class="user-wrapper" style="display:none;">
   <div class="card">
@@ -743,6 +831,7 @@ window.guardarCambiosUser = async () => {
 
 </body>
 </html>
+
 
 
 
