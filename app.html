@@ -249,42 +249,44 @@ ul {
 </div>
  <!------------------------------- SOLO LA VISTA USUARIO -->
 <div id="vista-user" class="user-wrapper" style="display:none;">
+  <div class="card">
 
-  <h2>Vista Usuario</h2>
+    <h2>Vista Usuario</h2>
 
-<div class="select-container">
-  <select id="selectProyectoUser"></select>
-</div>
+    <!-- SELECT PROYECTOS -->
+    <div class="select-container">
+      <select id="selectProyectoUser"></select>
+    </div>
 
+    <h3 id="userNombreProyecto">Proyecto</h3>
 
-<div class="card">
-  <h3 id="userNombreProyecto">Proyecto</h3>
+    <!-- PSR -->
+    <h4>PSR</h4>
+    <ul id="user-psr"></ul>
+    <div class="barra-bg">
+      <div id="user-barra-psr" class="barra psr">0%</div>
+    </div>
 
-  <!-- PSR -->
-  <h4>PSR</h4>
-  <ul id="user-psr"></ul>
-  <div class="barra-bg">
-    <div id="user-barra-psr" class="barra psr">0%</div>
-  </div>
+    <!-- KPI -->
+    <h4>KPI</h4>
+    <ul id="user-kpi"></ul>
+    <div class="barra-bg">
+      <div id="user-barra-kpi" class="barra kpi">0%</div>
+    </div>
 
-  <!-- KPI -->
-  <h4>KPI</h4>
-  <ul id="user-kpi"></ul>
-  <div class="barra-bg">
-    <div id="user-barra-kpi" class="barra kpi">0%</div>
-  </div>
+    <!-- PLAN -->
+    <h4>PLAN</h4>
+    <ul id="user-plan"></ul>
+    <div class="barra-bg">
+      <div id="user-barra-plan" class="barra plan">0%</div>
+    </div>
 
-  <!-- PLAN -->
-  <h4>PLAN</h4>
-  <ul id="user-plan"></ul>
-  <div class="barra-bg">
-    <div id="user-barra-plan" class="barra plan">0%</div>
+    <!-- ✅ BOTÓN GUARDAR -->
     <button class="btn-guardar" onclick="guardarCambiosUser()">
-  💾 Guardar cambios
-</button>
+      💾 Guardar cambios
+    </button>
 
   </div>
-</div>
 </div>
 
 
@@ -741,6 +743,7 @@ window.guardarCambiosUser = async () => {
 
 </body>
 </html>
+
 
 
 
