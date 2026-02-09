@@ -49,14 +49,21 @@ ul {
 .psr { background: #2196f3; }
 .kpi { background: #ff9800; }
 .plan { background: #4caf50; }
+ 
+  #vista-user input[type="text"],
+#vista-user input[type="number"] {
+  display: none;
+}
+
 </style>
 
 
 
   
 <body>
-
-<h2>Gestor de Proyectos</h2>
+  <!------------------------------------- VISTA DEL ADMIN -->
+<div id="vista-admin" style="display:none;">
+  <h2>Gestor de Proyectos</h2>
 <p id="rol"></p>
 
 <div id="admin"></div>
@@ -123,7 +130,10 @@ ul {
 </div>
 
 <hr>
-<h2>Vista Usuario</h2>
+</div>
+ <!------------------------------- SOLO LA VISTA USUARIO -->
+<div id="vista-user" style="display:none;">
+  <h2>Vista Usuario</h2>
 
 <select id="selectProyectoUser"></select>
 
@@ -151,9 +161,14 @@ ul {
     <div id="user-barra-plan" class="barra plan">0%</div>
   </div>
 </div>
+</div>
 
 
 
+
+
+
+<script type="module">
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import {
@@ -166,8 +181,14 @@ import {
   updateDoc
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
+import {
+  getAuth,
+  onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-/* CONFIG */
+/* =====================
+   CONFIG FIREBASE
+===================== */
 const firebaseConfig = {
   apiKey: "AIzaSyAoVH8wQ2ofolAaJYdFnu1COcwI-xvaNnM",
   authDomain: "panel-proyectos-f119f.firebaseapp.com",
@@ -176,6 +197,61 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+const auth = getAuth(app);
+
+/* =====================
+   VARIABLES GLOBALES
+===================== */
+let ROL = null;
+let UID = null;
+let proyectoActualId = null;
+
+/* =====================
+   AUTH + ROL
+===================== */
+onAuthStateChanged(auth, async (user) => {
+  if (!user) {
+    alert("No autenticado");
+    return;
+  }
+
+  UID = user.uid;
+
+  const refUser = doc(db, "users", UID);
+  const snapUser = await getDoc(refUser);
+
+  if (!snapUser.exists()) {
+    alert("Usuario sin rol asignado");
+    return;
+  }
+
+  ROL = snapUser.data().rol;
+
+  aplicarRol();
+
+  cargarProyectos();
+  cargarProyectosUser();
+});
+
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+function aplicarRol() {
+  const rolEl = document.getElementById("rol");
+
+  if (ROL === "admin") {
+    document.getElementById("vista-admin").style.display = "block";
+    document.getElementById("vista-user").style.display = "none";
+
+    if (rolEl) rolEl.textContent = "Rol: Administrador";
+  } else {
+    document.getElementById("vista-admin").style.display = "none";
+    document.getElementById("vista-user").style.display = "block";
+
+    if (rolEl) rolEl.textContent = "Rol: Usuario";
+  }
+}
+
 
 /* ==========================
    PROYECTOS
@@ -185,6 +261,7 @@ let proyectoActualId = null;
 
 /* CREAR PROYECTO */
 window.crearProyecto = async () => {
+  if (ROL !== "admin") return;
   const nombre = document.getElementById("nombreProyecto").value.trim();
   if (!nombre) {
     alert("Escribe un nombre");
@@ -239,7 +316,10 @@ async function cargarProyecto(id) {
   renderRequisitos(
   data.requisitos || { psr: [], kpi: [], plan: [] }
 );
-renderVistaUser(data);
+if (ROL === "admin") {
+  renderVistaUser(data);
+}
+
 
 }
 
@@ -302,6 +382,7 @@ function actualizarBarra(tipo, valor) {
 
 /* AGREGAR */
 window.agregarRequisito = async () => {
+   if (ROL !== "admin") return;
   if (!proyectoActualId) {
     alert("Selecciona un proyecto");
     return;
@@ -337,6 +418,7 @@ renderRequisitos(data.requisitos);
 
 /* ELIMINAR */
 window.eliminarRequisito = async (tipo, index) => {
+   if (ROL !== "admin") return;
   const ref = doc(db, "proyectos", proyectoActualId);
   const snap = await getDoc(ref);
   const data = snap.data();
@@ -352,6 +434,7 @@ window.eliminarRequisito = async (tipo, index) => {
 
 /* EDITAR TEXTO */
 window.editarTexto = async (tipo, index, valor) => {
+   if (ROL !== "admin") return;
   const ref = doc(db, "proyectos", proyectoActualId);
   const snap = await getDoc(ref);
   const data = snap.data();
@@ -368,6 +451,7 @@ window.editarTexto = async (tipo, index, valor) => {
 
 /* EDITAR PESO */
 window.editarPeso = async (tipo, index, valor) => {
+   if (ROL !== "admin") return;
   const ref = doc(db, "proyectos", proyectoActualId);
   const snap = await getDoc(ref);
   const data = snap.data();
@@ -384,8 +468,12 @@ window.editarPeso = async (tipo, index, valor) => {
 
 /* TOGGLE */
 window.toggleRequisito = async (tipo, index) => {
+  if (ROL !== "admin") return;
+
   const ref = doc(db, "proyectos", proyectoActualId);
   const snap = await getDoc(ref);
+  if (!snap.exists()) return;
+
   const data = snap.data();
 
   data.requisitos[tipo][index].cumplido =
@@ -395,8 +483,13 @@ window.toggleRequisito = async (tipo, index) => {
     requisitos: data.requisitos
   });
 
-  renderRequisitos(data.requisitos); // aqui actualiza las tablas
+  // 🔄 refresca admin
+  renderRequisitos(data.requisitos);
+
+  // 🔄 refresca vista usuario
+  renderVistaUser(data);
 };
+
 
 function calcularProgreso(requisitos) {
   let totalPeso = 0;
@@ -474,29 +567,60 @@ function renderListaUser(tipo, lista) {
   const ul = document.getElementById(`user-${tipo}`);
   ul.innerHTML = "";
 
-  (lista || []).forEach(r => {
+  (lista || []).forEach((r, index) => {
     const li = document.createElement("li");
-    li.textContent = `• ${r.texto} (${r.peso}%)`;
+
+    li.innerHTML = `
+      <label>
+       <input type="checkbox"
+        ${r.cumplido ? "checked" : ""}
+        ${r.peso <= 0 ? "disabled" : ""}
+        onchange="toggleRequisitoUser('${tipo}', ${index}, this.checked)">
+
+      </label>
+    `;
+
     ul.appendChild(li);
   });
 }
+
 
 function actualizarBarraUser(tipo, valor) {
   const barra = document.getElementById(`user-barra-${tipo}`);
   barra.style.width = valor + "%";
   barra.textContent = valor + "%";
 }
+window.toggleRequisitoUser = async (tipo, index, checked) => {
+  const proyectoId = document.getElementById("selectProyectoUser").value;
+  if (!proyectoId) return;
+
+  const ref = doc(db, "proyectos", proyectoId);
+  const snap = await getDoc(ref);
+  if (!snap.exists()) return;
+
+  const data = snap.data();
+  data.requisitos[tipo][index].cumplido = checked;
+
+  await updateDoc(ref, {
+    requisitos: data.requisitos
+  });
+
+  renderVistaUser(data);
+};
 
   
 /* INIT */
+aplicarRol();
 cargarProyectos();
 cargarProyectosUser();
+
 
 </script>
 
 
 </body>
 </html>
+
 
 
 
