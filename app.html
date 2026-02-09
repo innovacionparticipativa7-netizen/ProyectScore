@@ -252,6 +252,44 @@ ul {
   color: #666;
   margin-bottom: 6px;
 }
+  .circle-wrap {
+  display: flex;
+  justify-content: center;
+  margin: 12px 0;
+}
+
+.circle {
+  width: 110px;
+  height: 110px;
+  border-radius: 50%;
+  background: conic-gradient(#ddd 0deg, #ddd 360deg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.circle::before {
+  content: "";
+  width: 82px;
+  height: 82px;
+  background: #fff;
+  border-radius: 50%;
+  position: absolute;
+}
+
+.circle span {
+  position: relative;
+  font-weight: bold;
+  font-size: 18px;
+  color: #333;
+}
+
+/* Colores */
+.circle.psr { --color: #2196f3; }
+.circle.kpi { --color: #ff9800; }
+.circle.plan { --color: #4caf50; }
+
 
 </style>
 
@@ -351,23 +389,32 @@ ul {
     <!-- PSR -->
     <h4>PSR</h4>
     <ul id="user-psr"></ul>
-    <div class="barra-bg">
-      <div id="user-barra-psr" class="barra psr">0%</div>
-    </div>
+    <div class="circle-wrap">
+  <div id="circle-psr" class="circle psr">
+    <span id="text-psr">0%</span>
+  </div>
+</div>
+
 
     <!-- KPI -->
     <h4>KPI</h4>
     <ul id="user-kpi"></ul>
-    <div class="barra-bg">
-      <div id="user-barra-kpi" class="barra kpi">0%</div>
-    </div>
+    <div class="circle-wrap">
+  <div id="circle-kpi" class="circle kpi">
+    <span id="text-psr">0%</span>
+  </div>
+</div>
+
 
     <!-- PLAN -->
     <h4>PLAN</h4>
     <ul id="user-plan"></ul>
-    <div class="barra-bg">
-      <div id="user-barra-plan" class="barra plan">0%</div>
-    </div>
+    <div class="circle-wrap">
+  <div id="circle-plan" class="circle plan">
+    <span id="text-psr">0%</span>
+  </div>
+</div>
+
 
     <!-- ✅ BOTÓN GUARDAR -->
     <button class="btn-guardar" onclick="guardarCambiosUser()">
@@ -748,9 +795,10 @@ function renderVistaUser(proyecto) {
   renderListaUser("kpi", proyecto.requisitos.kpi);
   renderListaUser("plan", proyecto.requisitos.plan);
 
-  actualizarBarraUser("psr", calcularProgresoTipo(proyecto.requisitos.psr));
-  actualizarBarraUser("kpi", calcularProgresoTipo(proyecto.requisitos.kpi));
-  actualizarBarraUser("plan", calcularProgresoTipo(proyecto.requisitos.plan));
+ actualizarCirculo("circle-psr", calcularProgresoTipo(proyecto.requisitos.psr));
+actualizarCirculo("circle-kpi", calcularProgresoTipo(proyecto.requisitos.kpi));
+actualizarCirculo("circle-plan", calcularProgresoTipo(proyecto.requisitos.plan));
+
 }
 
 async function cargarProyectosUser() {
@@ -796,6 +844,17 @@ function renderListaUser(tipo, lista) {
   });
 }
 
+function actualizarCirculo(id, porcentaje) {
+  const circle = document.getElementById(id);
+  const text = circle.querySelector("span");
+
+  const grados = porcentaje * 3.6;
+
+  circle.style.background =
+    `conic-gradient(${getComputedStyle(circle).getPropertyValue('--color')} ${grados}deg, #ddd ${grados}deg)`;
+
+  text.textContent = porcentaje + "%";
+}
 
 function actualizarBarraUser(tipo, valor) {
   const barra = document.getElementById(`user-barra-${tipo}`);
@@ -831,6 +890,7 @@ window.guardarCambiosUser = async () => {
 
 </body>
 </html>
+
 
 
 
