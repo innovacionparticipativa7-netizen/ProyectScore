@@ -355,6 +355,10 @@ ul {
     <!-- PROYECTO ACTUAL -->
     <div class="admin-card full">
       <h3 id="tituloProyecto">Proyecto seleccionado</h3>
+      <button class="btn-primary" onclick="exportarHistorialExcel()">
+      📤 Exportar Historial
+      </button>
+
 
       <p class="sub">Progreso total</p>
       <div class="barra-bg">
@@ -923,18 +927,81 @@ window.toggleRequisitoUser = (tipo, index, checked) => {
   renderVistaUser(proyectoTemporal);
 };
 
+import {
+  addDoc,
+  serverTimestamp
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
 window.guardarCambiosUser = async () => {
   try {
+
+    // 1️⃣ Guardar cambios en proyecto
     await updateDoc(doc(db, "proyectos", proyectoTemporalId), {
       requisitos: proyectoTemporal.requisitos
     });
-    alert("Cambios guardados ✅");
+
+    // 2️⃣ Calcular progresos
+    const progresoPSR = calcularProgresoTipo(proyectoTemporal.requisitos.psr);
+    const progresoKPI = calcularProgresoTipo(proyectoTemporal.requisitos.kpi);
+    const progresoPLAN = calcularProgresoTipo(proyectoTemporal.requisitos.plan);
+    const progresoTotal = calcularProgreso(proyectoTemporal.requisitos);
+
+    // 3️⃣ Guardar historial
+    await addDoc(collection(db, "historial_cambios"), {
+      proyectoId: proyectoTemporalId,
+      proyectoNombre: proyectoTemporal.nombre,
+      usuarioId: UID,
+      rol: ROL,
+      fecha: serverTimestamp(),
+      progresoPSR: progresoPSR,
+      progresoKPI: progresoKPI,
+      progresoPLAN: progresoPLAN,
+      progresoTotal: progresoTotal
+    });
+
+    alert("Cambios guardados y registrados ✅");
+
   } catch (e) {
     console.error("ERROR GUARDANDO:", e);
     alert("No tienes permisos para guardar ❌");
   }
 };
 
+
+import * as XLSX from "https://cdn.jsdelivr.net/npm/xlsx@0.18.5/+esm";
+
+window.exportarHistorialExcel = async () => {
+
+  const snap = await getDocs(collection(db, "historial_cambios"));
+
+  const data = [];
+
+  snap.forEach(docu => {
+    const d = docu.data();
+
+    data.push({
+      Fecha: d.fecha?.toDate().toLocaleString() ?? "",
+      Proyecto: d.proyectoNombre,
+      Usuario: d.usuarioId,
+      Rol: d.rol,
+      PSR: d.progresoPSR + "%",
+      KPI: d.progresoKPI + "%",
+      PLAN: d.progresoPLAN + "%",
+      General: d.progresoTotal + "%"
+    });
+  });
+
+  if (data.length === 0) {
+    alert("No hay historial");
+    return;
+  }
+
+  const ws = XLSX.utils.json_to_sheet(data);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Historial");
+
+  XLSX.writeFile(wb, "historial_proyectos.xlsx");
+};
 
 
 
@@ -944,6 +1011,7 @@ window.guardarCambiosUser = async () => {
 
 </body>
 </html>
+
 
 
 
