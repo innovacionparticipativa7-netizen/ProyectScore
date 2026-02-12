@@ -589,23 +589,22 @@ window.crearProyecto = async () => {
   cargarProyectos();
 };
 async function cargarProyecto(id) {
-  proyectoActualId = id; // 👈 CLAVE
+  proyectoActualId = id;
   proyectoTemporalId = id;
 
   const ref = doc(db, "proyectos", id);
   const snap = await getDoc(ref);
   if (!snap.exists()) return;
 
-  const data = snap.data();
+  proyectoTemporal = structuredClone(snap.data()); // 👈 IMPORTANTE
 
   document.getElementById("tituloProyecto").textContent =
-    "Proyecto: " + data.nombre;
+    "Proyecto: " + proyectoTemporal.nombre;
 
-  renderRequisitos(data.requisitos);
-
-  // sincroniza vista usuario si está abierta
-  renderVistaUser(data);
+  renderRequisitos(proyectoTemporal.requisitos);
+  renderVistaUser(proyectoTemporal);
 }
+
 
 /* LISTAR PROYECTOS */
 async function cargarProyectos() {
@@ -734,78 +733,47 @@ renderRequisitos(data.requisitos);
 
 
 /* ELIMINAR */
-window.eliminarRequisito = async (tipo, index) => {
-   if (ROL !== "admin") return;
-  const ref = doc(db, "proyectos", proyectoActualId);
-  const snap = await getDoc(ref);
-  const data = snap.data();
+window.eliminarRequisito = (tipo, index) => {
+  if (ROL !== "admin") return;
 
-  data.requisitos[tipo].splice(index, 1);
+  proyectoTemporal.requisitos[tipo].splice(index, 1);
 
-  await updateDoc(ref, {
-    requisitos: data.requisitos
-  });
-
-  renderRequisitos(data.requisitos);
+  renderRequisitos(proyectoTemporal.requisitos);
 };
 
+
 /* EDITAR TEXTO */
-window.editarTexto = async (tipo, index, valor) => {
-   if (ROL !== "admin") return;
-  const ref = doc(db, "proyectos", proyectoActualId);
-  const snap = await getDoc(ref);
-  const data = snap.data();
+window.editarTexto = (tipo, index, valor) => {
+  if (ROL !== "admin") return;
 
-  data.requisitos[tipo][index].texto = valor;
+  proyectoTemporal.requisitos[tipo][index].texto = valor;
 
-  await updateDoc(ref, {
-    requisitos: data.requisitos
-  });
-
-  renderRequisitos(data.requisitos); // 
+  renderRequisitos(proyectoTemporal.requisitos);
 };
 
 
 /* EDITAR PESO */
-window.editarPeso = async (tipo, index, valor) => {
-   if (ROL !== "admin") return;
-  const ref = doc(db, "proyectos", proyectoActualId);
-  const snap = await getDoc(ref);
-  const data = snap.data();
+window.editarPeso = (tipo, index, valor) => {
+  if (ROL !== "admin") return;
 
-  data.requisitos[tipo][index].peso = Number(valor);
+  proyectoTemporal.requisitos[tipo][index].peso = Number(valor);
 
-  await updateDoc(ref, {
-    requisitos: data.requisitos
-  });
-
-  renderRequisitos(data.requisitos); // actualiza tabla
+  renderRequisitos(proyectoTemporal.requisitos);
 };
+
 
 
 /* TOGGLE */
-window.toggleRequisito = async (tipo, index) => {
+window.toggleRequisito = (tipo, index) => {
   if (ROL !== "admin") return;
 
-  const ref = doc(db, "proyectos", proyectoActualId);
-  const snap = await getDoc(ref);
-  if (!snap.exists()) return;
+  proyectoTemporal.requisitos[tipo][index].cumplido =
+    !proyectoTemporal.requisitos[tipo][index].cumplido;
 
-  const data = snap.data();
-
-  data.requisitos[tipo][index].cumplido =
-    !data.requisitos[tipo][index].cumplido;
-
-  await updateDoc(ref, {
-    requisitos: data.requisitos
-  });
-
-  // 🔄 refresca admin
-  renderRequisitos(data.requisitos);
-
-  // 🔄 refresca vista usuario
-  renderVistaUser(data);
+  renderRequisitos(proyectoTemporal.requisitos);
+  renderVistaUser(proyectoTemporal);
 };
+
 
 
 function calcularProgreso(requisitos) {
@@ -1003,6 +971,15 @@ window.exportarHistorialExcel = async () => {
   XLSX.writeFile(wb, "historial_proyectos.xlsx");
 };
 
+window.guardarProyectoAdmin = async () => {
+  if (!proyectoActualId) return;
+
+  await updateDoc(doc(db, "proyectos", proyectoActualId), {
+    requisitos: proyectoTemporal.requisitos
+  });
+
+  alert("Proyecto guardado ✅");
+};
 
 
 
@@ -1011,6 +988,7 @@ window.exportarHistorialExcel = async () => {
 
 </body>
 </html>
+
 
 
 
