@@ -697,9 +697,9 @@ function actualizarBarra(tipo, valor) {
 
 
 /* AGREGAR */
-window.agregarRequisito = async () => {
-   if (ROL !== "admin") return;
-  if (!proyectoActualId) {
+window.agregarRequisito = () => {
+  if (ROL !== "admin") return;
+  if (!proyectoTemporal) {
     alert("Selecciona un proyecto");
     return;
   }
@@ -713,23 +713,19 @@ window.agregarRequisito = async () => {
     return;
   }
 
-  const ref = doc(db, "proyectos", proyectoActualId);
-  const snap = await getDoc(ref);
-  const data = snap.data();
+  proyectoTemporal.requisitos[tipo].push({
+    texto,
+    peso,
+    cumplido: false
+  });
 
-data.requisitos[tipo].push({
-  texto,
-  peso,
-  cumplido: false
-});
+  renderRequisitos(proyectoTemporal.requisitos);
 
-await updateDoc(ref, {
-  requisitos: data.requisitos
-});
-
-renderRequisitos(data.requisitos);
-
+  // limpiar inputs
+  document.getElementById("reqTexto").value = "";
+  document.getElementById("reqPeso").value = "";
 };
+
 
 
 /* ELIMINAR */
@@ -988,6 +984,7 @@ window.guardarProyectoAdmin = async () => {
 
 </body>
 </html>
+
 
 
 
