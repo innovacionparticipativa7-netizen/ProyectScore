@@ -938,6 +938,9 @@ window.exportarHistorialExcel = async () => {
 
   const data = [];
 
+  console.log("CLICK EXPORTAR");
+
+  const snap = await getDocs(collection(db, "historial_cambios"));
   snap.forEach(docu => {
     const d = docu.data();
 
@@ -982,6 +985,7 @@ window.guardarProyectoAdmin = async () => {
 
 </body>
 </html>
+
 
 
 
