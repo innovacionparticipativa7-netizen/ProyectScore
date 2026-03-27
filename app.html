@@ -650,21 +650,24 @@ function renderRequisitos(requisitos) {
     lista.innerHTML = "";
 
     (requisitos[tipo] || []).forEach((req, index) => {
+       if (!req.estado) req.estado = "medio";
       const li = document.createElement("li");
 
       li.innerHTML = `
-        <input type="checkbox" ${req.cumplido ? "checked" : ""}
-          onchange="toggleRequisito('${tipo}', ${index})">
+  <select onchange="cambiarEstado('${tipo}', ${index}, this.value)">
+    <option value="bueno" ${req.estado === "bueno" ? "selected" : ""}>🟢 Bueno</option>
+    <option value="medio" ${req.estado === "medio" ? "selected" : ""}>🟡 Medio</option>
+    <option value="malo" ${req.estado === "malo" ? "selected" : ""}>🔴 Malo</option>
+  </select>
 
-        <input type="text" value="${req.texto}"
-          onchange="editarTexto('${tipo}', ${index}, this.value)">
+  <input type="text" value="${req.texto}"
+    onchange="editarTexto('${tipo}', ${index}, this.value)">
 
-        <input type="number" value="${req.peso}" min="1" max="100"
-          onchange="editarPeso('${tipo}', ${index}, this.value)">
+  <input type="number" value="${req.peso}" min="1" max="100"
+    onchange="editarPeso('${tipo}', ${index}, this.value)">
 
-        <button onclick="eliminarRequisito('${tipo}', ${index})">❌</button>
-      `;
-
+  <button onclick="eliminarRequisito('${tipo}', ${index})">❌</button>
+`;
       lista.appendChild(li);
     });
   });
@@ -714,11 +717,11 @@ window.agregarRequisito = () => {
     return;
   }
 
-  proyectoTemporal.requisitos[tipo].push({
-    texto,
-    peso,
-    cumplido: false
-  });
+proyectoTemporal.requisitos[tipo].push({
+  texto,
+  peso,
+  estado: "medio"
+});
 
   renderRequisitos(proyectoTemporal.requisitos);
 
@@ -747,8 +750,21 @@ window.editarTexto = (tipo, index, valor) => {
 
   renderRequisitos(proyectoTemporal.requisitos);
 };
+window.cambiarEstado = (tipo, index, valor) => {
+  if (ROL !== "admin") return;
 
+  proyectoTemporal.requisitos[tipo][index].estado = valor;
 
+  renderRequisitos(proyectoTemporal.requisitos);
+  renderVistaUser(proyectoTemporal);
+};
+window.cambiarEstadoUser = (tipo, index, valor) => {
+  if (!proyectoTemporal) return;
+
+  proyectoTemporal.requisitos[tipo][index].estado = valor;
+
+  renderVistaUser(proyectoTemporal);
+};
 /* EDITAR PESO */
 window.editarPeso = (tipo, index, valor) => {
   if (ROL !== "admin") return;
@@ -760,68 +776,26 @@ window.editarPeso = (tipo, index, valor) => {
 
 
 
-/* TOGGLE */
-window.toggleRequisito = (tipo, index) => {
-  if (ROL !== "admin") return;
-
-  proyectoTemporal.requisitos[tipo][index].cumplido =
-    !proyectoTemporal.requisitos[tipo][index].cumplido;
-
-  renderRequisitos(proyectoTemporal.requisitos);
-  renderVistaUser(proyectoTemporal);
-};
-
-
-
 function calcularProgreso(requisitos) {
   let totalPeso = 0;
-  let pesoCumplido = 0;
+  let acumulado = 0;
 
   ["psr", "kpi", "plan"].forEach(tipo => {
-    (requisitos[tipo] || []).forEach(req => {
-      totalPeso += req.peso;
-      if (req.cumplido) {
-        pesoCumplido += req.peso;
-      }
+    (requisitos[tipo] || []).forEach(r => {
+      totalPeso += r.peso;
+
+      let valor = 0;
+      if (r.estado === "bueno") valor = 100;
+      else if (r.estado === "medio") valor = 50;
+      else valor = 0;
+
+      acumulado += (valor * r.peso) / 100;
     });
   });
 
   if (totalPeso === 0) return 0;
 
-  return Math.round((pesoCumplido / totalPeso) * 100);
-}
-function calcularProgresoTipo(lista) {
-  let total = 0;
-  let cumplido = 0;
-
-  (lista || []).forEach(r => {
-    total += r.peso;
-    if (r.cumplido) cumplido += r.peso;
-  });
-
-  if (total === 0) return 0;
-  return Math.round((cumplido / total) * 100);
-}
-
-function renderVistaUser(proyecto) {
-  document.getElementById("userNombreProyecto").textContent =
-    proyecto.nombre;
-
-  renderListaUser("psr", proyecto.requisitos.psr);
-  renderListaUser("kpi", proyecto.requisitos.kpi);
-  renderListaUser("plan", proyecto.requisitos.plan);
-
- actualizarCirculo("circle-psr", calcularProgresoTipo(proyecto.requisitos.psr));
-actualizarCirculo("circle-kpi", calcularProgresoTipo(proyecto.requisitos.kpi));
-actualizarCirculo("circle-plan", calcularProgresoTipo(proyecto.requisitos.plan));
-
-  const total = calcularProgreso(proyecto.requisitos);
-const barraTotal = document.getElementById("user-barra-total");
-
-barraTotal.style.width = total + "%";
-barraTotal.textContent = total + "%";
-
-
+  return Math.round(acumulado / totalPeso);
 }
 
 async function cargarProyectosUser() {
@@ -856,9 +830,11 @@ function renderListaUser(tipo, lista) {
 
     li.innerHTML = `
       <label style="display:flex; align-items:center; gap:8px;">
-        <input type="checkbox"
-          ${r.cumplido ? "checked" : ""}
-          onchange="toggleRequisitoUser('${tipo}', ${index}, this.checked)">
+        <select onchange="cambiarEstadoUser('${tipo}', ${index}, this.value)">
+          <option value="bueno" ${r.estado === "bueno" ? "selected" : ""}>🟢</option>
+          <option value="medio" ${r.estado === "medio" ? "selected" : ""}>🟡</option>
+          <option value="malo" ${r.estado === "malo" ? "selected" : ""}>🔴</option>
+        </select>
         <span>${r.texto}</span>
       </label>
     `;
@@ -866,7 +842,25 @@ function renderListaUser(tipo, lista) {
     ul.appendChild(li);
   });
 }
+function calcularProgresoTipo(lista) {
+  let total = 0;
+  let acumulado = 0;
 
+  (lista || []).forEach(r => {
+    total += r.peso;
+
+    let valor = 0;
+    if (r.estado === "bueno") valor = 100;
+    else if (r.estado === "medio") valor = 50;
+    else valor = 0;
+
+    acumulado += (valor * r.peso) / 100;
+  });
+
+  if (total === 0) return 0;
+
+  return Math.round(acumulado / total);
+}
 function actualizarCirculo(id, porcentaje) {
   const circle = document.getElementById(id);
   const text = circle.querySelector("span");
@@ -884,13 +878,6 @@ function actualizarBarraUser(tipo, valor) {
   barra.style.width = valor + "%";
   barra.textContent = valor + "%";
 }
-window.toggleRequisitoUser = (tipo, index, checked) => {
-  if (!proyectoTemporal) return;
-
-  proyectoTemporal.requisitos[tipo][index].cumplido = checked;
-
-  renderVistaUser(proyectoTemporal);
-};
 
 
 
