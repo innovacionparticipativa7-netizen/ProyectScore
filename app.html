@@ -137,15 +137,6 @@ ul {
   padding: 16px;
   box-sizing: border-box;
 }
-  .card {
-  width: 100%;
-  max-width: 380px;
-  background: #fff;
-  padding: 16px;
-  border-radius: 14px;
-  box-shadow: 0 6px 16px rgba(0,0,0,.12);
-}
-
 #vista-user h2 {
   text-align: center;
   margin-bottom: 12px;
@@ -319,7 +310,30 @@ ul {
 .circle.small span {
   font-size: 12px;
 }
+.resumen-semaforos {
+  display: flex;
+  justify-content: space-around;
+  margin: 16px 0;
+}
 
+.semaforo-item {
+  text-align: center;
+  font-weight: bold;
+}
+
+.semaforo-item span {
+  display: block;
+  margin-bottom: 6px;
+}
+
+.luz {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: gray;
+  margin: auto;
+  transition: 0.3s;
+}
 
 </style>
 
@@ -412,7 +426,22 @@ ul {
   <div class="card">
 
     <h2>Vista Usuario</h2>
+<div class="resumen-semaforos">
+  <div class="semaforo-item">
+    <span>PSR</span>
+    <div class="luz" id="sem-psr"></div>
+  </div>
 
+  <div class="semaforo-item">
+    <span>KPI</span>
+    <div class="luz" id="sem-kpi"></div>
+  </div>
+
+  <div class="semaforo-item">
+    <span>GANTT</span>
+    <div class="luz" id="sem-plan"></div>
+  </div>
+</div>
     <!-- SELECT PROYECTOS -->
     <div class="select-container">
       <select id="selectProyectoUser"></select>
@@ -643,36 +672,37 @@ async function cargarProyectoUser(id) {
 /* ==========================
    REQUISITOS
 ========================== */
-
 function renderRequisitos(requisitos) {
   ["psr", "kpi", "plan"].forEach(tipo => {
     const lista = document.getElementById(`lista-${tipo}`);
     lista.innerHTML = "";
 
     (requisitos[tipo] || []).forEach((req, index) => {
-       if (!req.estado) req.estado = "medio";
+      if (!req.estado) req.estado = "medio";
+
       const li = document.createElement("li");
 
       li.innerHTML = `
-  <select onchange="cambiarEstado('${tipo}', ${index}, this.value)">
-    <option value="bueno" ${req.estado === "bueno" ? "selected" : ""}>🟢 Bueno</option>
-    <option value="medio" ${req.estado === "medio" ? "selected" : ""}>🟡 Medio</option>
-    <option value="malo" ${req.estado === "malo" ? "selected" : ""}>🔴 Malo</option>
-  </select>
+        <select onchange="cambiarEstado('${tipo}', ${index}, this.value)">
+          <option value="bueno" ${req.estado === "bueno" ? "selected" : ""}>🟢 Bueno</option>
+          <option value="medio" ${req.estado === "medio" ? "selected" : ""}>🟡 Medio</option>
+          <option value="malo" ${req.estado === "malo" ? "selected" : ""}>🔴 Malo</option>
+        </select>
 
-  <input type="text" value="${req.texto}"
-    onchange="editarTexto('${tipo}', ${index}, this.value)">
+        <input type="text" value="${req.texto}"
+          onchange="editarTexto('${tipo}', ${index}, this.value)">
 
-  <input type="number" value="${req.peso}" min="1" max="100"
-    onchange="editarPeso('${tipo}', ${index}, this.value)">
+        <input type="number" value="${req.peso}" min="1" max="100"
+          onchange="editarPeso('${tipo}', ${index}, this.value)">
 
-  <button onclick="eliminarRequisito('${tipo}', ${index})">❌</button>
-`;
+        <button onclick="eliminarRequisito('${tipo}', ${index})">❌</button>
+      `;
+
       lista.appendChild(li);
     });
   });
 
-  /* 🔹 BARRA TOTAL */
+  // 🔹 PROGRESO TOTAL
   const progresoTotal = calcularProgreso(requisitos);
   const barraTotal = document.getElementById("barraProgreso");
 
@@ -683,10 +713,13 @@ function renderRequisitos(requisitos) {
   else if (progresoTotal < 70) barraTotal.style.background = "orange";
   else barraTotal.style.background = "green";
 
-  /* 🔹 BARRAS POR TIPO */
+  // 🔹 POR TIPO
   actualizarBarra("psr", calcularProgresoTipo(requisitos.psr));
   actualizarBarra("kpi", calcularProgresoTipo(requisitos.kpi));
   actualizarBarra("plan", calcularProgresoTipo(requisitos.plan));
+
+  // 🔥 SEMÁFOROS (CORRECTO AQUÍ)
+  actualizarSemaforosIndividuales(requisitos);
 }
 
 
@@ -842,6 +875,32 @@ function renderListaUser(tipo, lista) {
     ul.appendChild(li);
   });
 }
+  function renderVistaUser(proyecto) {
+  if (!proyecto) return;
+
+  // Nombre del proyecto
+  document.getElementById("userNombreProyecto").textContent = proyecto.nombre;
+
+  // Listas
+  renderListaUser("psr", proyecto.requisitos.psr);
+  renderListaUser("kpi", proyecto.requisitos.kpi);
+  renderListaUser("plan", proyecto.requisitos.plan);
+
+  // Progreso total
+  const total = calcularProgreso(proyecto.requisitos);
+
+  const barra = document.getElementById("user-barra-total");
+  barra.style.width = total + "%";
+  barra.textContent = total + "%";
+
+  // 🔥 SEMÁFOROS (LO MÁS IMPORTANTE)
+  actualizarSemaforosIndividuales(proyecto.requisitos);
+
+  // (Opcional) actualizar círculos si quieres mantenerlos
+  actualizarCirculo("circle-psr", calcularProgresoTipo(proyecto.requisitos.psr));
+  actualizarCirculo("circle-kpi", calcularProgresoTipo(proyecto.requisitos.kpi));
+  actualizarCirculo("circle-plan", calcularProgresoTipo(proyecto.requisitos.plan));
+}
 function calcularProgresoTipo(lista) {
   let total = 0;
   let acumulado = 0;
@@ -962,7 +1021,21 @@ window.guardarProyectoAdmin = async () => {
 };
 
 
+function colorSemaforo(valor) {
+  if (valor >= 70) return "#4caf50"; // verde
+  if (valor >= 40) return "#ffc107"; // amarillo
+  return "#f44336"; // rojo
+}
 
+function actualizarSemaforosIndividuales(requisitos) {
+  const psr = calcularProgresoTipo(requisitos.psr);
+  const kpi = calcularProgresoTipo(requisitos.kpi);
+  const plan = calcularProgresoTipo(requisitos.plan);
+
+  document.getElementById("sem-psr").style.background = colorSemaforo(psr);
+  document.getElementById("sem-kpi").style.background = colorSemaforo(kpi);
+  document.getElementById("sem-plan").style.background = colorSemaforo(plan);
+}
 </script>
 
 
