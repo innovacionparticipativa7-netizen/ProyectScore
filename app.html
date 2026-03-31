@@ -334,7 +334,14 @@ ul {
   margin: auto;
   transition: 0.3s;
 }
-
+.luz {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: gray;
+  margin: auto;
+  transition: background 0.4s ease, transform 0.2s;
+}
 </style>
 
 
@@ -374,52 +381,7 @@ ul {
       </button>
 
 
-      <p class="sub">Progreso total</p>
-      <div class="barra-bg">
-        <div id="barraProgreso" class="barra plan">0%</div>
-      </div>
-
-      <hr>
-
-      <!-- AGREGAR REQUISITO -->
-      <h4>➕ Agregar requisito</h4>
-      <div class="form-row">
-        <select id="tipoReq">
-          <option value="psr">PSR</option>
-          <option value="kpi">KPI</option>
-          <option value="plan">PLAN</option>
-        </select>
-
-        <input type="text" id="reqTexto" placeholder="Descripción">
-        <input type="number" id="reqPeso" placeholder="Peso %" min="1" max="100">
-
-        <button class="btn-secondary" onclick="agregarRequisito()">Agregar</button>
-      </div>
-
-      <!-- REQUISITOS -->
-      <div class="req-grid">
-        <div>
-          <h4>PSR</h4>
-          <ul id="lista-psr"></ul>
-          <div class="barra-bg"><div id="barra-psr" class="barra psr">0%</div></div>
-        </div>
-
-        <div>
-          <h4>KPI</h4>
-          <ul id="lista-kpi"></ul>
-          <div class="barra-bg"><div id="barra-kpi" class="barra kpi">0%</div></div>
-        </div>
-
-        <div>
-          <h4>PLAN</h4>
-          <ul id="lista-plan"></ul>
-          <div class="barra-bg"><div id="barra-plan" class="barra plan">0%</div></div>
-        </div>
-      </div>
-
-    </div>
-  </div>
-</div>
+      
 
  <!------------------------------- SOLO LA VISTA USUARIO -->
 <div id="vista-user" class="user-wrapper" style="display:none;">
@@ -459,42 +421,36 @@ ul {
 </div>
 
 
-    <!-- PSR -->
-    <div class="titulo-seccion">
-  <h4>PSR</h4>
-  <div id="circle-psr" class="circle small psr">
-    <span>0%</span>
+<div class="evaluacion">
+  <div class="item">
+    <h4>PSR</h4>
+    <select onchange="cambiarEvaluacion('psr', this.value)">
+      <option value="bueno">🟢 Bueno</option>
+      <option value="medio">🟡 Medio</option>
+      <option value="malo">🔴 Malo</option>
+    </select>
   </div>
-</div>
 
-<ul id="user-lista-psr"></ul>
-
-
-
-
-    <!-- KPI -->
-   <div class="titulo-seccion">
-  <h4>KPI</h4>
-  <div id="circle-kpi" class="circle small kpi">
-    <span>0%</span>
+  <div class="item">
+    <h4>KPI</h4>
+    <select onchange="cambiarEvaluacion('kpi', this.value)">
+      <option value="bueno">🟢 Bueno</option>
+      <option value="medio">🟡 Medio</option>
+      <option value="malo">🔴 Malo</option>
+    </select>
   </div>
-</div>
 
-<ul id="user-lista-kpi"></ul>
-
-
-
-    <!-- PLAN -->
-   <div class="titulo-seccion">
-  <h4>PLAN</h4>
-  <div id="circle-plan" class="circle small plan">
-    <span>0%</span>
+  <div class="item">
+    <h4>GANTT</h4>
+    <select onchange="cambiarEvaluacion('gantt', this.value)">
+      <option value="bueno">🟢 Bueno</option>
+      <option value="medio">🟡 Medio</option>
+      <option value="malo">🔴 Malo</option>
+    </select>
   </div>
 </div>
 
 <ul id="user-lista-plan"></ul>
-
-
 
     <!-- ✅ BOTÓN GUARDAR -->
     <button class="btn-guardar" onclick="guardarCambiosUser()">
@@ -604,13 +560,13 @@ window.crearProyecto = async () => {
     return;
   }
 
-  await addDoc(collection(db, "proyectos"), {
+await addDoc(collection(db, "proyectos"), {
   nombre,
   creado: new Date(),
-  requisitos: {
-    psr: [],
-    kpi: [],
-    plan: []
+  evaluacion: {
+    psr: "medio",
+    kpi: "medio",
+    gantt: "medio"
   }
 });
 
@@ -631,7 +587,6 @@ async function cargarProyecto(id) {
   document.getElementById("tituloProyecto").textContent =
     "Proyecto: " + proyectoTemporal.nombre;
 
-  renderRequisitos(proyectoTemporal.requisitos);
   renderVistaUser(proyectoTemporal);
 }
 
@@ -672,123 +627,13 @@ async function cargarProyectoUser(id) {
 /* ==========================
    REQUISITOS
 ========================== */
-function renderRequisitos(requisitos) {
-  ["psr", "kpi", "plan"].forEach(tipo => {
-    const lista = document.getElementById(`lista-${tipo}`);
-    lista.innerHTML = "";
-
-    (requisitos[tipo] || []).forEach((req, index) => {
-      if (!req.estado) req.estado = "medio";
-
-      const li = document.createElement("li");
-
-      li.innerHTML = `
-        <select onchange="cambiarEstado('${tipo}', ${index}, this.value)">
-          <option value="bueno" ${req.estado === "bueno" ? "selected" : ""}>🟢 Bueno</option>
-          <option value="medio" ${req.estado === "medio" ? "selected" : ""}>🟡 Medio</option>
-          <option value="malo" ${req.estado === "malo" ? "selected" : ""}>🔴 Malo</option>
-        </select>
-
-        <input type="text" value="${req.texto}"
-          onchange="editarTexto('${tipo}', ${index}, this.value)">
-
-        <input type="number" value="${req.peso}" min="1" max="100"
-          onchange="editarPeso('${tipo}', ${index}, this.value)">
-
-        <button onclick="eliminarRequisito('${tipo}', ${index})">❌</button>
-      `;
-
-      lista.appendChild(li);
-    });
-  });
-
-  // 🔹 PROGRESO TOTAL
-  const progresoTotal = calcularProgreso(requisitos);
-  const barraTotal = document.getElementById("barraProgreso");
-
-  barraTotal.style.width = progresoTotal + "%";
-  barraTotal.textContent = progresoTotal + "%";
-
-  if (progresoTotal < 40) barraTotal.style.background = "red";
-  else if (progresoTotal < 70) barraTotal.style.background = "orange";
-  else barraTotal.style.background = "green";
-
-  // 🔹 POR TIPO
-  actualizarBarra("psr", calcularProgresoTipo(requisitos.psr));
-  actualizarBarra("kpi", calcularProgresoTipo(requisitos.kpi));
-  actualizarBarra("plan", calcularProgresoTipo(requisitos.plan));
-
-  // 🔥 SEMÁFOROS (CORRECTO AQUÍ)
-  actualizarSemaforosIndividuales(requisitos);
-}
 
 
-
-function actualizarBarra(tipo, valor) {
-  const barra = document.getElementById(`barra-${tipo}`);
-  if (!barra) return;
-
-  barra.style.width = valor + "%";
-  barra.textContent = valor + "%";
-}
-
-
-/* AGREGAR */
-window.agregarRequisito = () => {
-  if (ROL !== "admin") return;
-  if (!proyectoTemporal) {
-    alert("Selecciona un proyecto");
-    return;
-  }
-
-  const texto = document.getElementById("reqTexto").value.trim();
-  const peso = Number(document.getElementById("reqPeso").value);
-  const tipo = document.getElementById("tipoReq").value;
-
-  if (!texto || !peso) {
-    alert("Completa texto y peso");
-    return;
-  }
-
-proyectoTemporal.requisitos[tipo].push({
-  texto,
-  peso,
-  estado: "medio"
-});
-
-  renderRequisitos(proyectoTemporal.requisitos);
-
-  // limpiar inputs
-  document.getElementById("reqTexto").value = "";
-  document.getElementById("reqPeso").value = "";
-};
-
-
-
-/* ELIMINAR */
-window.eliminarRequisito = (tipo, index) => {
-  if (ROL !== "admin") return;
-
-  proyectoTemporal.requisitos[tipo].splice(index, 1);
-
-  renderRequisitos(proyectoTemporal.requisitos);
-};
-
-
-/* EDITAR TEXTO */
-window.editarTexto = (tipo, index, valor) => {
-  if (ROL !== "admin") return;
-
-  proyectoTemporal.requisitos[tipo][index].texto = valor;
-
-  renderRequisitos(proyectoTemporal.requisitos);
-};
 window.cambiarEstado = (tipo, index, valor) => {
   if (ROL !== "admin") return;
 
   proyectoTemporal.requisitos[tipo][index].estado = valor;
 
-  renderRequisitos(proyectoTemporal.requisitos);
   renderVistaUser(proyectoTemporal);
 };
 window.cambiarEstadoUser = (tipo, index, valor) => {
@@ -798,38 +643,8 @@ window.cambiarEstadoUser = (tipo, index, valor) => {
 
   renderVistaUser(proyectoTemporal);
 };
-/* EDITAR PESO */
-window.editarPeso = (tipo, index, valor) => {
-  if (ROL !== "admin") return;
-
-  proyectoTemporal.requisitos[tipo][index].peso = Number(valor);
-
-  renderRequisitos(proyectoTemporal.requisitos);
-};
 
 
-
-function calcularProgreso(requisitos) {
-  let totalPeso = 0;
-  let acumulado = 0;
-
-  ["psr", "kpi", "plan"].forEach(tipo => {
-    (requisitos[tipo] || []).forEach(r => {
-      totalPeso += r.peso;
-
-      let valor = 0;
-      if (r.estado === "bueno") valor = 100;
-      else if (r.estado === "medio") valor = 50;
-      else valor = 0;
-
-      acumulado += (valor * r.peso) / 100;
-    });
-  });
-
-  if (totalPeso === 0) return 0;
-
-  return Math.round(acumulado / totalPeso);
-}
 
 async function cargarProyectosUser() {
   const select = document.getElementById("selectProyectoUser");
@@ -852,127 +667,41 @@ document.getElementById("selectProyectoUser")
   .addEventListener("change", e => {
     cargarProyectoUser(e.target.value);
   });
-function renderListaUser(tipo, lista) {
-  const ul = document.getElementById(`user-lista-${tipo}`);
-  if (!ul) return;
 
-  ul.innerHTML = "";
-
-  (lista || []).forEach((r, index) => {
-    const li = document.createElement("li");
-
-    li.innerHTML = `
-      <label style="display:flex; align-items:center; gap:8px;">
-        <select onchange="cambiarEstadoUser('${tipo}', ${index}, this.value)">
-          <option value="bueno" ${r.estado === "bueno" ? "selected" : ""}>🟢</option>
-          <option value="medio" ${r.estado === "medio" ? "selected" : ""}>🟡</option>
-          <option value="malo" ${r.estado === "malo" ? "selected" : ""}>🔴</option>
-        </select>
-        <span>${r.texto}</span>
-      </label>
-    `;
-
-    ul.appendChild(li);
-  });
-}
-  function renderVistaUser(proyecto) {
+function renderVistaUser(proyecto) {
   if (!proyecto) return;
 
-  // Nombre del proyecto
   document.getElementById("userNombreProyecto").textContent = proyecto.nombre;
 
-  // Listas
-  renderListaUser("psr", proyecto.requisitos.psr);
-  renderListaUser("kpi", proyecto.requisitos.kpi);
-  renderListaUser("plan", proyecto.requisitos.plan);
+  // 👇 SI NO EXISTE (proyectos viejos)
+  if (!proyecto.evaluacion) {
+    proyecto.evaluacion = {
+      psr: "medio",
+      kpi: "medio",
+      gantt: "medio"
+    };
+  }
 
-  // Progreso total
-  const total = calcularProgreso(proyecto.requisitos);
+  // 🔥 ACTUALIZA SELECTS (LO QUE TE FALTA)
+  const selects = document.querySelectorAll(".evaluacion select");
 
-  const barra = document.getElementById("user-barra-total");
-  barra.style.width = total + "%";
-  barra.textContent = total + "%";
+  selects[0].value = proyecto.evaluacion.psr;
+  selects[1].value = proyecto.evaluacion.kpi;
+  selects[2].value = proyecto.evaluacion.gantt;
 
-  // 🔥 SEMÁFOROS (LO MÁS IMPORTANTE)
-  actualizarSemaforosIndividuales(proyecto.requisitos);
-
-  // (Opcional) actualizar círculos si quieres mantenerlos
-  actualizarCirculo("circle-psr", calcularProgresoTipo(proyecto.requisitos.psr));
-  actualizarCirculo("circle-kpi", calcularProgresoTipo(proyecto.requisitos.kpi));
-  actualizarCirculo("circle-plan", calcularProgresoTipo(proyecto.requisitos.plan));
+  // 🔥 ACTUALIZA SEMÁFOROS
+  renderSemaforos(proyecto.evaluacion);
 }
-function calcularProgresoTipo(lista) {
-  let total = 0;
-  let acumulado = 0;
-
-  (lista || []).forEach(r => {
-    total += r.peso;
-
-    let valor = 0;
-    if (r.estado === "bueno") valor = 100;
-    else if (r.estado === "medio") valor = 50;
-    else valor = 0;
-
-    acumulado += (valor * r.peso) / 100;
-  });
-
-  if (total === 0) return 0;
-
-  return Math.round(acumulado / total);
-}
-function actualizarCirculo(id, porcentaje) {
-  const circle = document.getElementById(id);
-  const text = circle.querySelector("span");
-
-  const grados = porcentaje * 3.6;
-
-  circle.style.background =
-    `conic-gradient(${getComputedStyle(circle).getPropertyValue('--color')} ${grados}deg, #ddd ${grados}deg)`;
-
-  text.textContent = porcentaje + "%";
-}
-
-function actualizarBarraUser(tipo, valor) {
-  const barra = document.getElementById(`user-barra-${tipo}`);
-  barra.style.width = valor + "%";
-  barra.textContent = valor + "%";
-}
-
 
 
 window.guardarCambiosUser = async () => {
-  try {
+  await updateDoc(doc(db, "proyectos", proyectoTemporalId), {
+    evaluacion: proyectoTemporal.evaluacion
+  });
 
-    // 1️⃣ Guardar cambios en proyecto
-    await updateDoc(doc(db, "proyectos", proyectoTemporalId), {
-      requisitos: proyectoTemporal.requisitos
-    });
+  renderVistaUser(proyectoTemporal); // 
 
-    // 2️⃣ Calcular progresos
-    const progresoPSR = calcularProgresoTipo(proyectoTemporal.requisitos.psr);
-    const progresoKPI = calcularProgresoTipo(proyectoTemporal.requisitos.kpi);
-    const progresoPLAN = calcularProgresoTipo(proyectoTemporal.requisitos.plan);
-    const progresoTotal = calcularProgreso(proyectoTemporal.requisitos);
-
-    // 3️⃣ Guardar historial
-    await addDoc(collection(db, "historial_cambios"), {
-      proyectoId: proyectoTemporalId,
-      proyectoNombre: proyectoTemporal.nombre,
-      usuarioId: UID,
-      rol: ROL,
-      fecha: serverTimestamp(),
-      progresoPSR: progresoPSR,
-      progresoKPI: progresoKPI,
-      progresoPLAN: progresoPLAN,
-      progresoTotal: progresoTotal
-    });
-
-    alert("Cambios guardados y registrados ✅");
-
-  } catch (e) {
-    console.error("ERROR GUARDANDO:", e);
-    alert("No tienes permisos para guardar ❌");
-  }
+  alert("Guardado ✅");
 };
 
 
@@ -1027,55 +756,37 @@ function colorSemaforo(valor) {
   return "#f44336"; // rojo
 }
 
-function actualizarSemaforosIndividuales(requisitos) {
-  const psr = calcularProgresoTipo(requisitos.psr);
-  const kpi = calcularProgresoTipo(requisitos.kpi);
-  const plan = calcularProgresoTipo(requisitos.plan);
+window.cambiarEvaluacion = (tipo, valor) => {
+  if (!proyectoTemporal) return;
 
-  document.getElementById("sem-psr").style.background = colorSemaforo(psr);
-  document.getElementById("sem-kpi").style.background = colorSemaforo(kpi);
-  document.getElementById("sem-plan").style.background = colorSemaforo(plan);
+  proyectoTemporal.evaluacion[tipo] = valor;
+
+  renderSemaforos(proyectoTemporal.evaluacion);
+};
+function renderSemaforos(eval) {
+  document.getElementById("sem-psr").style.background = getColor(eval.psr);
+  document.getElementById("sem-kpi").style.background = getColor(eval.kpi);
+  document.getElementById("sem-plan").style.background = getColor(eval.gantt);
+}
+
+function getColor(estado) {
+  if (estado === "bueno") return "#4caf50"; // verde
+  if (estado === "medio") return "#ffc107"; // amarillo
+  return "#f44336"; // rojo
+}
+
+  
+  function semaforoGlobal(eval) {
+  const valores = Object.values(eval);
+
+  if (valores.includes("malo")) return "rojo";
+  if (valores.includes("medio")) return "amarillo";
+  return "verde";
 }
 </script>
 
 
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
