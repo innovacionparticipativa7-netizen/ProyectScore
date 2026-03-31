@@ -463,8 +463,7 @@ ul {
 
 
 <script type="module">
-  let proyectoTemporalId = null;
-  let proyectoTemporal = null;
+
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import {
   getFirestore,
@@ -481,7 +480,9 @@ import {
   getAuth,
   onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-
+  
+  let proyectoTemporalId = null;
+  let proyectoTemporal = null;
 /* =====================
    CONFIG FIREBASE
 ===================== */
@@ -592,19 +593,20 @@ async function cargarProyecto(id) {
 
 
 /* LISTAR PROYECTOS */
-async function cargarProyectos() {
+import { onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+function cargarProyectos() {
   const lista = document.getElementById("listaProyectos");
-  lista.innerHTML = "";
 
-  const snap = await getDocs(collection(db, "proyectos"));
-  snap.forEach(docu => {
-    const li = document.createElement("li");
-    li.textContent = docu.data().nombre;
-    li.style.cursor = "pointer";
+  onSnapshot(collection(db, "proyectos"), (snap) => {
+    lista.innerHTML = "";
 
-    li.onclick = () => cargarProyecto(docu.id);
-
-    lista.appendChild(li);
+    snap.forEach(docu => {
+      const li = document.createElement("li");
+      li.textContent = docu.data().nombre;
+      li.onclick = () => cargarProyecto(docu.id);
+      lista.appendChild(li);
+    });
   });
 }
 
@@ -646,21 +648,23 @@ window.cambiarEstadoUser = (tipo, index, valor) => {
 
 
 
-async function cargarProyectosUser() {
+function cargarProyectosUser() {
   const select = document.getElementById("selectProyectoUser");
-  select.innerHTML = "";
 
-  const snap = await getDocs(collection(db, "proyectos"));
-  snap.forEach(docu => {
-    const opt = document.createElement("option");
-    opt.value = docu.id;
-    opt.textContent = docu.data().nombre;
-    select.appendChild(opt);
+  onSnapshot(collection(db, "proyectos"), (snap) => {
+    select.innerHTML = "";
+
+    snap.forEach(docu => {
+      const opt = document.createElement("option");
+      opt.value = docu.id;
+      opt.textContent = docu.data().nombre;
+      select.appendChild(opt);
+    });
+
+    if (select.value) {
+      cargarProyectoUser(select.value);
+    }
   });
-
-  if (select.value) {
-    cargarProyectoUser(select.value);
-  }
 }
 
 document.getElementById("selectProyectoUser")
@@ -765,9 +769,9 @@ window.cambiarEvaluacion = (tipo, valor) => {
 };
   
 function renderSemaforos(evaluacion) {
-  document.getElementById("sem-psr").style.background = getColor(eval.psr);
-  document.getElementById("sem-kpi").style.background = getColor(eval.kpi);
-  document.getElementById("sem-plan").style.background = getColor(eval.gantt);
+  document.getElementById("sem-psr").style.background = getColor(evaluacion.psr);
+  document.getElementById("sem-kpi").style.background = getColor(evaluacion.kpi);
+  document.getElementById("sem-plan").style.background = getColor(evaluacion.gantt);
 }
 
 function getColor(estado) {
@@ -777,8 +781,8 @@ function getColor(estado) {
 }
 
   
-  function semaforoGlobal(evaluacion) {
-  const valores = Object.values(eval);
+function semaforoGlobal(evaluacion) {
+  const valores = Object.values(evaluacion);
 
   if (valores.includes("malo")) return "rojo";
   if (valores.includes("medio")) return "amarillo";
