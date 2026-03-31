@@ -763,7 +763,8 @@ window.cambiarEvaluacion = (tipo, valor) => {
 
   renderSemaforos(proyectoTemporal.evaluacion);
 };
-function renderSemaforos(eval) {
+  
+function renderSemaforos(evaluacion) {
   document.getElementById("sem-psr").style.background = getColor(eval.psr);
   document.getElementById("sem-kpi").style.background = getColor(eval.kpi);
   document.getElementById("sem-plan").style.background = getColor(eval.gantt);
@@ -776,7 +777,7 @@ function getColor(estado) {
 }
 
   
-  function semaforoGlobal(eval) {
+  function semaforoGlobal(evaluacion) {
   const valores = Object.values(eval);
 
   if (valores.includes("malo")) return "rojo";
