@@ -190,55 +190,55 @@ async function crearProyecto() {
   if (!nombre) return alert("Escribe nombre");
 
   await db.collection("proyectos").add({
-    nombre,
-    evaluacion: { psr:"medio", kpi:"medio", gantt:"medio" }
-  });
+  nombre,
+  evaluacion: { psr:"medio", kpi:"medio", gantt:"medio" }
+});
+
+// 🔄 refrescar lista
+cargarProyectos();
+cargarSelect();
 
 }
 /* ===== LISTA ADMIN ===== */
-function cargarProyectos() {
+async function cargarProyectos() {
 
-  db.collection("proyectos").onSnapshot(snap => {
+  const snap = await db.collection("proyectos").get();
 
-    listaProyectos.innerHTML = "";
+  listaProyectos.innerHTML = "";
 
-    snap.forEach(doc => {
+  snap.forEach(doc => {
 
-      const li = document.createElement("li");
-      li.textContent = doc.data().nombre;
+    const li = document.createElement("li");
+    li.textContent = doc.data().nombre;
 
-      li.onclick = () => cargarProyecto(doc.id);
+    li.onclick = () => cargarProyecto(doc.id);
 
-      listaProyectos.appendChild(li);
-
-    });
+    listaProyectos.appendChild(li);
 
   });
 
 }
 
 /* ===== SELECT USER ===== */
-function cargarSelect() {
+async function cargarSelect() {
 
-  db.collection("proyectos").onSnapshot(snap => {
+  const snap = await db.collection("proyectos").get();
 
-    selectProyectoUser.innerHTML = "";
+  selectProyectoUser.innerHTML = "";
 
-    snap.forEach(doc => {
+  snap.forEach(doc => {
 
-      const op = document.createElement("option");
-      op.value = doc.id;
-      op.textContent = doc.data().nombre;
+    const op = document.createElement("option");
+    op.value = doc.id;
+    op.textContent = doc.data().nombre;
 
-      selectProyectoUser.appendChild(op);
-
-    });
-
-    if (selectProyectoUser.value) {
-      cargarProyecto(selectProyectoUser.value);
-    }
+    selectProyectoUser.appendChild(op);
 
   });
+
+  if (selectProyectoUser.value) {
+    cargarProyecto(selectProyectoUser.value);
+  }
 
 }
 
