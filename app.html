@@ -94,6 +94,7 @@ body {
 .verde { background: green; }
 .amarillo { background: orange; }
 .rojo { background: red; }
+.gris { background: gray; }
 
 /* Tarjeta gráfica */
 .card-grafica {
@@ -206,6 +207,8 @@ body {
   <div class="opcion verde" onclick="setValor('psr','bueno')"></div>
   <div class="opcion amarillo" onclick="setValor('psr','medio')"></div>
   <div class="opcion rojo" onclick="setValor('psr','malo')"></div>
+  <div class="opcion gris" onclick="setValor('psr','sin')"></div>
+  
 </div>
 
 <p>KPI</p>
@@ -213,6 +216,7 @@ body {
   <div class="opcion verde" onclick="setValor('kpi','bueno')"></div>
   <div class="opcion amarillo" onclick="setValor('kpi','medio')"></div>
   <div class="opcion rojo" onclick="setValor('kpi','malo')"></div>
+  <div class="opcion gris" onclick="setValor('psr','sin')"></div>
 </div>
 
 <p>GANTT</p>
@@ -220,6 +224,7 @@ body {
   <div class="opcion verde" onclick="setValor('gantt','bueno')"></div>
   <div class="opcion amarillo" onclick="setValor('gantt','medio')"></div>
   <div class="opcion rojo" onclick="setValor('gantt','malo')"></div>
+  <div class="opcion gris" onclick="setValor('psr','sin')"></div>
 </div>
 
       <button class="btn" onclick="guardar()">Guardar</button>
@@ -386,7 +391,9 @@ function renderSemaforos() {
 function color(v) {
   if (v==="bueno") return "green";
   if (v==="medio") return "orange";
-  return "red";
+  if (v==="malo") return "red";
+  if (v==="sin") return "gray"; // nuevo estado gris
+  return "gray"; // default
 }
 
 /* ===== GUARDAR ===== */
@@ -480,6 +487,7 @@ function actualizarUI(tipo, valor) {
   if (valor === "bueno") cont.children[0].classList.add("activa");
   if (valor === "medio") cont.children[1].classList.add("activa");
   if (valor === "malo") cont.children[2].classList.add("activa");
+  if (valor === "sin") cont.children[3].classList.add("activa");
 }
 
 
