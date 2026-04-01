@@ -164,7 +164,7 @@ let proyectoId = null;
 let proyecto = null;
 
   /* ===== AUTO LOGIN ===== */
-auth.signInWithRedirect(provider);
+auth.signInWithRedirect(provider)
   .catch(err => {
     console.error("Error login:", err);
   });
