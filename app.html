@@ -302,12 +302,15 @@ async function cargarProyectos() {
     const li = document.createElement("li");
     li.textContent = doc.data().nombre;
 
-    li.onclick = () => {
+li.onclick = () => {
   proyectoId = doc.id;
   proyecto = doc.data();
   document.querySelectorAll("#listaProyectos li").forEach(el => el.classList.remove("activo"));
   li.classList.add("activo");
   alert("Proyecto seleccionado: " + proyecto.nombre);
+
+  // 🔹 Mostrar el progreso solo de este proyecto
+  cargarGrafica(proyectoId);
 }
 
 const btn = document.createElement("button");
@@ -421,12 +424,16 @@ async function guardar() {
   alert("Guardado ✅");
 }
   
-async function cargarGrafica() {
+async function cargarGrafica(filtroProyectoId = null) {
   const snap = await db.collection("historial").orderBy("fecha").get();
   const semanas = {};
 
   snap.forEach(doc => {
     const d = doc.data();
+
+    // 🔹 filtrar por proyecto si se pasa un ID
+    if (filtroProyectoId && d.proyectoId !== filtroProyectoId) return;
+
     const f = d.fecha.toDate();
     const semana = f.getFullYear() + "-W" + Math.ceil(f.getDate()/7);
     if (!semanas[semana]) semanas[semana] = [];
@@ -441,17 +448,17 @@ async function cargarGrafica() {
   });
 
   const ctx = document.getElementById("grafica").getContext("2d");
-if(chart) chart.destroy(); // destruye la anterior
-chart = new Chart(ctx, {
-    type: 'bar',
-    data: { labels, datasets:[{ label:"Promedio semanal", data, backgroundColor:"rgba(75,192,192,0.7)" }] },
-    options: {
-        responsive: true,
-        maintainAspectRatio: false, // 🔑 deja que se ajuste al contenedor
-        plugins: { legend: { position: 'top' } },
-        scales: { y: { beginAtZero:true, max:100 } }
-    }
-});
+  if(chart) chart.destroy();
+  chart = new Chart(ctx, {
+      type: 'bar',
+      data: { labels, datasets:[{ label:"Promedio semanal", data, backgroundColor:"rgba(75,192,192,0.7)" }] },
+      options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { position: 'top' } },
+          scales: { y: { beginAtZero:true, max:100 } }
+      }
+  });
 }
 
 function promedioEvaluacion(ev) {
@@ -518,6 +525,7 @@ function exportarExcel() {
   });
 }
 
+  
   
 aplicarRol();
 cargarProyectos();
