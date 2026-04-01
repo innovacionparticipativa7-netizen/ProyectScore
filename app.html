@@ -154,8 +154,7 @@ const db = firebase.firestore();
 const auth = firebase.auth();
 const provider = new firebase.auth.GoogleAuthProvider();
 
-auth.signInWithPopup(provider)
-  .catch(e => console.error(e));
+
   
 /* ===== VARIABLES ===== */
 let ROL = null;
@@ -163,22 +162,36 @@ let UID = null;
 let proyectoId = null;
 let proyecto = null;
 
+  /* ===== AUTO LOGIN ===== */
+auth.signInWithPopup(provider)
+  .catch(err => {
+    console.error("Error login:", err);
+  });
+  
 /* ===== LOGIN ===== */
 auth.onAuthStateChanged(async user => {
 
-  if (!user) return;
+  if (!user) {
+    auth.signInWithPopup(provider);
+    return;
+  }
 
   UID = user.uid;
   const email = user.email || "";
 
   let rolDetectado = "usuario";
 
-  // 🔥 REGLA AUTOMÁTICA
+  // dominio empresa
   if (email.includes("@proyectosg.com")) {
     rolDetectado = "admin";
   }
 
-  // 🔥 GUARDAR / ACTUALIZAR EN FIREBASE
+  // lista manual
+  const admins = ["tu@correo.com", "otro@correo.com"];
+  if (admins.includes(email)) {
+    rolDetectado = "admin";
+  }
+
   const ref = db.collection("users").doc(UID);
   const snap = await ref.get();
 
