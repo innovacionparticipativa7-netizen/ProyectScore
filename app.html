@@ -5,6 +5,10 @@
 <title>Proyectos</title>
 </head>
 
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+  
 <style>
 body {
   font-family: Arial, sans-serif;
@@ -462,39 +466,16 @@ ul {
 
 
 
-<script type="module">
-
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import {
-  getFirestore,
-  collection,
-  addDoc,
-  getDocs,
-  doc,
-  getDoc,
-  updateDoc,
-  serverTimestamp
-} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-
-import {
-  getAuth,
-  onAuthStateChanged
-} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+<script>
   
-  let proyectoTemporalId = null;
-  let proyectoTemporal = null;
-/* =====================
-   CONFIG FIREBASE
-===================== */
-const firebaseConfig = {
+firebase.initializeApp({
   apiKey: "AIzaSyAoVH8wQ2ofolAaJYdFnu1COcwI-xvaNnM",
   authDomain: "panel-proyectos-f119f.firebaseapp.com",
   projectId: "panel-proyectos-f119f"
-};
+});
 
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-const auth = getAuth(app);
+const db = firebase.firestore();
+const auth = firebase.auth();
 
 /* =====================
    VARIABLES GLOBALES
@@ -506,7 +487,7 @@ let proyectoActualId = null;
 /* =====================
    AUTH + ROL
 ===================== */
-onAuthStateChanged(auth, async (user) => {
+auth.onAuthStateChanged(async (user) => {
   if (!user) {
     alert("No autenticado");
     return;
@@ -514,8 +495,7 @@ onAuthStateChanged(auth, async (user) => {
 
   UID = user.uid;
 
-  const refUser = doc(db, "users", UID);
-  const snapUser = await getDoc(refUser);
+const snapUser = await db.collection("users").doc(UID).get();
 
   if (!snapUser.exists()) {
     alert("Usuario sin rol asignado");
@@ -561,7 +541,7 @@ window.crearProyecto = async () => {
     return;
   }
 
-await addDoc(collection(db, "proyectos"), {
+await db.collection("proyectos").add({
   nombre,
   creado: new Date(),
   evaluacion: {
@@ -579,8 +559,7 @@ async function cargarProyecto(id) {
   proyectoActualId = id;
   proyectoTemporalId = id;
 
-  const ref = doc(db, "proyectos", id);
-  const snap = await getDoc(ref);
+const snap = await db.collection("proyectos").doc(id).get();
   if (!snap.exists()) return;
 
   proyectoTemporal = structuredClone(snap.data()); // 👈 IMPORTANTE
@@ -597,7 +576,7 @@ async function cargarProyecto(id) {
 function cargarProyectos() {
   const lista = document.getElementById("listaProyectos");
 
-  onSnapshot(collection(db, "proyectos"), (snap) => {
+  db.collection("proyectos").onSnapshot((snap) => {
     lista.innerHTML = "";
 
     snap.forEach(docu => {
@@ -610,15 +589,23 @@ function cargarProyectos() {
 }
 
 /* CARGAR PROYECTO */
-async function cargarProyectoUser(id) {
-  const ref = doc(db, "proyectos", id);
-  const snap = await getDoc(ref);
-  if (!snap.exists()) return;
+function cargarProyectosUser() {
+  const select = document.getElementById("selectProyectoUser");
 
-  proyectoTemporalId = id;
-  proyectoTemporal = structuredClone(snap.data());
+  db.collection("proyectos").onSnapshot((snap) => {
+    select.innerHTML = "";
 
-  renderVistaUser(proyectoTemporal);
+    snap.forEach(docu => {
+      const opt = document.createElement("option");
+      opt.value = docu.id;
+      opt.textContent = docu.data().nombre;
+      select.appendChild(opt);
+    });
+
+    if (select.value) {
+      cargarProyectoUser(select.value);
+    }
+  });
 }
 
 
@@ -644,27 +631,6 @@ window.cambiarEstadoUser = (tipo, index, valor) => {
 
   renderVistaUser(proyectoTemporal);
 };
-
-
-
-function cargarProyectosUser() {
-  const select = document.getElementById("selectProyectoUser");
-
-  onSnapshot(collection(db, "proyectos"), (snap) => {
-    select.innerHTML = "";
-
-    snap.forEach(docu => {
-      const opt = document.createElement("option");
-      opt.value = docu.id;
-      opt.textContent = docu.data().nombre;
-      select.appendChild(opt);
-    });
-
-    if (select.value) {
-      cargarProyectoUser(select.value);
-    }
-  });
-}
 
 document.getElementById("selectProyectoUser")
   .addEventListener("change", e => {
@@ -698,9 +664,9 @@ function renderVistaUser(proyecto) {
 
 
 window.guardarCambiosUser = async () => {
-  await updateDoc(doc(db, "proyectos", proyectoTemporalId), {
-    evaluacion: proyectoTemporal.evaluacion
-  });
+  await db.collection("proyectos").doc(proyectoTemporalId).update({
+  evaluacion: proyectoTemporal.evaluacion
+});
 
   renderVistaUser(proyectoTemporal); // 
 
@@ -712,7 +678,7 @@ import * as XLSX from "https://cdn.jsdelivr.net/npm/xlsx@0.18.5/+esm";
 
 window.exportarHistorialExcel = async () => {
 
-  const snap = await getDocs(collection(db, "historial_cambios"));
+ const snap = await db.collection("historial_cambios").get();
 
   const data = [];
   snap.forEach(docu => {
@@ -744,10 +710,9 @@ window.exportarHistorialExcel = async () => {
 
 window.guardarProyectoAdmin = async () => {
   if (!proyectoActualId) return;
-
-  await updateDoc(doc(db, "proyectos", proyectoActualId), {
-    requisitos: proyectoTemporal.requisitos
-  });
+ await db.collection("proyectos").doc(proyectoActualId).update({
+  requisitos: proyectoTemporal.requisitos
+});
 
   alert("Proyecto guardado ✅");
 };
@@ -786,6 +751,15 @@ function semaforoGlobal(evaluacion) {
   if (valores.includes("malo")) return "rojo";
   if (valores.includes("medio")) return "amarillo";
   return "verde";
+}
+  async function cargarProyectoUser(id) {
+  const snap = await db.collection("proyectos").doc(id).get();
+  if (!snap.exists) return;
+
+  proyectoTemporalId = id;
+  proyectoTemporal = structuredClone(snap.data());
+
+  renderVistaUser(proyectoTemporal);
 }
 </script>
 
