@@ -182,12 +182,12 @@ auth.onAuthStateChanged(async user => {
   let rolDetectado = "usuario";
 
   // dominio empresa
-  if (email.includes("@proyectosg.com")) {
+  if (email.includes("@proyects.com")) {
     rolDetectado = "admin";
   }
 
   // lista manual
-  const admins = ["tu@correo.com", "otro@correo.com"];
+  const admins = ["max@proyects.com"];
   if (admins.includes(email)) {
     rolDetectado = "admin";
   }
