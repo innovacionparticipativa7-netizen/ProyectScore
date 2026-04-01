@@ -66,6 +66,34 @@ body {
   border-radius:6px;
   cursor:pointer;
 }
+  .semaforo-opciones {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.opcion {
+  width: 25px;
+  height: 25px;
+  border-radius: 50%;
+  opacity: 0.4;
+  cursor: pointer;
+  border: 2px solid #ccc;
+  transition: 0.2s;
+}
+
+.opcion:hover {
+  transform: scale(1.2);
+}
+
+.opcion.activa {
+  opacity: 1;
+  border: 2px solid #000;
+}
+
+.verde { background: green; }
+.amarillo { background: orange; }
+.rojo { background: red; }
 </style>
 </head>
 
@@ -113,27 +141,27 @@ body {
       <select id="selectProyectoUser"></select>
 
       <div>
-        <p>PSR</p>
-        <select onchange="cambiarEvaluacion('psr', this.value)">
-          <option value="bueno">Bueno</option>
-          <option value="medio">Medio</option>
-          <option value="malo">Malo</option>
-        </select>
+  <p>PSR</p>
+  <div class="semaforo-opciones">
+    <div class="opcion verde" onclick="setValor('psr','bueno')"></div>
+    <div class="opcion amarillo" onclick="setValor('psr','medio')"></div>
+    <div class="opcion rojo" onclick="setValor('psr','malo')"></div>
+  </div>
 
-        <p>KPI</p>
-        <select onchange="cambiarEvaluacion('kpi', this.value)">
-          <option value="bueno">Bueno</option>
-          <option value="medio">Medio</option>
-          <option value="malo">Malo</option>
-        </select>
+  <p>KPI</p>
+  <div class="semaforo-opciones">
+    <div class="opcion verde" onclick="setValor('kpi','bueno')"></div>
+    <div class="opcion amarillo" onclick="setValor('kpi','medio')"></div>
+    <div class="opcion rojo" onclick="setValor('kpi','malo')"></div>
+  </div>
 
-        <p>GANTT</p>
-        <select onchange="cambiarEvaluacion('gantt', this.value)">
-          <option value="bueno">Bueno</option>
-          <option value="medio">Medio</option>
-          <option value="malo">Malo</option>
-        </select>
-      </div>
+  <p>GANTT</p>
+  <div class="semaforo-opciones">
+    <div class="opcion verde" onclick="setValor('gantt','bueno')"></div>
+    <div class="opcion amarillo" onclick="setValor('gantt','medio')"></div>
+    <div class="opcion rojo" onclick="setValor('gantt','malo')"></div>
+  </div>
+</div>
 
       <button class="btn" onclick="guardar()">Guardar</button>
 
@@ -354,8 +382,39 @@ selectProyectoUser.onchange = () => {
   localStorage.clear();
   window.location.href = "index.html";
 }
+function setValor(tipo, valor) {
 
-  
+  proyecto.evaluacion[tipo] = valor;
+
+  // actualizar semáforo general
+  renderSemaforos();
+
+  // actualizar selección visual
+  actualizarUI(tipo, valor);
+}
+  function actualizarUI(tipo, valor) {
+
+  const contenedores = document.querySelectorAll(".semaforo-opciones");
+
+  const map = {
+    psr: 0,
+    kpi: 1,
+    gantt: 2
+  };
+
+  const cont = contenedores[map[tipo]];
+
+  cont.querySelectorAll(".opcion").forEach(o => {
+    o.classList.remove("activa");
+  });
+
+  if (valor === "bueno") cont.children[0].classList.add("activa");
+  if (valor === "medio") cont.children[1].classList.add("activa");
+  if (valor === "malo") cont.children[2].classList.add("activa");
+}
+actualizarUI("psr", proyecto.evaluacion.psr);
+actualizarUI("kpi", proyecto.evaluacion.kpi);
+actualizarUI("gantt", proyecto.evaluacion.gantt);  
 aplicarRol();
 cargarProyectos();
 cargarSelect();
