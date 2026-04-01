@@ -228,22 +228,33 @@ cargarSelect();
 }
 /* ===== LISTA ADMIN ===== */
 async function cargarProyectos() {
-
   const snap = await db.collection("proyectos").get();
-
   listaProyectos.innerHTML = "";
 
   snap.forEach(doc => {
-
     const li = document.createElement("li");
     li.textContent = doc.data().nombre;
 
+    // Seleccionar proyecto
     li.onclick = () => cargarProyecto(doc.id);
 
+    // Botón eliminar
+    const btnEliminar = document.createElement("button");
+    btnEliminar.textContent = "Eliminar";
+    btnEliminar.style.marginLeft = "10px";
+    btnEliminar.onclick = async (e) => {
+      e.stopPropagation(); // evita que seleccione el proyecto al eliminar
+      if (confirm("¿Eliminar este proyecto?")) {
+        await db.collection("proyectos").doc(doc.id).delete();
+        cargarProyectos();
+        cargarSelect();
+        cargarGrafica();
+      }
+    };
+
+    li.appendChild(btnEliminar);
     listaProyectos.appendChild(li);
-
   });
-
 }
 
 /* ===== SELECT USER ===== */
@@ -339,19 +350,14 @@ async function guardar() {
   alert("Guardado ✅");
 }
 async function cargarGrafica() {
-
   const snap = await db.collection("historial").get();
-
   const semanas = {};
-  
+
   snap.forEach(doc => {
     const d = doc.data();
     const fecha = d.fecha.toDate();
-
     const semana = fecha.getFullYear() + "-W" + Math.ceil(fecha.getDate()/7);
-
     if (!semanas[semana]) semanas[semana] = [];
-
     const val = promedioEvaluacion(d.despues);
     semanas[semana].push(val);
   });
@@ -362,15 +368,24 @@ async function cargarGrafica() {
     return arr.reduce((a,b)=>a+b,0)/arr.length;
   });
 
+  const totalProyectos = await db.collection("proyectos").get();
+  const promedioGeneral = [];
+
+  labels.forEach(sem => {
+    // promedio general de todos los proyectos, solo para ejemplo simple
+    promedioGeneral.push( data.reduce((a,b)=>a+b,0)/data.length );
+  });
+
   new Chart(document.getElementById("grafica"), {
     type: "bar",
     data: {
       labels,
-      datasets: [{
-        label: "Progreso semanal",
-        data
-      }]
-    }
+      datasets: [
+        { label: "Progreso semanal", data },
+        { label: "Promedio general", data: promedioGeneral, backgroundColor:"rgba(54,162,235,0.5)" }
+      ]
+    },
+    options: { responsive:true, maintainAspectRatio:false }
   });
 }
 
@@ -410,6 +425,29 @@ function actualizarUI(tipo, valor) {
   if (valor === "medio") cont.children[1].classList.add("activa");
   if (valor === "malo") cont.children[2].classList.add("activa");
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+  
 aplicarRol();
 cargarProyectos();
 cargarSelect();
