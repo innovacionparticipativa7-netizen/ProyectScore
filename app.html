@@ -8,7 +8,7 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
 body {
   font-family: Arial;
@@ -91,7 +91,7 @@ body {
     <button onclick="crearProyecto()">Crear</button>
 
     <ul id="listaProyectos"></ul>
-
+<canvas id="grafica"></canvas>
   </div>
 </div>
 
@@ -202,14 +202,16 @@ function logout() {
 /* ===== ROLES ===== */
 function aplicarRol() {
 
-  if (ROL === "admin") {
-    vistaAdmin.style.display = "block";
-    vistaUser.style.display = "none";
-  } else {
-    vistaAdmin.style.display = "none";
-    vistaUser.style.display = "block";
-  }
+ const ref = db.collection("users").doc(UID);
+const snap = await ref.get();
 
+if (!snap.exists) {
+  alert("Usuario no autorizado");
+  auth.signOut();
+  return;
+}
+
+ROL = snap.data().rol;
 }
 async function login() {
   const email = document.getElementById("email").value;
@@ -325,14 +327,65 @@ function color(v) {
 /* ===== GUARDAR ===== */
 async function guardar() {
 
+  const before = await db.collection("proyectos").doc(proyectoId).get();
+  const oldData = before.data();
+
   await db.collection("proyectos").doc(proyectoId).update({
     evaluacion: proyecto.evaluacion
   });
 
-  alert("Guardado");
+  // 🔥 HISTORIAL
+  await db.collection("historial").add({
+    proyectoId,
+    proyectoNombre: proyecto.nombre,
+    usuario: UID,
+    fecha: new Date(),
+    antes: oldData.evaluacion,
+    despues: proyecto.evaluacion
+  });
 
+  alert("Guardado ✅");
+}
+async function cargarGrafica() {
+
+  const snap = await db.collection("historial").get();
+
+  const semanas = {};
+  
+  snap.forEach(doc => {
+    const d = doc.data();
+    const fecha = d.fecha.toDate();
+
+    const semana = fecha.getFullYear() + "-W" + Math.ceil(fecha.getDate()/7);
+
+    if (!semanas[semana]) semanas[semana] = [];
+
+    const val = promedioEvaluacion(d.despues);
+    semanas[semana].push(val);
+  });
+
+  const labels = Object.keys(semanas);
+  const data = labels.map(s => {
+    const arr = semanas[s];
+    return arr.reduce((a,b)=>a+b,0)/arr.length;
+  });
+
+  new Chart(document.getElementById("grafica"), {
+    type: "bar",
+    data: {
+      labels,
+      datasets: [{
+        label: "Progreso semanal",
+        data
+      }]
+    }
+  });
 }
 
+function promedioEvaluacion(ev) {
+  const map = { bueno: 100, medio: 60, malo: 20 };
+  return (map[ev.psr] + map[ev.kpi] + map[ev.gantt]) / 3;
+}
 /* ===== SELECT CHANGE ===== */
 selectProyectoUser.onchange = () => {
   cargarProyecto(selectProyectoUser.value);
