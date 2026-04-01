@@ -160,6 +160,7 @@ body {
     <span id="rol"></span>
     <button onclick="logout()">Salir</button>
   </div>
+  
 
   <div class="admin-content">
     <!-- Tarjeta lista de proyectos -->
@@ -177,6 +178,13 @@ body {
     <canvas id="grafica"></canvas>
     </div>
   </div>
+  
+  <!-- Tarjeta gráfica antes/después -->
+<div class="card card-grafica">
+  <h3>Antes / Después por proyecto</h3>
+  <canvas id="graficaAntesDespues"></canvas>
+</div>
+  
 </div>
 
 <!-- USER -->
@@ -525,11 +533,68 @@ function exportarExcel() {
   });
 }
 
+  async function cargarGraficaAntesDespues() {
+  const snap = await db.collection("historial").orderBy("fecha").get();
   
+  // Guardar los últimos cambios de cada proyecto
+  const proyectosMap = {}; // proyectoId -> {nombre, antes, despues}
+  
+  snap.forEach(doc => {
+    const d = doc.data();
+    proyectosMap[d.proyectoId] = {
+      nombre: d.proyectoNombre,
+      antes: d.antes,
+      despues: d.despues
+    };
+  });
+  
+  const labels = [];
+  const psrAntes = [], psrDespues = [];
+  const kpiAntes = [], kpiDespues = [];
+  const ganttAntes = [], ganttDespues = [];
+  
+  const map = { bueno: 100, medio: 60, malo: 20, sin: 0 };
+
+  for (const pId in proyectosMap) {
+    const p = proyectosMap[pId];
+    labels.push(p.nombre);
+    psrAntes.push(map[p.antes.psr] ?? 0);
+    psrDespues.push(map[p.despues.psr] ?? 0);
+    kpiAntes.push(map[p.antes.kpi] ?? 0);
+    kpiDespues.push(map[p.despues.kpi] ?? 0);
+    ganttAntes.push(map[p.antes.gantt] ?? 0);
+    ganttDespues.push(map[p.despues.gantt] ?? 0);
+  }
+
+  const ctx = document.getElementById("graficaAntesDespues").getContext("2d");
+  if(window.chart2) window.chart2.destroy();
+
+  window.chart2 = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [
+        { label: "PSR Antes", data: psrAntes, backgroundColor: "rgba(75,192,192,0.4)" },
+        { label: "PSR Después", data: psrDespues, backgroundColor: "rgba(75,192,192,0.8)" },
+        { label: "KPI Antes", data: kpiAntes, backgroundColor: "rgba(255,206,86,0.4)" },
+        { label: "KPI Después", data: kpiDespues, backgroundColor: "rgba(255,206,86,0.8)" },
+        { label: "GANTT Antes", data: ganttAntes, backgroundColor: "rgba(255,99,132,0.4)" },
+        { label: "GANTT Después", data: ganttDespues, backgroundColor: "rgba(255,99,132,0.8)" },
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { position: 'top' } },
+      scales: { y: { beginAtZero: true, max: 100 } }
+    }
+  });
+}
   
 aplicarRol();
 cargarProyectos();
 cargarSelect();
+cargarGraficaAntesDespues();
 cargarGrafica();
 </script>
 
