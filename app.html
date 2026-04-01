@@ -201,26 +201,25 @@ body {
       <select id="selectProyectoUser"></select>
 
       <div>
-  <p>PSR</p>
-  <div class="semaforo-opciones">
-    <div class="opcion verde" onclick="setValor('psr','bueno')"></div>
-    <div class="opcion amarillo" onclick="setValor('psr','medio')"></div>
-    <div class="opcion rojo" onclick="setValor('psr','malo')"></div>
-  </div>
+<p>PSR</p>
+<div class="semaforo-opciones" data-tipo="psr">
+  <div class="opcion verde" onclick="setValor('psr','bueno')"></div>
+  <div class="opcion amarillo" onclick="setValor('psr','medio')"></div>
+  <div class="opcion rojo" onclick="setValor('psr','malo')"></div>
+</div>
 
-  <p>KPI</p>
-  <div class="semaforo-opciones">
-    <div class="opcion verde" onclick="setValor('kpi','bueno')"></div>
-    <div class="opcion amarillo" onclick="setValor('kpi','medio')"></div>
-    <div class="opcion rojo" onclick="setValor('kpi','malo')"></div>
-  </div>
+<p>KPI</p>
+<div class="semaforo-opciones" data-tipo="kpi">
+  <div class="opcion verde" onclick="setValor('kpi','bueno')"></div>
+  <div class="opcion amarillo" onclick="setValor('kpi','medio')"></div>
+  <div class="opcion rojo" onclick="setValor('kpi','malo')"></div>
+</div>
 
-  <p>GANTT</p>
-  <div class="semaforo-opciones">
-    <div class="opcion verde" onclick="setValor('gantt','bueno')"></div>
-    <div class="opcion amarillo" onclick="setValor('gantt','medio')"></div>
-    <div class="opcion rojo" onclick="setValor('gantt','malo')"></div>
-  </div>
+<p>GANTT</p>
+<div class="semaforo-opciones" data-tipo="gantt">
+  <div class="opcion verde" onclick="setValor('gantt','bueno')"></div>
+  <div class="opcion amarillo" onclick="setValor('gantt','medio')"></div>
+  <div class="opcion rojo" onclick="setValor('gantt','malo')"></div>
 </div>
 
       <button class="btn" onclick="guardar()">Guardar</button>
