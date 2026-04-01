@@ -9,6 +9,7 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 <style>
 body {
   font-family: Arial;
@@ -167,6 +168,7 @@ body {
       <input id="nombreProyecto" placeholder="Nuevo proyecto">
       <button onclick="crearProyecto()">Crear</button>
       <ul id="listaProyectos"></ul>
+      <button class="btn" onclick="exportarExcel()">Exportar Proyectos a Excel</button>
     </div>
 
     <!-- Tarjeta gráfica -->
@@ -490,26 +492,31 @@ function actualizarUI(tipo, valor) {
   if (valor === "sin") cont.children[3].classList.add("activa");
 }
 
+function exportarExcel() {
+  db.collection("proyectos").get().then(snap => {
+    const data = [];
+    
+    snap.forEach(doc => {
+      const p = doc.data();
+      // Convertir colores a porcentaje
+      const map = { bueno: 100, medio: 75, malo: 50, sin: 0 };
+      data.push({
+        Proyecto: p.nombre,
+        PSR: map[p.evaluacion.psr] ?? 0,
+        KPI: map[p.evaluacion.kpi] ?? 0,
+        GANTT: map[p.evaluacion.gantt] ?? 0
+      });
+    });
 
+    // Crear hoja y libro
+    const ws = XLSX.utils.json_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Proyectos");
 
-
-
-
-
-
-
-
-
-
-
-
-
-  
-
-
-
-
-
+    // Descargar Excel
+    XLSX.writeFile(wb, "Proyectos_Progreso.xlsx");
+  });
+}
 
   
 aplicarRol();
