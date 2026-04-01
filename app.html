@@ -3,768 +3,314 @@
 <head>
 <meta charset="UTF-8">
 <title>Proyectos</title>
-</head>
 
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<!-- FIREBASE COMPAT -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 
-  
 <style>
 body {
-  font-family: Arial, sans-serif;
+  font-family: Arial;
   background: #f4f6f8;
 }
 
-.card {
-  width: 320px;
-  background: #fff;
-  padding: 16px;
-  border-radius: 10px;
-  box-shadow: 0 4px 10px rgba(0,0,0,.1);
-}
-
-.card h3 {
-  margin-top: 0;
-  text-align: center;
-}
-
-ul {
-  padding-left: 18px;
-}
-
-.bloque-barra {
-  margin-top: 12px;
-}
-
-.barra-bg {
-  background: #ddd;
-  border-radius: 6px;
-  overflow: hidden;
-}
-
-.barra {
-  height: 18px;
-  text-align: center;
-  color: white;
-  font-size: 12px;
-  transition: width .3s ease;
-}
-
-.psr { background: #2196f3; }
-.kpi { background: #ff9800; }
-.plan { background: #4caf50; }
- 
-  #vista-user input[type="text"],
-#vista-user input[type="number"] {
-  display: none;
-}
-  .btn-guardar {
-  width: 100%;
-  margin-top: 14px;
-  padding: 12px;
-  border: none;
-  border-radius: 8px;
-  background: linear-gradient(135deg, #4caf50, #2e7d32);
-  color: white;
-  font-size: 15px;
-  font-weight: bold;
-  cursor: pointer;
-  box-shadow: 0 4px 8px rgba(0,0,0,.2);
-  transition: transform .15s ease, box-shadow .15s ease, opacity .15s;
-}
-
-.btn-guardar:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 6px 12px rgba(0,0,0,.25);
-  opacity: .95;
-}
-
-.btn-guardar:active {
-  transform: scale(.98);
-}
-
-.btn-guardar:disabled {
-  background: #aaa;
-  cursor: not-allowed;
-  box-shadow: none;
-}
-
-.select-container {
-  margin-bottom: 12px;
-  position: relative;
-}
-
-.select-container select {
-  width: 100%;
-  padding: 10px 38px 10px 12px;
-  border-radius: 8px;
-  border: 1px solid #ccc;
-  background: #fff;
-  font-size: 14px;
-  cursor: pointer;
-  appearance: none;
-  -webkit-appearance: none;
-  -moz-appearance: none;
-  box-shadow: 0 2px 6px rgba(0,0,0,.08);
-}
-
-.select-container::after {
-  content: "▾";
-  position: absolute;
-  right: 12px;
-  top: 50%;
-  transform: translateY(-50%);
-  pointer-events: none;
-  font-size: 16px;
-  color: #555;
-}
-
-.select-container select:focus {
-  outline: none;
-  border-color: #4caf50;
-  box-shadow: 0 0 0 2px rgba(76,175,80,.25);
-}
-#vista-user li {
-  padding: 6px 4px;
-  border-radius: 6px;
-  transition: background .15s;
-}
-
-#vista-user li:hover {
-  background: #f1f1f1;
-}
-.user-wrapper {
-  min-height: 100vh;
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
-  padding: 16px;
-  box-sizing: border-box;
-}
-#vista-user h2 {
-  text-align: center;
-  margin-bottom: 12px;
-}
-
-.card h4 {
-  margin-top: 16px;
-  margin-bottom: 6px;
-}
-#vista-user label {
-  padding: 6px 4px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-#vista-user input[type="checkbox"] {
-  transform: scale(1.2);
-  cursor: pointer;
-}
-.barra-bg {
-  height: 18px;
-  margin-top: 4px;
-}
-.admin-wrapper {
-  min-height: 100vh;
-  padding: 16px;
-}
-
+/* ===== ADMIN ===== */
+.admin-wrapper { padding:20px; }
 .admin-header {
-  background: #fff;
-  padding: 16px;
-  border-radius: 14px;
-  box-shadow: 0 4px 12px rgba(0,0,0,.1);
-  margin-bottom: 16px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.admin-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: 16px;
-}
-
-.admin-card {
-  background: #fff;
-  padding: 16px;
-  border-radius: 14px;
-  box-shadow: 0 4px 12px rgba(0,0,0,.1);
-}
-
-.admin-card.full {
-  grid-column: 1 / -1;
-}
-
-.admin-card h3 {
-  margin-top: 0;
+  background:#fff; padding:15px; border-radius:10px;
+  display:flex; justify-content:space-between;
 }
 
 .lista-proyectos li {
-  padding: 8px;
-  border-radius: 8px;
-  cursor: pointer;
+  padding:8px; cursor:pointer;
 }
-
 .lista-proyectos li:hover {
-  background: #f1f1f1;
+  background:#eee;
 }
 
-.form-row {
-  display: grid;
-  gap: 8px;
+/* ===== USER ===== */
+.user-wrapper {
+  display:flex;
+  justify-content:center;
+  margin-top:20px;
 }
 
-.req-grid {
-  margin-top: 16px;
-  display: grid;
-  gap: 16px;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+.card {
+  width:320px;
+  background:#fff;
+  padding:15px;
+  border-radius:10px;
 }
 
-.btn-primary {
-  background: linear-gradient(135deg, #4caf50, #2e7d32);
-  color: white;
-  border: none;
-  padding: 10px;
-  border-radius: 8px;
-  cursor: pointer;
+.luz {
+  width:25px;
+  height:25px;
+  border-radius:50%;
+  background:gray;
+  margin:auto;
 }
 
-.btn-secondary {
-  background: #2196f3;
-  color: white;
-  border: none;
-  padding: 10px;
-  border-radius: 8px;
-  cursor: pointer;
-}
-
-.sub {
-  font-size: 13px;
-  color: #666;
-  margin-bottom: 6px;
-}
-  .circle-wrap {
-  display: flex;
-  justify-content: center;
-  margin: 12px 0;
-}
-
-.circle {
-  width: 110px;
-  height: 110px;
-  border-radius: 50%;
-  background: conic-gradient(#ddd 0deg, #ddd 360deg);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: relative;
-}
-
-.circle::before {
-  content: "";
-  width: 82px;
-  height: 82px;
-  background: #fff;
-  border-radius: 50%;
-  position: absolute;
-}
-
-.circle span {
-  position: relative;
-  font-weight: bold;
-  font-size: 18px;
-  color: #333;
-}
-  .circle {
-  transition: background 0.6s ease;
-}
-
-
-/* Colores */
-.circle.psr { --color: #2196f3; }
-.circle.kpi { --color: #ff9800; }
-.circle.plan { --color: #4caf50; }
-.titulo-seccion {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-top: 18px;
-}
-
-.circle.small {
-  width: 54px;
-  height: 54px;
-  --color: #2196f3;
-}
-  #vista-user ul {
-  margin-top: 6px;
-  margin-bottom: 12px;
-}
-
-
-.circle.small::before {
-  width: 40px;
-  height: 40px;
-}
-
-.circle.small span {
-  font-size: 12px;
-}
 .resumen-semaforos {
-  display: flex;
-  justify-content: space-around;
-  margin: 16px 0;
+  display:flex;
+  justify-content:space-around;
+  margin-bottom:10px;
 }
 
-.semaforo-item {
-  text-align: center;
-  font-weight: bold;
-}
-
-.semaforo-item span {
-  display: block;
-  margin-bottom: 6px;
-}
-
-.luz {
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  background: gray;
-  margin: auto;
-  transition: 0.3s;
-}
-.luz {
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  background: gray;
-  margin: auto;
-  transition: background 0.4s ease, transform 0.2s;
+.btn {
+  width:100%;
+  padding:10px;
+  background:#4caf50;
+  color:#fff;
+  border:none;
+  border-radius:6px;
+  cursor:pointer;
 }
 </style>
+</head>
 
-
-
-  
 <body>
-  <!------------------------------------- VISTA DEL ADMIN -->
-<div id="vista-admin" class="admin-wrapper" style="display:none;">
 
-  <!-- HEADER -->
-  <header class="admin-header">
-    <h2>Admin de Proyectos</h2>
-    <span id="rol"></span>
-  </header>
+<!-- ADMIN -->
+<div id="vista-admin" style="display:none;">
+  <div class="admin-wrapper">
 
-  <!-- CONTENIDO -->
-  <div class="admin-grid">
-
-    <!-- CREAR PROYECTO -->
-    <div class="admin-card">
-      <h3>➕ Nuevo proyecto</h3>
-      <input type="text" id="nombreProyecto" placeholder="Nombre del proyecto">
-      <button class="btn-primary" onclick="crearProyecto()">Crear</button>
+    <div class="admin-header">
+      <h2>Admin</h2>
+      <span id="rol"></span>
     </div>
 
-    <!-- LISTA PROYECTOS -->
-    <div class="admin-card">
-      <h3>📁 Proyectos</h3>
-      <ul id="listaProyectos" class="lista-proyectos"></ul>
-    </div>
+    <input id="nombreProyecto" placeholder="Nuevo proyecto">
+    <button onclick="crearProyecto()">Crear</button>
 
-    <!-- PROYECTO ACTUAL -->
-    <div class="admin-card full">
-      <h3 id="tituloProyecto">Proyecto seleccionado</h3>
-      <button class="btn-primary" onclick="exportarHistorialExcel()">
-      📤 Exportar Historial
-      </button>
+    <ul id="listaProyectos"></ul>
 
-
-      
-
- <!------------------------------- SOLO LA VISTA USUARIO -->
-<div id="vista-user" class="user-wrapper" style="display:none;">
-  <div class="card">
-
-    <h2>Vista Usuario</h2>
-<div class="resumen-semaforos">
-  <div class="semaforo-item">
-    <span>PSR</span>
-    <div class="luz" id="sem-psr"></div>
-  </div>
-
-  <div class="semaforo-item">
-    <span>KPI</span>
-    <div class="luz" id="sem-kpi"></div>
-  </div>
-
-  <div class="semaforo-item">
-    <span>GANTT</span>
-    <div class="luz" id="sem-plan"></div>
   </div>
 </div>
-    <!-- SELECT PROYECTOS -->
-    <div class="select-container">
+
+<!-- USER -->
+<div id="vista-user" style="display:none;">
+  <div class="user-wrapper">
+    <div class="card">
+
+      <h3 id="userNombreProyecto">Proyecto</h3>
+
+      <div class="resumen-semaforos">
+        <div>
+          PSR
+          <div class="luz" id="sem-psr"></div>
+        </div>
+        <div>
+          KPI
+          <div class="luz" id="sem-kpi"></div>
+        </div>
+        <div>
+          GANTT
+          <div class="luz" id="sem-plan"></div>
+        </div>
+      </div>
+
       <select id="selectProyectoUser"></select>
+
+      <div>
+        <p>PSR</p>
+        <select onchange="cambiarEvaluacion('psr', this.value)">
+          <option value="bueno">Bueno</option>
+          <option value="medio">Medio</option>
+          <option value="malo">Malo</option>
+        </select>
+
+        <p>KPI</p>
+        <select onchange="cambiarEvaluacion('kpi', this.value)">
+          <option value="bueno">Bueno</option>
+          <option value="medio">Medio</option>
+          <option value="malo">Malo</option>
+        </select>
+
+        <p>GANTT</p>
+        <select onchange="cambiarEvaluacion('gantt', this.value)">
+          <option value="bueno">Bueno</option>
+          <option value="medio">Medio</option>
+          <option value="malo">Malo</option>
+        </select>
+      </div>
+
+      <button class="btn" onclick="guardar()">Guardar</button>
+
     </div>
-
-    <h3 id="userNombreProyecto">Proyecto</h3>
-    <!-- PROGRESO GENERAL -->
-<div style="margin-bottom:16px;">
-  <strong>Progreso general</strong>
-  <div class="barra-bg">
-    <div id="user-barra-total" class="barra" style="background:#673ab7;">
-      0%
-    </div>
   </div>
 </div>
-
-
-<div class="evaluacion">
-  <div class="item">
-    <h4>PSR</h4>
-    <select onchange="cambiarEvaluacion('psr', this.value)">
-      <option value="bueno">🟢 Bueno</option>
-      <option value="medio">🟡 Medio</option>
-      <option value="malo">🔴 Malo</option>
-    </select>
-  </div>
-
-  <div class="item">
-    <h4>KPI</h4>
-    <select onchange="cambiarEvaluacion('kpi', this.value)">
-      <option value="bueno">🟢 Bueno</option>
-      <option value="medio">🟡 Medio</option>
-      <option value="malo">🔴 Malo</option>
-    </select>
-  </div>
-
-  <div class="item">
-    <h4>GANTT</h4>
-    <select onchange="cambiarEvaluacion('gantt', this.value)">
-      <option value="bueno">🟢 Bueno</option>
-      <option value="medio">🟡 Medio</option>
-      <option value="malo">🔴 Malo</option>
-    </select>
-  </div>
-</div>
-
-<ul id="user-lista-plan"></ul>
-
-    <!-- ✅ BOTÓN GUARDAR -->
-    <button class="btn-guardar" onclick="guardarCambiosUser()">
-      💾 Guardar cambios
-    </button>
-
-  </div>
-</div>
-
-
 
 <script>
-  
+
+/* ===== FIREBASE ===== */
 firebase.initializeApp({
-  apiKey: "AIzaSyAoVH8wQ2ofolAaJYdFnu1COcwI-xvaNnM",
-  authDomain: "panel-proyectos-f119f.firebaseapp.com",
-  projectId: "panel-proyectos-f119f"
+  apiKey: "TU_API_KEY",
+  authDomain: "TU_AUTH",
+  projectId: "TU_PROJECT_ID"
 });
 
 const db = firebase.firestore();
 const auth = firebase.auth();
 
-/* =====================
-   VARIABLES GLOBALES
-===================== */
+/* ===== VARIABLES ===== */
 let ROL = null;
 let UID = null;
-let proyectoActualId = null;
+let proyectoId = null;
+let proyecto = null;
 
-/* =====================
-   AUTH + ROL
-===================== */
-auth.onAuthStateChanged(async (user) => {
-  if (!user) {
-    alert("No autenticado");
-    return;
-  }
+/* ===== LOGIN ===== */
+auth.onAuthStateChanged(async user => {
+
+  if (!user) return alert("No login");
 
   UID = user.uid;
 
-const snapUser = await db.collection("users").doc(UID).get();
+  const snap = await db.collection("users").doc(UID).get();
 
-  if (!snapUser.exists()) {
-    alert("Usuario sin rol asignado");
-    return;
-  }
+  if (!snap.exists) return alert("Sin rol");
 
-  ROL = snapUser.data().rol;
+  ROL = snap.data().rol;
 
   aplicarRol();
 
   cargarProyectos();
-  cargarProyectosUser();
+  cargarSelect();
+
 });
 
-  
+/* ===== ROLES ===== */
 function aplicarRol() {
-  const rolEl = document.getElementById("rol");
 
   if (ROL === "admin") {
-    document.getElementById("vista-admin").style.display = "block";
-    document.getElementById("vista-user").style.display = "none";
-
-    if (rolEl) rolEl.textContent = "Rol: Administrador";
+    vistaAdmin.style.display = "block";
+    vistaUser.style.display = "none";
   } else {
-    document.getElementById("vista-admin").style.display = "none";
-    document.getElementById("vista-user").style.display = "block";
-
-    if (rolEl) rolEl.textContent = "Rol: Usuario";
+    vistaAdmin.style.display = "none";
+    vistaUser.style.display = "block";
   }
+
 }
 
+/* ===== CREAR ===== */
+async function crearProyecto() {
 
-/* ==========================
-   PROYECTOS
-========================== */
+  const nombre = nombreProyecto.value.trim();
 
-/* CREAR PROYECTO */
-window.crearProyecto = async () => {
-  if (ROL !== "admin") return;
-  const nombre = document.getElementById("nombreProyecto").value.trim();
-  if (!nombre) {
-    alert("Escribe un nombre");
-    return;
-  }
+  if (!nombre) return alert("Escribe nombre");
 
-await db.collection("proyectos").add({
-  nombre,
-  creado: new Date(),
-  evaluacion: {
-    psr: "medio",
-    kpi: "medio",
-    gantt: "medio"
-  }
-});
+  await db.collection("proyectos").add({
+    nombre,
+    evaluacion: { psr:"medio", kpi:"medio", gantt:"medio" }
+  });
 
-
-  document.getElementById("nombreProyecto").value = "";
-  cargarProyectos();
-};
-async function cargarProyecto(id) {
-  proyectoActualId = id;
-  proyectoTemporalId = id;
-
-const snap = await db.collection("proyectos").doc(id).get();
-  if (!snap.exists()) return;
-
-  proyectoTemporal = structuredClone(snap.data()); // 👈 IMPORTANTE
-
-  document.getElementById("tituloProyecto").textContent =
-    "Proyecto: " + proyectoTemporal.nombre;
-
-  renderVistaUser(proyectoTemporal);
 }
 
-
-/* LISTAR PROYECTOS */
-
+/* ===== LISTA ADMIN ===== */
 function cargarProyectos() {
-  const lista = document.getElementById("listaProyectos");
 
-  db.collection("proyectos").onSnapshot((snap) => {
-    lista.innerHTML = "";
+  db.collection("proyectos").onSnapshot(snap => {
 
-    snap.forEach(docu => {
+    listaProyectos.innerHTML = "";
+
+    snap.forEach(doc => {
+
       const li = document.createElement("li");
-      li.textContent = docu.data().nombre;
-      li.onclick = () => cargarProyecto(docu.id);
-      lista.appendChild(li);
+      li.textContent = doc.data().nombre;
+
+      li.onclick = () => cargarProyecto(doc.id);
+
+      listaProyectos.appendChild(li);
+
     });
+
   });
+
 }
 
-/* CARGAR PROYECTO */
-function cargarProyectosUser() {
-  const select = document.getElementById("selectProyectoUser");
+/* ===== SELECT USER ===== */
+function cargarSelect() {
 
-  db.collection("proyectos").onSnapshot((snap) => {
-    select.innerHTML = "";
+  db.collection("proyectos").onSnapshot(snap => {
 
-    snap.forEach(docu => {
-      const opt = document.createElement("option");
-      opt.value = docu.id;
-      opt.textContent = docu.data().nombre;
-      select.appendChild(opt);
+    selectProyectoUser.innerHTML = "";
+
+    snap.forEach(doc => {
+
+      const op = document.createElement("option");
+      op.value = doc.id;
+      op.textContent = doc.data().nombre;
+
+      selectProyectoUser.appendChild(op);
+
     });
 
-    if (select.value) {
-      cargarProyectoUser(select.value);
+    if (selectProyectoUser.value) {
+      cargarProyecto(selectProyectoUser.value);
     }
-  });
-}
 
-
-
-
-
-/* ==========================
-   REQUISITOS
-========================== */
-
-
-window.cambiarEstado = (tipo, index, valor) => {
-  if (ROL !== "admin") return;
-
-  proyectoTemporal.requisitos[tipo][index].estado = valor;
-
-  renderVistaUser(proyectoTemporal);
-};
-window.cambiarEstadoUser = (tipo, index, valor) => {
-  if (!proyectoTemporal) return;
-
-  proyectoTemporal.requisitos[tipo][index].estado = valor;
-
-  renderVistaUser(proyectoTemporal);
-};
-
-document.getElementById("selectProyectoUser")
-  .addEventListener("change", e => {
-    cargarProyectoUser(e.target.value);
   });
 
-function renderVistaUser(proyecto) {
-  if (!proyecto) return;
-
-  document.getElementById("userNombreProyecto").textContent = proyecto.nombre;
-
-  // 👇 SI NO EXISTE (proyectos viejos)
-  if (!proyecto.evaluacion) {
-    proyecto.evaluacion = {
-      psr: "medio",
-      kpi: "medio",
-      gantt: "medio"
-    };
-  }
-
-  // 🔥 ACTUALIZA SELECTS (LO QUE TE FALTA)
-  const selects = document.querySelectorAll(".evaluacion select");
-
-  selects[0].value = proyecto.evaluacion.psr;
-  selects[1].value = proyecto.evaluacion.kpi;
-  selects[2].value = proyecto.evaluacion.gantt;
-
-  // 🔥 ACTUALIZA SEMÁFOROS
-  renderSemaforos(proyecto.evaluacion);
 }
 
+/* ===== CARGAR PROYECTO ===== */
+async function cargarProyecto(id) {
 
-window.guardarCambiosUser = async () => {
-  await db.collection("proyectos").doc(proyectoTemporalId).update({
-  evaluacion: proyectoTemporal.evaluacion
-});
+  proyectoId = id;
 
-  renderVistaUser(proyectoTemporal); // 
-
-  alert("Guardado ✅");
-};
-
-
-import * as XLSX from "https://cdn.jsdelivr.net/npm/xlsx@0.18.5/+esm";
-
-window.exportarHistorialExcel = async () => {
-
- const snap = await db.collection("historial_cambios").get();
-
-  const data = [];
-  snap.forEach(docu => {
-    const d = docu.data();
-
-    data.push({
-      Fecha: d.fecha?.toDate().toLocaleString() ?? "",
-      Proyecto: d.proyectoNombre,
-      Usuario: d.usuarioId,
-      Rol: d.rol,
-      PSR: d.progresoPSR + "%",
-      KPI: d.progresoKPI + "%",
-      PLAN: d.progresoPLAN + "%",
-      General: d.progresoTotal + "%"
-    });
-  });
-
-  if (data.length === 0) {
-    alert("No hay historial");
-    return;
-  }
-
-  const ws = XLSX.utils.json_to_sheet(data);
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, "Historial");
-
-  XLSX.writeFile(wb, "historial_proyectos.xlsx");
-};
-
-window.guardarProyectoAdmin = async () => {
-  if (!proyectoActualId) return;
- await db.collection("proyectos").doc(proyectoActualId).update({
-  requisitos: proyectoTemporal.requisitos
-});
-
-  alert("Proyecto guardado ✅");
-};
-
-
-function colorSemaforo(valor) {
-  if (valor >= 70) return "#4caf50"; // verde
-  if (valor >= 40) return "#ffc107"; // amarillo
-  return "#f44336"; // rojo
-}
-
-window.cambiarEvaluacion = (tipo, valor) => {
-  if (!proyectoTemporal) return;
-
-  proyectoTemporal.evaluacion[tipo] = valor;
-
-  renderSemaforos(proyectoTemporal.evaluacion);
-};
-  
-function renderSemaforos(evaluacion) {
-  document.getElementById("sem-psr").style.background = getColor(evaluacion.psr);
-  document.getElementById("sem-kpi").style.background = getColor(evaluacion.kpi);
-  document.getElementById("sem-plan").style.background = getColor(evaluacion.gantt);
-}
-
-function getColor(estado) {
-  if (estado === "bueno") return "#4caf50"; // verde
-  if (estado === "medio") return "#ffc107"; // amarillo
-  return "#f44336"; // rojo
-}
-
-  
-function semaforoGlobal(evaluacion) {
-  const valores = Object.values(evaluacion);
-
-  if (valores.includes("malo")) return "rojo";
-  if (valores.includes("medio")) return "amarillo";
-  return "verde";
-}
-  async function cargarProyectoUser(id) {
   const snap = await db.collection("proyectos").doc(id).get();
+
   if (!snap.exists) return;
 
-  proyectoTemporalId = id;
-  proyectoTemporal = structuredClone(snap.data());
+  proyecto = snap.data();
 
-  renderVistaUser(proyectoTemporal);
+  userNombreProyecto.textContent = proyecto.nombre;
+
+  renderSemaforos();
+
 }
-</script>
 
+/* ===== CAMBIAR ===== */
+function cambiarEvaluacion(tipo, valor) {
+
+  proyecto.evaluacion[tipo] = valor;
+
+  renderSemaforos();
+
+}
+
+/* ===== SEMAFOROS ===== */
+function renderSemaforos() {
+
+  semPsr.style.background = color(proyecto.evaluacion.psr);
+  semKpi.style.background = color(proyecto.evaluacion.kpi);
+  semPlan.style.background = color(proyecto.evaluacion.gantt);
+
+}
+
+function color(v) {
+  if (v==="bueno") return "green";
+  if (v==="medio") return "orange";
+  return "red";
+}
+
+/* ===== GUARDAR ===== */
+async function guardar() {
+
+  await db.collection("proyectos").doc(proyectoId).update({
+    evaluacion: proyecto.evaluacion
+  });
+
+  alert("Guardado");
+
+}
+
+/* ===== SELECT CHANGE ===== */
+selectProyectoUser.onchange = () => {
+  cargarProyecto(selectProyectoUser.value);
+};
+
+</script>
 
 </body>
 </html>
-
-
