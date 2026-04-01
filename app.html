@@ -249,6 +249,7 @@ if (!UID || !ROL) {
   window.location.href = "login.html";
 }
 function aplicarRol() {
+  if (!vistaAdmin || !vistaUser) return; // 🔒 evita error si no existen
   if (ROL === "admin") {
     vistaAdmin.style.display = "block";
     vistaUser.style.display = "none";
