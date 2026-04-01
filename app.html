@@ -94,6 +94,14 @@ body {
 .verde { background: green; }
 .amarillo { background: orange; }
 .rojo { background: red; }
+
+
+  #grafica {
+  width: 100%;
+  max-width: 700px; /* para que no se salga de la pantalla */
+  height: 400px; /* altura fija */
+  margin-top: 20px;
+}
 </style>
 </head>
 
@@ -349,43 +357,60 @@ async function guardar() {
 
   alert("Guardado ✅");
 }
+  
 async function cargarGrafica() {
-  const snap = await db.collection("historial").get();
-  const semanas = {};
+  const snapHistorial = await db.collection("historial").orderBy("fecha").get();
+  const snapProyectos = await db.collection("proyectos").get();
 
-  snap.forEach(doc => {
+  const semanas = {}; // { "2026-W14": { proyectoId: valor, ... } }
+
+  snapHistorial.forEach(doc => {
     const d = doc.data();
     const fecha = d.fecha.toDate();
     const semana = fecha.getFullYear() + "-W" + Math.ceil(fecha.getDate()/7);
-    if (!semanas[semana]) semanas[semana] = [];
-    const val = promedioEvaluacion(d.despues);
-    semanas[semana].push(val);
+    if (!semanas[semana]) semanas[semana] = {};
+    semanas[semana][d.proyectoId] = promedioEvaluacion(d.despues);
   });
 
-  const labels = Object.keys(semanas);
-  const data = labels.map(s => {
-    const arr = semanas[s];
-    return arr.reduce((a,b)=>a+b,0)/arr.length;
+  const labels = Object.keys(semanas).sort();
+  const promedioSemanal = labels.map(sem => {
+    const vals = Object.values(semanas[sem]);
+    if (vals.length === 0) return 0;
+    return vals.reduce((a,b)=>a+b,0)/vals.length;
   });
 
-  const totalProyectos = await db.collection("proyectos").get();
-  const promedioGeneral = [];
-
-  labels.forEach(sem => {
-    // promedio general de todos los proyectos, solo para ejemplo simple
-    promedioGeneral.push( data.reduce((a,b)=>a+b,0)/data.length );
+  const promedioGeneral = snapProyectos.docs.map(doc => {
+    // promedio total de cada proyecto en todo el historial
+    const historialProyecto = snapHistorial.docs.filter(d => d.data().proyectoId === doc.id);
+    if (historialProyecto.length === 0) return 0;
+    const total = historialProyecto.reduce((acc,d) => acc + promedioEvaluacion(d.data().despues), 0);
+    return total / historialProyecto.length;
   });
 
   new Chart(document.getElementById("grafica"), {
-    type: "bar",
+    type: 'bar',
     data: {
       labels,
       datasets: [
-        { label: "Progreso semanal", data },
-        { label: "Promedio general", data: promedioGeneral, backgroundColor:"rgba(54,162,235,0.5)" }
+        {
+          label: "Promedio semanal",
+          data: promedioSemanal,
+          backgroundColor: "rgba(75, 192, 192, 0.7)"
+        },
+        {
+          label: "Promedio general por proyecto",
+          data: promedioGeneral, // si quieres mostrarlo en otra gráfica sería mejor
+          backgroundColor: "rgba(153, 102, 255, 0.7)"
+        }
       ]
     },
-    options: { responsive:true, maintainAspectRatio:false }
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        y: { beginAtZero: true, max: 100 }
+      }
+    }
   });
 }
 
