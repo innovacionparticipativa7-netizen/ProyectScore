@@ -149,7 +149,8 @@ firebase.initializeApp({
   authDomain: "panel-proyectos-f119f.firebaseapp.com",
   projectId: "panel-proyectos-f119f"
 });
-
+const vistaAdmin = document.getElementById("vista-admin");
+const vistaUser = document.getElementById("vista-user");
 const db = firebase.firestore();
 const auth = firebase.auth();
 const provider = new firebase.auth.GoogleAuthProvider();
@@ -163,7 +164,7 @@ let proyectoId = null;
 let proyecto = null;
 
   /* ===== AUTO LOGIN ===== */
-auth.signInWithPopup(provider)
+auth.signInWithRedirect(provider);
   .catch(err => {
     console.error("Error login:", err);
   });
@@ -172,7 +173,7 @@ auth.signInWithPopup(provider)
 auth.onAuthStateChanged(async user => {
 
   if (!user) {
-    auth.signInWithPopup(provider);
+    auth.signInWithRedirect(provider);
     return;
   }
 
@@ -313,9 +314,9 @@ function cambiarEvaluacion(tipo, valor) {
 /* ===== SEMAFOROS ===== */
 function renderSemaforos() {
 
-  semPsr.style.background = color(proyecto.evaluacion.psr);
-  semKpi.style.background = color(proyecto.evaluacion.kpi);
-  semPlan.style.background = color(proyecto.evaluacion.gantt);
+document.getElementById("sem-psr").style.background = color(proyecto.evaluacion.psr);
+document.getElementById("sem-kpi").style.background = color(proyecto.evaluacion.kpi);
+document.getElementById("sem-plan").style.background = color(proyecto.evaluacion.gantt);
 
 }
 
