@@ -171,6 +171,19 @@ canvas {
     gap: 10px;
   }
 }
+
+select {
+  background: #f9fafb;
+  border: 1px solid #ddd;
+  transition: 0.2s;
+}
+
+select:focus {
+  border-color: #4caf50;
+  outline: none;
+  box-shadow: 0 0 5px rgba(76,175,80,0.4);
+}
+    
 </style>
 
   
@@ -217,7 +230,33 @@ canvas {
   <div class="user-wrapper">
     <div class="card card-user">
 <button onclick="logout()">Salir</button>
-      <h3 id="userNombreProyecto">Proyecto</h3>
+      <div class="card">
+  <h3>Filtros</h3>
+
+  <select id="filtroTier" onchange="aplicarFiltros()">
+    <option value="">Todos los Tier</option>
+    <option>Tier 1</option>
+    <option>Tier 2</option>
+    <option>Tier 3</option>
+    <option>Tier 4</option>
+    <option>Tier 5</option>
+    <option>Tier 6</option>
+  </select>
+
+  <select id="filtroSeccion" onchange="aplicarFiltros()">
+    <option value="">Todas las Secciones</option>
+    <option>Buy to Make</option>
+    <option>DTC</option>
+    <option>Material Optimization</option>
+    <option>OH Cost Control</option>
+    <option>Resourcing</option>
+  </select>
+
+  <select id="filtroChampion" onchange="aplicarFiltros()">
+    <option value="">Todos los Champions</option>
+  </select>
+
+</div>
 
       <div class="resumen-semaforos">
   <div style="text-align:center;">
@@ -316,14 +355,17 @@ async function crearProyecto() {
   const nombre = nombreProyecto.value.trim();
   if (!nombre) return alert("Escribe nombre");
 
-  await db.collection("proyectos").add({
-    nombre,
-    evaluacion: {  
+await db.collection("proyectos").add({
+  nombre,
+  tier: "Tier 1",
+  seccion: "Buy to Make",
+  champion: "Antonio Aguilar",
+  evaluacion: {  
     kpi:"", 
     gantt:"",
-    pdca: []   // 🔥 importante
-}
-  });
+    pdca:[]
+  }
+});
 
   cargarProyectos();
   cargarSelect();
@@ -406,6 +448,7 @@ function marcarRadios() {
   });
 }
 
+  
 /* ===== SET VALOR ===== */
 function setValor(tipo, valor) {
   if (!proyecto) return;
@@ -643,6 +686,79 @@ function togglePDCA(checkbox) {
 
   return 0;
 }
+
+/* ===== RELACION SECCION → CHAMPIONS  ===== */
+const championsPorSeccion = {
+  "Buy to Make": ["Antonio Aguilar"],
+  "DTC": ["Jaime Castro"],
+  "Material Optimization": ["Fabian Perez", "Jorge Millan"],
+  "Resourcing": ["Gerardo Loredo"],
+  "OH Cost Control": ["Carlos Perez"]
+};
+
+
+  /* ===== ACTUALIZAR CHAMPIONS DINAMICAMENTE  ===== */
+
+document.getElementById("filtroSeccion").addEventListener("change", () => {
+  const seccion = filtroSeccion.value;
+  const selectChampion = document.getElementById("filtroChampion");
+
+  selectChampion.innerHTML = '<option value="">Todos los Champions</option>';
+
+  if (championsPorSeccion[seccion]) {
+    championsPorSeccion[seccion].forEach(ch => {
+      const op = document.createElement("option");
+      op.value = ch;
+      op.textContent = ch;
+      selectChampion.appendChild(op);
+    });
+  }
+});
+  
+/* ===== FUNCION DE FILTRADO  ===== */
+async function aplicarFiltros() {
+  const tier = document.getElementById("filtroTier").value;
+  const seccion = document.getElementById("filtroSeccion").value;
+  const champion = document.getElementById("filtroChampion").value;
+
+  const snap = await db.collection("proyectos").get();
+
+  selectProyectoUser.innerHTML = "";
+
+  snap.forEach(doc => {
+    const p = doc.data();
+
+    if (tier && p.tier !== tier) return;
+    if (seccion && p.seccion !== seccion) return;
+    if (champion && p.champion !== champion) return;
+
+    const op = document.createElement("option");
+    op.value = doc.id;
+    op.textContent = p.nombre;
+
+    selectProyectoUser.appendChild(op);
+  });
+
+  // cargar el primero filtrado automáticamente
+  if (selectProyectoUser.value) {
+    cargarProyecto(selectProyectoUser.value);
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
 /* ===== INIT ===== */
 aplicarRol();
 cargarProyectos();
