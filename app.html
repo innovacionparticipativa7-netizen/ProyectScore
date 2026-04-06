@@ -289,10 +289,10 @@ async function crearProyecto() {
   await db.collection("proyectos").add({
     nombre,
     evaluacion: {  
-      kpi:"na", 
-      gantt:"na",
-      pdca:"na"
-    }
+    kpi:"", 
+    gantt:"",
+    pdca: []   // 🔥 importante
+}
   });
 
   cargarProyectos();
@@ -383,8 +383,10 @@ function setValor(tipo, valor) {
   renderSemaforos();
 }
 
-/* ===== COLORES ===== */
 function color(tipo, v) {
+  if (!v || (Array.isArray(v) && v.length === 0)) {
+    return "#808080";
+  }
 
   // ===== KPI =====
   if (tipo === "kpi") {
@@ -403,21 +405,20 @@ function color(tipo, v) {
     if (["r3"].includes(v)) return "#FF0000";
   }
 
-  // ===== PDCA (POR CANTIDAD) =====
+  // ===== PDCA =====
   if (tipo === "pdca") {
 
     const cantidad = Array.isArray(v) ? v.length : 0;
 
-    if (cantidad >= 6) return "#008000";      // verde
-    if (cantidad === 5) return "#90EE90";     // verde claro
-    if (cantidad === 4) return "#FFD700";     // amarillo
-    if (cantidad === 3) return "#FF8C00";     // naranja
-    if (cantidad < 3) return "#FF0000";       // rojo
+    if (cantidad >= 6) return "#008000";
+    if (cantidad === 5) return "#90EE90";
+    if (cantidad === 4) return "#FFD700";
+    if (cantidad === 3) return "#FF8C00";
+    if (cantidad < 3) return "#FF0000";
   }
 
-  return "#808080"; // gris
+  return "#808080";
 }
-
 /* ===== SEMAFORO VISUAL ===== */
 function renderSemaforos() {
   if (!proyecto || !proyecto.evaluacion) return;
