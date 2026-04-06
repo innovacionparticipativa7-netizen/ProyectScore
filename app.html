@@ -196,8 +196,8 @@ body {
 
       <div class="resumen-semaforos">
         <div>
-          PSR
-          <div class="luz" id="sem-psr"></div>
+          PDCA
+          <div class="luz" id="sem-pdca"></div>
         </div>
         <div>
           KPI
@@ -212,29 +212,31 @@ body {
       <select id="selectProyectoUser"></select>
 
       <div>
-<p>PSR</p>
-<div class="semaforo-opciones" data-tipo="psr">
-  <div class="opcion verde" onclick="setValor('psr','bueno')"></div>
-  <div class="opcion amarillo" onclick="setValor('psr','medio')"></div>
-  <div class="opcion rojo" onclick="setValor('psr','malo')"></div>
-  <div class="opcion gris" onclick="setValor('psr','sin')"></div>
-  
-</div>
-
 <p>KPI</p>
-<div class="semaforo-opciones" data-tipo="kpi">
-  <div class="opcion verde" onclick="setValor('kpi','bueno')"></div>
-  <div class="opcion amarillo" onclick="setValor('kpi','medio')"></div>
-  <div class="opcion rojo" onclick="setValor('kpi','malo')"></div>
-  <div class="opcion gris" onclick="setValor('kpi','sin')"></div>
+<div class="check-opciones">
+<label><input type="radio" name="kpi" value="en_tiempo" onclick="setValor('kpi','en_tiempo')"> En tiempo</label>
+<label><input type="radio" name="kpi" value="cumple" onclick="setValor('kpi','cumple')"> Cumple</label>
+<label><input type="radio" name="kpi" value="mitigado" onclick="setValor('kpi','mitigado')"> Retraso mitigado</label>
+<label><input type="radio" name="kpi" value="retraso" onclick="setValor('kpi','retraso')"> Retraso</label>
+<label><input type="radio" name="kpi" value="programado" onclick="setValor('kpi','programado')"> Retraso programado</label>
+<label><input type="radio" name="kpi" value="na" onclick="setValor('kpi','na')"> N/A</label>
+</div>
+<p>GANTT</p>
+<div class="check-opciones">
+<label><input type="radio" name="gantt" value="valor" onclick="setValor('gantt','valor')"> Valor agregado</label>
+<label><input type="radio" name="gantt" value="retraso" onclick="setValor('gantt','retraso')"> Retraso</label>
+<label><input type="radio" name="gantt" value="r2" onclick="setValor('gantt','r2')"> Retraso >2</label>
+<label><input type="radio" name="gantt" value="r3" onclick="setValor('gantt','r3')"> Retraso <3</label>
+<label><input type="radio" name="gantt" value="na" onclick="setValor('gantt','na')"> N/A</label>
 </div>
 
-<p>GANTT</p>
-<div class="semaforo-opciones" data-tipo="gantt">
-  <div class="opcion verde" onclick="setValor('gantt','bueno')"></div>
-  <div class="opcion amarillo" onclick="setValor('gantt','medio')"></div>
-  <div class="opcion rojo" onclick="setValor('gantt','malo')"></div>
-  <div class="opcion gris" onclick="setValor('gantt','sin')"></div>
+<p>PDCA</p>
+<div class="check-opciones">
+<label><input type="radio" name="pdca" value="6pack" onclick="setValor('pdca','6pack')"> 6 Pack</label>
+<label><input type="radio" name="pdca" value="kpi" onclick="setValor('pdca','kpi')"> KPI</label>
+<label><input type="radio" name="pdca" value="gantt" onclick="setValor('pdca','gantt')"> GANTT</label>
+<label><input type="radio" name="pdca" value="psr" onclick="setValor('pdca','psr')"> PSR</label>
+<label><input type="radio" name="pdca" value="iplayers" onclick="setValor('pdca','iplayers')"> IP Layers</label>
 </div>
 
       <button class="btn" onclick="guardar()">Guardar</button>
@@ -251,30 +253,25 @@ firebase.initializeApp({
   authDomain: "panel-proyectos-f119f.firebaseapp.com",
   projectId: "panel-proyectos-f119f"
 });
+
 const vistaAdmin = document.getElementById("vista-admin");
 const vistaUser = document.getElementById("vista-user");
 const db = firebase.firestore();
-const auth = firebase.auth();
-
 
 /* ===== VARIABLES ===== */
 let ROL = localStorage.getItem("rol");
 let UID = localStorage.getItem("uid");
-let chart = null;  // variable global para la gráfica
+let chart = null;
 let proyectoId = null;
 let proyecto = null;
 
-/* ===== VALIDACIÓN LOGIN ===== */
-if (!UID || !ROL) {
-  alert("No autorizado");
-  window.location.href = "login.html";
-}
+/* ===== LOGIN ===== */
 if (!UID || !ROL) {
   localStorage.clear();
   window.location.href = "login.html";
 }
+
 function aplicarRol() {
-  if (!vistaAdmin || !vistaUser) return; // 🔒 evita error si no existen
   if (ROL === "admin") {
     vistaAdmin.style.display = "block";
     vistaUser.style.display = "none";
@@ -286,22 +283,23 @@ function aplicarRol() {
 
 /* ===== CREAR ===== */
 async function crearProyecto() {
-
   const nombre = nombreProyecto.value.trim();
-
   if (!nombre) return alert("Escribe nombre");
 
   await db.collection("proyectos").add({
-  nombre,
-  evaluacion: { psr:"medio", kpi:"medio", gantt:"medio" }
-});
+    nombre,
+    evaluacion: {  
+      kpi:"na", 
+      gantt:"na",
+      pdca:"na"
+    }
+  });
 
-// 🔄 refrescar lista
-cargarProyectos();
-cargarSelect();
-
+  cargarProyectos();
+  cargarSelect();
 }
-/* ===== LISTA ADMIN ===== */
+
+/* ===== LISTA ===== */
 async function cargarProyectos() {
   const snap = await db.collection("proyectos").get();
   listaProyectos.innerHTML = "";
@@ -310,28 +308,25 @@ async function cargarProyectos() {
     const li = document.createElement("li");
     li.textContent = doc.data().nombre;
 
-li.onclick = () => {
-  proyectoId = doc.id;
-  proyecto = doc.data();
-  document.querySelectorAll("#listaProyectos li").forEach(el => el.classList.remove("activo"));
-  li.classList.add("activo");
-  alert("Proyecto seleccionado: " + proyecto.nombre);
+    li.onclick = () => {
+      proyectoId = doc.id;
+      proyecto = doc.data();
+      document.querySelectorAll("#listaProyectos li").forEach(el => el.classList.remove("activo"));
+      li.classList.add("activo");
+      cargarGrafica(proyectoId);
+    };
 
-  // 🔹 Mostrar el progreso solo de este proyecto
-  cargarGrafica(proyectoId);
-}
+    const btn = document.createElement("button");
+    btn.textContent = "Eliminar";
+    btn.onclick = async (e) => {
+      e.stopPropagation();
+      if (confirm("Eliminar este proyecto?")) {
+        await db.collection("proyectos").doc(doc.id).delete();
+        cargarProyectos();
+        cargarGrafica();
+      }
+    };
 
-const btn = document.createElement("button");
-btn.textContent = "Eliminar";
-btn.onclick = async (e) => {
-  e.stopPropagation();
-  if (confirm("Eliminar este proyecto?")) {
-    await db.collection("proyectos").doc(doc.id).delete();
-    if(proyectoId===doc.id) proyectoId=null;
-    cargarProyectos();
-    cargarGrafica();
-  }
-}
     li.appendChild(btn);
     listaProyectos.appendChild(li);
   });
@@ -339,79 +334,85 @@ btn.onclick = async (e) => {
 
 /* ===== SELECT USER ===== */
 async function cargarSelect() {
-
   const snap = await db.collection("proyectos").get();
-
   selectProyectoUser.innerHTML = "";
 
   snap.forEach(doc => {
-
     const op = document.createElement("option");
     op.value = doc.id;
     op.textContent = doc.data().nombre;
-
     selectProyectoUser.appendChild(op);
-
   });
 
   if (selectProyectoUser.value) {
     cargarProyecto(selectProyectoUser.value);
   }
-
 }
 
 /* ===== CARGAR PROYECTO ===== */
 async function cargarProyecto(id) {
-
   proyectoId = id;
-
   const snap = await db.collection("proyectos").doc(id).get();
-
   if (!snap.exists) return;
 
   proyecto = snap.data();
-
   userNombreProyecto.textContent = proyecto.nombre;
 
   renderSemaforos();
-
-  // 🔥 SOLO después de cargar
-  actualizarUI("psr", proyecto.evaluacion.psr);
-  actualizarUI("kpi", proyecto.evaluacion.kpi);
-  actualizarUI("gantt", proyecto.evaluacion.gantt);
+  marcarRadios();
 }
 
-/* ===== CAMBIAR ===== */
-function cambiarEvaluacion(tipo, valor) {
+/* ===== MARCAR RADIOS ===== */
+function marcarRadios() {
+  if (!proyecto || !proyecto.evaluacion) return;
 
+  Object.keys(proyecto.evaluacion).forEach(tipo => {
+    const valor = proyecto.evaluacion[tipo];
+    const radios = document.querySelectorAll(`input[name="${tipo}"]`);
+    
+    radios.forEach(r => {
+      r.checked = r.value === valor;
+    });
+  });
+}
+
+/* ===== SET VALOR ===== */
+function setValor(tipo, valor) {
+  if (!proyecto) return;
   proyecto.evaluacion[tipo] = valor;
-
   renderSemaforos();
-
 }
 
-/* ===== SEMAFOROS ===== */
-function renderSemaforos() {
-
-  if (!proyecto || !proyecto.evaluacion) return; // 🔥 clave
-
-  document.getElementById("sem-psr").style.background = color(proyecto.evaluacion.psr);
-  document.getElementById("sem-kpi").style.background = color(proyecto.evaluacion.kpi);
-  document.getElementById("sem-plan").style.background = color(proyecto.evaluacion.gantt);
-
-}
-
+/* ===== COLORES ===== */
 function color(v) {
-  if (v==="bueno") return "green";
-  if (v==="medio") return "orange";
-  if (v==="malo") return "red";
-  if (v==="sin") return "gray"; // nuevo estado gris
-  return "gray"; // default
+  const verde = ["en_tiempo","cumple","valor","6pack"];
+  const amarillo = ["mitigado","programado","r3"];
+  const rojo = ["retraso","r2"];
+  
+  if (verde.includes(v)) return "green";
+  if (amarillo.includes(v)) return "orange";
+  if (rojo.includes(v)) return "red";
+  return "gray";
+}
+
+/* ===== SEMAFORO VISUAL ===== */
+function renderSemaforos() {
+  if (!proyecto || !proyecto.evaluacion) return;
+
+  const map = {
+    "sem-pdca": proyecto.evaluacion.pdca,
+    "sem-kpi": proyecto.evaluacion.kpi,
+    "sem-plan": proyecto.evaluacion.gantt
+  };
+
+  Object.keys(map).forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.background = color(map[id]);
+  });
 }
 
 /* ===== GUARDAR ===== */
 async function guardar() {
-
   const before = await db.collection("proyectos").doc(proyectoId).get();
   const oldData = before.data();
 
@@ -419,7 +420,6 @@ async function guardar() {
     evaluacion: proyecto.evaluacion
   });
 
-  // 🔥 HISTORIAL
   await db.collection("historial").add({
     proyectoId,
     proyectoNombre: proyecto.nombre,
@@ -431,19 +431,35 @@ async function guardar() {
 
   alert("Guardado ✅");
 }
-  
+
+/* ===== PROMEDIO ===== */
+function promedioEvaluacion(ev) {
+  const map = {
+    en_tiempo:100, cumple:90, valor:100, "6pack":100,
+    mitigado:70, programado:60, r3:65,
+    retraso:40, r2:20,
+    na:0
+  };
+
+  return (
+    (map[ev.kpi] ?? 0) +
+    (map[ev.gantt] ?? 0) +
+    (map[ev.pdca] ?? 0)
+  ) / 3;
+}
+
+/* ===== GRAFICA ===== */
 async function cargarGrafica(filtroProyectoId = null) {
   const snap = await db.collection("historial").orderBy("fecha").get();
   const semanas = {};
 
   snap.forEach(doc => {
     const d = doc.data();
-
-    // 🔹 filtrar por proyecto si se pasa un ID
     if (filtroProyectoId && d.proyectoId !== filtroProyectoId) return;
 
     const f = d.fecha.toDate();
     const semana = f.getFullYear() + "-W" + Math.ceil(f.getDate()/7);
+
     if (!semanas[semana]) semanas[semana] = [];
     semanas[semana].push(promedioEvaluacion(d.despues));
   });
@@ -451,151 +467,69 @@ async function cargarGrafica(filtroProyectoId = null) {
   const labels = Object.keys(semanas).sort();
   const data = labels.map(sem => {
     const arr = semanas[sem];
-    if (!arr.length) return 0;
     return arr.reduce((a,b)=>a+b,0)/arr.length;
   });
 
   const ctx = document.getElementById("grafica").getContext("2d");
   if(chart) chart.destroy();
+
   chart = new Chart(ctx, {
-      type: 'bar',
-      data: { labels, datasets:[{ label:"Promedio semanal", data, backgroundColor:"rgba(75,192,192,0.7)" }] },
-      options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: { legend: { position: 'top' } },
-          scales: { y: { beginAtZero:true, max:100 } }
-      }
+    type: 'bar',
+    data: { labels, datasets:[{ label:"Promedio semanal", data }] },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: { y: { beginAtZero:true, max:100 } }
+    }
   });
 }
 
-function promedioEvaluacion(ev) {
-  const map = { bueno: 100, medio: 60, malo: 20 };
-  return (map[ev.psr] + map[ev.kpi] + map[ev.gantt]) / 3;
+/* ===== EXCEL ===== */
+function exportarExcel() {
+  db.collection("proyectos").get().then(snap => {
+    const data = [];
+
+    const map = {
+      en_tiempo:100, cumple:90, valor:100, "6pack":100,
+      mitigado:70, programado:60, r3:65,
+      retraso:40, r2:20,
+      na:0
+    };
+
+    snap.forEach(doc => {
+      const p = doc.data();
+      data.push({
+        Proyecto: p.nombre,
+        KPI: map[p.evaluacion.kpi] ?? 0,
+        GANTT: map[p.evaluacion.gantt] ?? 0,
+        PDCA: map[p.evaluacion.pdca] ?? 0
+      });
+    });
+
+    const ws = XLSX.utils.json_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Proyectos");
+    XLSX.writeFile(wb, "Proyectos.xlsx");
+  });
 }
-/* ===== SELECT CHANGE ===== */
+
+/* ===== LOGOUT ===== */
+function logout() {
+  localStorage.clear();
+  window.location.href = "index.html";
+}
+
+/* ===== EVENTOS ===== */
 selectProyectoUser.onchange = () => {
   cargarProyecto(selectProyectoUser.value);
 };
 
-
-  function logout() {
-  localStorage.clear();
-  window.location.href = "index.html";
-}
-function setValor(tipo, valor) {
-
-  if (!proyecto) return; // 🛑 evita error
-
-  proyecto.evaluacion[tipo] = valor;
-
-  renderSemaforos();
-  actualizarUI(tipo, valor);
-}
-function actualizarUI(tipo, valor) {
-
-  const cont = document.querySelector(`.semaforo-opciones[data-tipo="${tipo}"]`);
-  if (!cont) return;
-
-  cont.querySelectorAll(".opcion").forEach(o => {
-    o.classList.remove("activa");
-  });
-
-  if (valor === "bueno") cont.children[0].classList.add("activa");
-  if (valor === "medio") cont.children[1].classList.add("activa");
-  if (valor === "malo") cont.children[2].classList.add("activa");
-  if (valor === "sin") cont.children[3].classList.add("activa");
-}
-
-function exportarExcel() {
-  db.collection("proyectos").get().then(snap => {
-    const data = [];
-    
-    snap.forEach(doc => {
-      const p = doc.data();
-      // Convertir colores a porcentaje
-      const map = { bueno: 100, medio: 75, malo: 50, sin: 0 };
-      data.push({
-        Proyecto: p.nombre,
-        PSR: map[p.evaluacion.psr] ?? 0,
-        KPI: map[p.evaluacion.kpi] ?? 0,
-        GANTT: map[p.evaluacion.gantt] ?? 0
-      });
-    });
-
-    // Crear hoja y libro
-    const ws = XLSX.utils.json_to_sheet(data);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Proyectos");
-
-    // Descargar Excel
-    XLSX.writeFile(wb, "Proyectos_Progreso.xlsx");
-  });
-}
-
-  async function cargarGraficaAntesDespues() {
-  const snap = await db.collection("historial").orderBy("fecha").get();
-  
-  // Guardar los últimos cambios de cada proyecto
-  const proyectosMap = {}; // proyectoId -> {nombre, antes, despues}
-  
-  snap.forEach(doc => {
-    const d = doc.data();
-    proyectosMap[d.proyectoId] = {
-      nombre: d.proyectoNombre,
-      antes: d.antes,
-      despues: d.despues
-    };
-  });
-  
-  const labels = [];
-  const psrAntes = [], psrDespues = [];
-  const kpiAntes = [], kpiDespues = [];
-  const ganttAntes = [], ganttDespues = [];
-  
-  const map = { bueno: 100, medio: 75, malo: 50, sin: 0 };
-
-  for (const pId in proyectosMap) {
-    const p = proyectosMap[pId];
-    labels.push(p.nombre);
-    psrAntes.push(map[p.antes.psr] ?? 0);
-    psrDespues.push(map[p.despues.psr] ?? 0);
-    kpiAntes.push(map[p.antes.kpi] ?? 0);
-    kpiDespues.push(map[p.despues.kpi] ?? 0);
-    ganttAntes.push(map[p.antes.gantt] ?? 0);
-    ganttDespues.push(map[p.despues.gantt] ?? 0);
-  }
-
-  const ctx = document.getElementById("graficaAntesDespues").getContext("2d");
-  if(window.chart2) window.chart2.destroy();
-
-  window.chart2 = new Chart(ctx, {
-    type: 'bar',
-    data: {
-      labels,
-      datasets: [
-        { label: "PSR Antes", data: psrAntes, backgroundColor: "rgba(75,192,192,0.4)" },
-        { label: "PSR Después", data: psrDespues, backgroundColor: "rgba(75,192,192,0.8)" },
-        { label: "KPI Antes", data: kpiAntes, backgroundColor: "rgba(255,206,86,0.4)" },
-        { label: "KPI Después", data: kpiDespues, backgroundColor: "rgba(255,206,86,0.8)" },
-        { label: "GANTT Antes", data: ganttAntes, backgroundColor: "rgba(255,99,132,0.4)" },
-        { label: "GANTT Después", data: ganttDespues, backgroundColor: "rgba(255,99,132,0.8)" },
-      ]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: { legend: { position: 'top' } },
-      scales: { y: { beginAtZero: true, max: 100 } }
-    }
-  });
-}
-  
+/* ===== INIT ===== */
 aplicarRol();
 cargarProyectos();
 cargarSelect();
-cargarGraficaAntesDespues();
 cargarGrafica();
+
 </script>
 
 </body>
