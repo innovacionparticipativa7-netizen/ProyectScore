@@ -10,145 +10,170 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
-<style>
+
+  
+  <style>
+* {
+  box-sizing: border-box;
+}
+
 body {
-  font-family: Arial;
-  background: #f4f6f8;
+  font-family: 'Segoe UI', Arial, sans-serif;
+  margin: 0;
+  background: linear-gradient(135deg, #eef2f7, #e3e9f0);
 }
 
-/* ===== ADMIN ===== */
-.admin-wrapper { padding:20px; }
+/* ===== HEADER ===== */
 .admin-header {
-  background:#fff; padding:15px; border-radius:10px;
-  display:flex; justify-content:space-between;
-}
-
-.lista-proyectos li {
-  padding:8px; cursor:pointer;
-}
-.lista-proyectos li:hover {
-  background:#eee;
-}
-
-/* ===== USER ===== */
-.user-wrapper {
-  display:flex;
-  justify-content:center;
-  margin-top:20px;
-}
-
-.card {
-  width:320px;
-  background:#fff;
-  padding:15px;
-  border-radius:10px;
-}
-
-.luz {
-  width:25px;
-  height:25px;
-  border-radius:50%;
-  background:gray;
-  margin:auto;
-}
-
-.resumen-semaforos {
-  display:flex;
-  justify-content:space-around;
-  margin-bottom:10px;
-}
-
-.btn {
-  width:100%;
-  padding:10px;
-  background:#4caf50;
-  color:#fff;
-  border:none;
-  border-radius:6px;
-  cursor:pointer;
-}
-  .semaforo-opciones {
+  background: #1f2937;
+  color: white;
+  padding: 15px;
+  border-radius: 0 0 15px 15px;
   display: flex;
-  gap: 10px;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* ===== LAYOUT ===== */
+.admin-content {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  padding: 15px;
+}
+
+/* ===== CARDS ===== */
+.card {
+  background: white;
+  border-radius: 18px;
+  padding: 15px;
+  box-shadow: 0 8px 25px rgba(0,0,0,0.08);
+  flex: 1 1 300px;
+  transition: 0.3s;
+}
+
+.card:hover {
+  transform: translateY(-3px);
+}
+
+/* ===== INPUT ===== */
+input, select {
+  width: 100%;
+  padding: 10px;
+  border-radius: 10px;
+  border: 1px solid #ddd;
+  margin-top: 8px;
   margin-bottom: 10px;
 }
 
-.opcion {
-  width: 25px;
-  height: 25px;
-  border-radius: 50%;
-  opacity: 0.4;
+/* ===== BOTONES ===== */
+button {
+  border: none;
+  border-radius: 10px;
+  padding: 10px;
   cursor: pointer;
-  border: 2px solid #ccc;
+  font-weight: bold;
+}
+
+.btn {
+  width: 100%;
+  background: linear-gradient(135deg, #4caf50, #2e7d32);
+  color: white;
+}
+
+button:hover {
+  opacity: 0.9;
+}
+
+/* ===== LISTA ===== */
+#listaProyectos li {
+  padding: 10px;
+  border-radius: 10px;
+  margin-bottom: 5px;
+  background: #f4f6f8;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+#listaProyectos li.activo {
+  background: #c8f7c5;
+}
+
+/* ===== USER CARD ===== */
+.user-wrapper {
+  padding: 15px;
+}
+
+.card-user {
+  max-width: 420px;
+  margin: auto;
+}
+
+/* ===== SEMAFOROS ===== */
+.resumen-semaforos {
+  display: flex;
+  justify-content: space-between;
+  margin: 15px 0;
+}
+
+.luz {
+  width: 35px;
+  height: 35px;
+  border-radius: 50%;
+  background: gray;
+  margin-top: 5px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.2);
+}
+
+/* ===== CHECKS BONITOS ===== */
+.check-opciones label {
+  display: block;
+  background: #f4f6f8;
+  padding: 10px;
+  border-radius: 10px;
+  margin-bottom: 8px;
+  cursor: pointer;
   transition: 0.2s;
 }
 
-.opcion:hover {
-  transform: scale(1.2);
+.check-opciones input {
+  margin-right: 8px;
 }
 
-.opcion.activa {
-  opacity: 1;
-  border: 2px solid #000;
+.check-opciones label:hover {
+  background: #e0e7ff;
 }
 
-.verde { background: green; }
-.amarillo { background: orange; }
-.rojo { background: red; }
-.gris { background: gray; }
-
-/* Tarjeta gráfica */
+/* ===== GRAFICAS ===== */
 .card-grafica {
-  background: #fff;
-  border-radius: 10px;
-  padding: 15px;
-  box-shadow: 0 3px 10px rgba(0,0,0,0.05);
-  flex: 1 1 350px;
-  max-width: 700px;
-
-  /* 🔒 limites de altura para que la gráfica no se desborde */
+  height: 350px;
   display: flex;
   flex-direction: column;
-  height: 400px;
-}
-#grafica {
-  flex: 1; /* ocupa todo el espacio disponible de la tarjeta */
 }
 
-  .lista-proyectos li.activo { background: #d0f0d0; }
-  .admin-wrapper { padding: 20px; }
-.admin-header {
-  display: flex; justify-content: space-between; align-items: center;
-  background: #fff; padding: 15px; border-radius: 10px; margin-bottom: 20px;
-  box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+canvas {
+  flex: 1;
 }
 
-.admin-content {
-  display: flex; flex-wrap: wrap; gap: 20px;
+/* ===== MOBILE ===== */
+@media (max-width: 600px) {
+  .admin-content {
+    flex-direction: column;
+  }
+
+  .card {
+    width: 100%;
+  }
+
+  .admin-header {
+    flex-direction: column;
+    gap: 10px;
+  }
 }
-
-.card {
-  background: #fff; border-radius: 10px; padding: 15px;
-  box-shadow: 0 3px 10px rgba(0,0,0,0.05);
-  flex: 1 1 350px; /* se adapta a la pantalla */
-  max-width: 700px;
-}
-
-#listaProyectos {
-  list-style: none; padding: 0; margin-top: 10px;
-  max-height: 300px; overflow-y: auto;
-}
-
-#listaProyectos li {
-  padding: 8px; cursor: pointer; display: flex; justify-content: space-between;
-  border-bottom: 1px solid #eee;
-}
-
-#listaProyectos li:hover { background: #f0f0f0; }
-#listaProyectos li.activo { background: #d0f0d0; }
-
-#grafica { width: 100%; height: 300px; } /* alto fijo, no se sale */
 </style>
+
+  
 </head>
 
 <body>
@@ -190,7 +215,7 @@ body {
 <!-- USER -->
 <div id="vista-user" style="display:none;">
   <div class="user-wrapper">
-    <div class="card">
+    <div class="card card-user">
 <button onclick="logout()">Salir</button>
       <h3 id="userNombreProyecto">Proyecto</h3>
 
