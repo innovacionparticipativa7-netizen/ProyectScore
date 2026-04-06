@@ -237,7 +237,6 @@ body {
 <label><input type="checkbox" value="gantt" onchange="togglePDCA(this)"> GANTT</label>
 <label><input type="checkbox" value="psr" onchange="togglePDCA(this)"> PSR</label>
 <label><input type="checkbox" value="iplayers" onchange="togglePDCA(this)"> IP Layers</label>
-<label><input type="checkbox" value="otro" onchange="togglePDCA(this)"> Otro</label>
 </div>
 
       <button class="btn" onclick="guardar()">Guardar</button>
@@ -414,7 +413,6 @@ function color(tipo, v) {
     if (cantidad === 4) return "#FFD700";     // amarillo
     if (cantidad === 3) return "#FF8C00";     // naranja
     if (cantidad < 3) return "#FF0000";       // rojo
-    if (cantidad === 0) return "#808080";       // gris
   }
 
   return "#808080"; // gris
