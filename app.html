@@ -220,19 +220,24 @@ canvas {
       <h3 id="userNombreProyecto">Proyecto</h3>
 
       <div class="resumen-semaforos">
-        <div>
-          PDCA
-          <div class="luz" id="sem-pdca"></div>
-        </div>
-        <div>
-          KPI
-          <div class="luz" id="sem-kpi"></div>
-        </div>
-        <div>
-          GANTT
-          <div class="luz" id="sem-plan"></div>
-        </div>
-      </div>
+  <div style="text-align:center;">
+    PDCA
+    <div class="luz" id="sem-pdca"></div>
+    <div id="porc-pdca">0%</div>
+  </div>
+
+  <div style="text-align:center;">
+    KPI
+    <div class="luz" id="sem-kpi"></div>
+    <div id="porc-kpi">0%</div>
+  </div>
+
+  <div style="text-align:center;">
+    GANTT
+    <div class="luz" id="sem-plan"></div>
+    <div id="porc-gantt">0%</div>
+  </div>
+</div>
 
       <select id="selectProyectoUser"></select>
 
@@ -449,6 +454,7 @@ function color(tipo, v) {
 function renderSemaforos() {
   if (!proyecto || !proyecto.evaluacion) return;
 
+  // COLORES
   document.getElementById("sem-kpi").style.background =
     color("kpi", proyecto.evaluacion.kpi);
 
@@ -457,6 +463,16 @@ function renderSemaforos() {
 
   document.getElementById("sem-pdca").style.background =
     color("pdca", proyecto.evaluacion.pdca);
+
+  // PORCENTAJES
+  document.getElementById("porc-kpi").innerText =
+    obtenerPorcentaje("kpi", proyecto.evaluacion.kpi) + "%";
+
+  document.getElementById("porc-gantt").innerText =
+    obtenerPorcentaje("gantt", proyecto.evaluacion.gantt) + "%";
+
+  document.getElementById("porc-pdca").innerText =
+    obtenerPorcentaje("pdca", proyecto.evaluacion.pdca) + "%";
 }
 
 /* ===== GUARDAR ===== */
@@ -588,6 +604,44 @@ function togglePDCA(checkbox) {
   }
 
   renderSemaforos();
+}
+
+
+  /* ===== PORCENTAJES ===== */
+  function obtenerPorcentaje(tipo, v) {
+
+  // ===== KPI =====
+  if (tipo === "kpi") {
+    if (v === "en_tiempo") return 100;
+    if (v === "cumple") return 90;
+    if (v === "mitigado") return 70;
+    if (v === "retraso") return 50;
+    if (v === "programado") return 30;
+    return 0;
+  }
+
+  // ===== GANTT =====
+  if (tipo === "gantt") {
+    if (v === "valor") return 100;
+    if (v === "retraso") return 70;
+    if (v === "r2") return 50;
+    if (v === "r3") return 30;
+    return 0;
+  }
+
+  // ===== PDCA =====
+  if (tipo === "pdca") {
+    const cantidad = Array.isArray(v) ? v.length : 0;
+
+    if (cantidad >= 5) return 100;
+    if (cantidad === 4) return 80;
+    if (cantidad === 3) return 60;
+    if (cantidad === 2) return 40;
+    if (cantidad === 1) return 20;
+    return 0;
+  }
+
+  return 0;
 }
 /* ===== INIT ===== */
 aplicarRol();
