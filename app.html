@@ -232,11 +232,12 @@ body {
 
 <p>PDCA</p>
 <div class="check-opciones">
-<label><input type="radio" name="pdca" value="6pack" onclick="setValor('pdca','6pack')"> 6 Pack</label>
-<label><input type="radio" name="pdca" value="kpi" onclick="setValor('pdca','kpi')"> KPI</label>
-<label><input type="radio" name="pdca" value="gantt" onclick="setValor('pdca','gantt')"> GANTT</label>
-<label><input type="radio" name="pdca" value="psr" onclick="setValor('pdca','psr')"> PSR</label>
-<label><input type="radio" name="pdca" value="iplayers" onclick="setValor('pdca','iplayers')"> IP Layers</label>
+<label><input type="checkbox" value="6pack" onchange="togglePDCA(this)"> 6 Pack</label>
+<label><input type="checkbox" value="kpi" onchange="togglePDCA(this)"> KPI</label>
+<label><input type="checkbox" value="gantt" onchange="togglePDCA(this)"> GANTT</label>
+<label><input type="checkbox" value="psr" onchange="togglePDCA(this)"> PSR</label>
+<label><input type="checkbox" value="iplayers" onchange="togglePDCA(this)"> IP Layers</label>
+<label><input type="checkbox" value="otro" onchange="togglePDCA(this)"> Otro</label>
 </div>
 
       <button class="btn" onclick="guardar()">Guardar</button>
@@ -384,39 +385,52 @@ function setValor(tipo, valor) {
 }
 
 /* ===== COLORES ===== */
-function color(v) {
+function color(tipo, v) {
 
-  const verde = ["en_tiempo", "valor"];
-  const verdeClaro = ["cumple"];
-  const amarillo = ["mitigado"];
-  const naranja = ["retraso", "r2"];
-  const rojo = ["programado", "r3"];
-  const gris = ["na"];
+  // ===== KPI =====
+  if (tipo === "kpi") {
+    if (["en_tiempo"].includes(v)) return "#008000";
+    if (["cumple"].includes(v)) return "#90EE90";
+    if (["mitigado"].includes(v)) return "#FFD700";
+    if (["retraso"].includes(v)) return "#FF8C00";
+    if (["programado"].includes(v)) return "#FF0000";
+  }
 
-  if (verde.includes(v)) return "#008000";        // verde fuerte
-  if (verdeClaro.includes(v)) return "#90EE90";   // verde claro
-  if (amarillo.includes(v)) return "#FFD700";     // amarillo
-  if (naranja.includes(v)) return "#FF8C00";      // naranja
-  if (rojo.includes(v)) return "#FF0000";         // rojo
-  if (gris.includes(v)) return "#808080";         // gris
+  // ===== GANTT =====
+  if (tipo === "gantt") {
+    if (["valor"].includes(v)) return "#008000";
+    if (["retraso"].includes(v)) return "#FFD700";
+    if (["r2"].includes(v)) return "#FF8C00";
+    if (["r3"].includes(v)) return "#FF0000";
+  }
 
-  return "#808080"; // default
+  // ===== PDCA (POR CANTIDAD) =====
+  if (tipo === "pdca") {
+
+    const cantidad = Array.isArray(v) ? v.length : 0;
+
+    if (cantidad >= 6) return "#008000";      // verde
+    if (cantidad === 5) return "#90EE90";     // verde claro
+    if (cantidad === 4) return "#FFD700";     // amarillo
+    if (cantidad === 3) return "#FF8C00";     // naranja
+    if (cantidad < 3) return "#FF0000";       // rojo
+  }
+
+  return "#808080"; // gris
 }
 
 /* ===== SEMAFORO VISUAL ===== */
 function renderSemaforos() {
   if (!proyecto || !proyecto.evaluacion) return;
 
-  const map = {
-    "sem-pdca": proyecto.evaluacion.pdca,
-    "sem-kpi": proyecto.evaluacion.kpi,
-    "sem-plan": proyecto.evaluacion.gantt
-  };
+  document.getElementById("sem-kpi").style.background =
+    color("kpi", proyecto.evaluacion.kpi);
 
-  Object.keys(map).forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.style.background = color(map[id]);
-  });
+  document.getElementById("sem-plan").style.background =
+    color("gantt", proyecto.evaluacion.gantt);
+
+  document.getElementById("sem-pdca").style.background =
+    color("pdca", proyecto.evaluacion.pdca);
 }
 
 /* ===== GUARDAR ===== */
@@ -532,6 +546,23 @@ selectProyectoUser.onchange = () => {
   cargarProyecto(selectProyectoUser.value);
 };
 
+/* ===== TOGGLE ===== */
+function togglePDCA(checkbox) {
+  if (!proyecto) return;
+
+  if (!Array.isArray(proyecto.evaluacion.pdca)) {
+    proyecto.evaluacion.pdca = [];
+  }
+
+  if (checkbox.checked) {
+    proyecto.evaluacion.pdca.push(checkbox.value);
+  } else {
+    proyecto.evaluacion.pdca =
+      proyecto.evaluacion.pdca.filter(v => v !== checkbox.value);
+  }
+
+  renderSemaforos();
+}
 /* ===== INIT ===== */
 aplicarRol();
 cargarProyectos();
