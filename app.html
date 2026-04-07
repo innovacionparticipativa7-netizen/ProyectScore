@@ -197,7 +197,24 @@ select:focus {
 #formCrear {
   transition: all 0.3s ease;
 }
-    
+    #vista-user {
+  display: block;
+  width: 100%;
+}
+
+.user-wrapper {
+  display: flex;
+  justify-content: center;
+  padding: 20px;
+}
+
+.card-user {
+  width: 100%;
+  max-width: 500px;
+}
+    #vista-user {
+  background: red;
+}
 </style>
 
   
@@ -397,7 +414,8 @@ function aplicarRol() {
     vistaUser.style.display = "none";
   } else {
     vistaAdmin.style.display = "none";
-    vistaUser.style.display = "block";
+    vistaUser.style.display = "flex"; // 👈 CAMBIO CLAVE
+    vistaUser.style.flexDirection = "column";
   }
 }
 /* ===== CREAR ===== */
