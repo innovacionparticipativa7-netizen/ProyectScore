@@ -435,74 +435,58 @@ await db.collection("proyectos").add({
   alert("Proyecto creado ✅");
 }
 
-/* ===== LISTA ===== */
-async function cargarProyectos() {
-  const snap = await db.collection("proyectos").get();
-  listaProyectos.innerHTML = "";
 
-  snap.forEach(doc => {
-    const li = document.createElement("li");
-    li.textContent = doc.data().nombre;
-
-    li.onclick = () => {
-      proyectoId = doc.id;
-      proyecto = doc.data();
-      document.querySelectorAll("#listaProyectos li").forEach(el => el.classList.remove("activo"));
-      li.classList.add("activo");
-    };
-
-    const btn = document.createElement("button");
-    btn.textContent = "Eliminar";
-    btn.onclick = async (e) => {
-      e.stopPropagation();
-      if (confirm("Eliminar este proyecto?")) {
-        await db.collection("proyectos").doc(doc.id).delete();
-        cargarProyectos();
-      }
-    };
-
-    li.appendChild(btn);
-    listaProyectos.appendChild(li);
-  });
-}
 
 /* ===== SELECT USER ===== */
-async function cargarSelect() {
+function cargarSelect() {
   db.collection("proyectos").onSnapshot(snap => {
-  listaProyectos.innerHTML = "";
+    selectProyectoUser.innerHTML = "";
 
-  snap.forEach(doc => {
-    const li = document.createElement("li");
-    li.textContent = doc.data().nombre;
+    snap.forEach(doc => {
+      const op = document.createElement("option");
+      op.value = doc.id;
+      op.textContent = doc.data().nombre;
+      selectProyectoUser.appendChild(op);
+    });
 
-    li.onclick = () => {
-      proyectoId = doc.id;
-      proyecto = doc.data();
-      document.querySelectorAll("#listaProyectos li").forEach(el => el.classList.remove("activo"));
-      li.classList.add("activo");
-    };
-
-    listaProyectos.appendChild(li);
+    // cargar automáticamente el primero
+    if (selectProyectoUser.value) {
+      cargarProyecto(selectProyectoUser.value);
+    }
   });
-});
-
-/* ===== CARGAR PROYECTO ===== */
-async function cargarProyecto(id) {
-  proyectoId = id;
-  const snap = await db.collection("proyectos").doc(id).get();
-  if (!snap.exists) return;
-
-  proyecto = snap.data();
-  userNombreProyecto.textContent = proyecto.nombre;
-
-  document.getElementById("infoChampion").innerText = proyecto.champion || "-";
-  document.getElementById("infoSponsor").innerText = proyecto.sponsor || "-";
-  document.getElementById("infoOwner").innerText = proyecto.owner || "-";
-
-  renderSemaforos();
-  marcarRadios();
 }
 
+/* ===== CARGAR PROYECTO ===== */
+function cargarProyectos() {
+  db.collection("proyectos").onSnapshot(snap => {
+    listaProyectos.innerHTML = "";
+
+    snap.forEach(doc => {
+      const li = document.createElement("li");
+      li.textContent = doc.data().nombre;
+
+      li.onclick = () => {
+        proyectoId = doc.id;
+        proyecto = doc.data();
+        document.querySelectorAll("#listaProyectos li")
+          .forEach(el => el.classList.remove("activo"));
+        li.classList.add("activo");
+      };
+
+      const btn = document.createElement("button");
+      btn.textContent = "Eliminar";
+      btn.onclick = async (e) => {
+        e.stopPropagation();
+        if (confirm("Eliminar este proyecto?")) {
+          await db.collection("proyectos").doc(doc.id).delete();
+        }
+      };
+
+      li.appendChild(btn);
+      listaProyectos.appendChild(li);
+    });
+  });
+}
 /* ===== MARCAR RADIOS ===== */
 function marcarRadios() {
   if (!proyecto || !proyecto.evaluacion) return;
@@ -524,7 +508,23 @@ function marcarRadios() {
     c.checked = proyecto.evaluacion.pdca?.includes(c.value);
   });
 }
+  
+async function cargarProyecto(id) {
+  proyectoId = id;
+  const snap = await db.collection("proyectos").doc(id).get();
+  if (!snap.exists) return;
 
+  proyecto = snap.data();
+
+  document.getElementById("userNombreProyecto").innerText = proyecto.nombre;
+  document.getElementById("infoChampion").innerText = proyecto.champion || "-";
+  document.getElementById("infoSponsor").innerText = proyecto.sponsor || "-";
+  document.getElementById("infoOwner").innerText = proyecto.owner || "-";
+
+  renderSemaforos();
+  marcarRadios();
+}
+  
   
 /* ===== SET VALOR ===== */
 function setValor(tipo, valor) {
@@ -625,13 +625,14 @@ function promedioEvaluacion(ev) {
     na:0
   };
 
-  return (
-    (map[ev.kpi] ?? 0) +
-    (map[ev.gantt] ?? 0) +
-    (map[ev.pdca] ?? 0)
-  ) / 3;
-}
+const pdcaScore = Array.isArray(ev.pdca) ? ev.pdca.length * 20 : 0;
 
+return (
+  (map[ev.kpi] ?? 0) +
+  (map[ev.gantt] ?? 0) +
+  pdcaScore
+) / 3;
+}
 
 /* ===== EXCEL ===== */
 function exportarExcel() {
