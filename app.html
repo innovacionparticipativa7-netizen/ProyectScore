@@ -233,6 +233,8 @@ select:focus {
       <ul id="listaProyectos"></ul>
       <button class="btn" onclick="exportarExcel()">Exportar Proyectos a Excel</button>
     </div>
+  <input type="file" id="inputExcel" accept=".xlsx, .xls">
+<button onclick="cargarExcel()">Cargar Excel</button>
 
     <!-- Tarjeta gráfica -->
     <div class="card card-grafica">
@@ -801,13 +803,102 @@ function cargarChampionsProyecto() {
   }
 }
 
+/* ===== SUBIR EXCEL ===== */
+  
+async function cargarExcel() {
+  const file = document.getElementById("inputExcel").files[0];
 
+  if (!file) {
+    return alert("Selecciona un archivo");
+  }
 
+  const reader = new FileReader();
 
+  reader.onload = async (e) => {
+    const data = new Uint8Array(e.target.result);
+    const workbook = XLSX.read(data, { type: "array" });
 
+    const hoja = workbook.Sheets[workbook.SheetNames[0]];
+    const json = XLSX.utils.sheet_to_json(hoja);
 
+    await guardarMasivo(json);
+  };
 
+  reader.readAsArrayBuffer(file);
+}
 
+  /* ===== CARGA MASIVA ===== */
+
+async function guardarMasivo(data) {
+
+  let errores = [];
+  let exitos = 0;
+
+  for (let i = 0; i < data.length; i++) {
+    const row = data[i];
+
+    const nombre = row.nombre;
+    const tier = row.tier;
+    const seccion = row.seccion;
+    const champion = row.champion;
+
+    // VALIDAR VACÍOS
+    if (!nombre || !tier || !seccion || !champion) {
+      errores.push(`Fila ${i+2} incompleta`);
+      continue;
+    }
+
+    // VALIDAR VALORES CORRECTOS
+    if (!validarDatos(row)) {
+      errores.push(`Fila ${i+2} datos inválidos`);
+      continue;
+    }
+
+    try {
+      await db.collection("proyectos").add({
+        nombre,
+        tier,
+        seccion,
+        champion,
+        evaluacion: {
+          kpi: "",
+          gantt: "",
+          pdca: []
+        }
+      });
+
+      exitos++;
+
+    } catch (err) {
+      errores.push(`Fila ${i+2} error al guardar`);
+    }
+  }
+
+  cargarProyectos();
+  cargarSelect();
+
+  alert(`Carga completada ✅
+✔ ${exitos} proyectos cargados
+❌ ${errores.length} errores`);
+
+  console.log("Errores:", errores);
+}
+  
+function validarDatos(row) {
+  const tiers = ["Tier 1","Tier 2","Tier 3","Tier 4","Tier 5","Tier 6"];
+  const secciones = [
+    "Buy to Make",
+    "DTC",
+    "Material Optimization",
+    "OH Cost Control",
+    "Resourcing"
+  ];
+
+  if (!tiers.includes(row.tier)) return false;
+  if (!secciones.includes(row.seccion)) return false;
+
+  return true;
+}
 
 
 
