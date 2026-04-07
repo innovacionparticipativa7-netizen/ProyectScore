@@ -391,7 +391,6 @@ if (!UID || !ROL) {
 console.log("ROL:", ROL);
   
 function aplicarRol() {
-  console.log("ROL detectado:", ROL);
 
   if (ROL === "admin") {
     vistaAdmin.style.display = "block";
@@ -405,7 +404,9 @@ function aplicarRol() {
     vistaUser.style.display = "block";
   }
 }
-
+console.log("ROL:", ROL);
+console.log("Vista user:", vistaUser);
+  vistaUser.style.display = "block";
 /* ===== CREAR ===== */
 async function crearProyecto() {
   const nombre = document.getElementById("nombreProyecto").value.trim();
@@ -678,12 +679,16 @@ function logout() {
   localStorage.clear();
   window.location.href = "index.html";
 }
-
+  
+const selectProyectoUser = document.getElementById("selectProyectoUser");
 /* ===== EVENTOS ===== */
 selectProyectoUser.onchange = () => {
   cargarProyecto(selectProyectoUser.value);
 };
-
+const vistaAdmin = document.getElementById("vista-admin");
+const vistaUser = document.getElementById("vista-user");
+const db = firebase.firestore();
+  
 /* ===== TOGGLE ===== */
 function togglePDCA(checkbox) {
   if (!proyecto) return;
