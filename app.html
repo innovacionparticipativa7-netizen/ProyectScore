@@ -406,7 +406,6 @@ function aplicarRol() {
 }
 console.log("ROL:", ROL);
 console.log("Vista user:", vistaUser);
-  vistaUser.style.display = "block";
 /* ===== CREAR ===== */
 async function crearProyecto() {
   const nombre = document.getElementById("nombreProyecto").value.trim();
@@ -685,10 +684,6 @@ const selectProyectoUser = document.getElementById("selectProyectoUser");
 selectProyectoUser.onchange = () => {
   cargarProyecto(selectProyectoUser.value);
 };
-const vistaAdmin = document.getElementById("vista-admin");
-const vistaUser = document.getElementById("vista-user");
-const db = firebase.firestore();
-  
 /* ===== TOGGLE ===== */
 function togglePDCA(checkbox) {
   if (!proyecto) return;
