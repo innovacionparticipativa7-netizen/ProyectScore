@@ -391,25 +391,14 @@ if (!UID || !ROL) {
 console.log("ROL:", ROL);
   
 function aplicarRol() {
-
   if (ROL === "admin") {
     vistaAdmin.style.display = "block";
     vistaUser.style.display = "none";
-  } else if (ROL === "user") {
-    vistaAdmin.style.display = "none";
-    vistaUser.style.display = "block";
   } else {
-    // fallback para evitar pantalla blanca
     vistaAdmin.style.display = "none";
     vistaUser.style.display = "block";
-    
   }
-  if (!ROL) {
-  ROL = "user"; // o "user" para probar
 }
-}
-console.log("ROL:", ROL);
-console.log("Vista user:", vistaUser);
 /* ===== CREAR ===== */
 async function crearProyecto() {
   const nombre = document.getElementById("nombreProyecto").value.trim();
@@ -789,18 +778,18 @@ async function aplicarFiltros() {
   const tier = document.getElementById("filtroTier").value;
   const seccion = document.getElementById("filtroSeccion").value;
   const champion = document.getElementById("filtroChampion").value;
+
   const selectProyectoUser = document.getElementById("selectProyectoUser");
+
   const snap = await db.collection("proyectos").get();
-  const listaProyectos = document.getElementById("listaProyectos");
 
-
-  
-
+  // limpiar select
   selectProyectoUser.innerHTML = "";
 
   snap.forEach(doc => {
     const p = doc.data();
 
+    // aplicar filtros
     if (tier && p.tier !== tier) return;
     if (seccion && p.seccion !== seccion) return;
     if (champion && p.champion !== champion) return;
@@ -812,12 +801,29 @@ async function aplicarFiltros() {
     selectProyectoUser.appendChild(op);
   });
 
-  // cargar el primero filtrado automáticamente
-  if (selectProyectoUser.value) {
-    cargarProyecto(selectProyectoUser.value);
-  }
-}
+  // 🔴 SI NO HAY RESULTADOS
+  if (selectProyectoUser.options.length === 0) {
+    const op = document.createElement("option");
+    op.textContent = "Sin resultados";
+    op.value = "";
+    selectProyectoUser.appendChild(op);
 
+    // limpiar vista
+    document.getElementById("userNombreProyecto").innerText = "Sin resultados";
+    document.getElementById("infoChampion").innerText = "-";
+    document.getElementById("infoSponsor").innerText = "-";
+    document.getElementById("infoOwner").innerText = "-";
+
+    return;
+  }
+
+  // 🔥 FORZAR selección del primero
+  const primerId = selectProyectoUser.options[0].value;
+  selectProyectoUser.value = primerId;
+
+  // cargar proyecto automáticamente
+  cargarProyecto(primerId);
+}
 /* ===== CARGA DE CHAMPIONS AUTOMATICO  ===== */
   
 function cargarChampionsProyecto() {
