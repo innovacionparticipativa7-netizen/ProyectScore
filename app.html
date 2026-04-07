@@ -590,25 +590,26 @@ function obtenerPorcentaje(tipo, v) {
 
 /* ===== SEMAFOROS ===== */
 function renderSemaforos() {
-  if (!proyecto?.evaluacion) return;
+  if (!proyecto || !proyecto.evaluacion) return;
 
-  sem_kpi.style.background = color("kpi", proyecto.evaluacion.kpi);
-  sem_plan.style.background = color("gantt", proyecto.evaluacion.gantt);
-  sem_pdca.style.background = color("pdca", proyecto.evaluacion.pdca);
+  document.getElementById("sem-kpi").style.background =
+    color("kpi", proyecto.evaluacion.kpi);
 
-  porc_kpi.innerText = obtenerPorcentaje("kpi", proyecto.evaluacion.kpi) + "%";
-  porc_gantt.innerText = obtenerPorcentaje("gantt", proyecto.evaluacion.gantt) + "%";
-  porc_pdca.innerText = obtenerPorcentaje("pdca", proyecto.evaluacion.pdca) + "%";
+  document.getElementById("sem-plan").style.background =
+    color("gantt", proyecto.evaluacion.gantt);
+
+  document.getElementById("sem-pdca").style.background =
+    color("pdca", proyecto.evaluacion.pdca);
+
+  document.getElementById("porc-kpi").innerText =
+    obtenerPorcentaje("kpi", proyecto.evaluacion.kpi) + "%";
+
+  document.getElementById("porc-gantt").innerText =
+    obtenerPorcentaje("gantt", proyecto.evaluacion.gantt) + "%";
+
+  document.getElementById("porc-pdca").innerText =
+    obtenerPorcentaje("pdca", proyecto.evaluacion.pdca) + "%";
 }
-
-/* ===== GUARDAR ===== */
-async function guardar() {
-  const before = await db.collection("proyectos").doc(proyectoId).get();
-
-  await db.collection("proyectos").doc(proyectoId).update({
-    evaluacion: proyecto.evaluacion
-  });
-
   await db.collection("historial").add({
     proyectoId,
     proyectoNombre: proyecto.nombre,
