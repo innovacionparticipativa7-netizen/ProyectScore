@@ -442,40 +442,30 @@ await db.collection("proyectos").add({
 
 /* ===== SELECT USER ===== */
 async function cargarSelect() {
-  try {
-    const snap = await db.collection("proyectos").get();
+  const snap = await db.collection("proyectos").get();
 
-    selectProyectoUser.innerHTML = "";
+  selectProyectoUser.innerHTML = "";
 
-    if (snap.empty) {
-      const op = document.createElement("option");
-      op.textContent = "No hay proyectos";
-      op.value = "";
-      selectProyectoUser.appendChild(op);
-      return;
-    }
-
-    let primerId = null;
-
-    snap.forEach(doc => {
-      const op = document.createElement("option");
-      op.value = doc.id;
-      op.textContent = doc.data().nombre;
-      selectProyectoUser.appendChild(op);
-
-      if (!primerId) primerId = doc.id;
-    });
-
-    // 🔥 SOLO si hay ID válido
-    if (primerId) {
-      selectProyectoUser.value = primerId;
-      await cargarProyecto(primerId);
-    }
-
-  } catch (error) {
-    console.error("Error cargarSelect:", error);
-    alert("Error cargando proyectos");
+  if (snap.empty) {
+    selectProyectoUser.innerHTML = "<option>No hay proyectos</option>";
+    return;
   }
+
+  let primerId = null;
+
+  snap.forEach(doc => {
+    const op = document.createElement("option");
+    op.value = doc.id;
+    op.textContent = doc.data().nombre;
+    selectProyectoUser.appendChild(op);
+
+    if (!primerId) primerId = doc.id;
+  });
+
+  // 🔥 FORZAR SELECCIÓN
+  selectProyectoUser.value = primerId;
+
+  await cargarProyecto(primerId);
 }
 
 /* ===== CARGAR PROYECTO ===== */
@@ -602,9 +592,11 @@ function color(tipo, v) {
 }
 /* ===== SEMAFORO VISUAL ===== */
 function renderSemaforos() {
-  if (!proyecto || !proyecto.evaluacion) return;
+  if (!proyecto || !proyecto.evaluacion) {
+    console.warn("Sin proyecto cargado");
+    return;
+  }
 
-  // COLORES
   document.getElementById("sem-kpi").style.background =
     color("kpi", proyecto.evaluacion.kpi);
 
@@ -614,7 +606,6 @@ function renderSemaforos() {
   document.getElementById("sem-pdca").style.background =
     color("pdca", proyecto.evaluacion.pdca);
 
-  // PORCENTAJES
   document.getElementById("porc-kpi").innerText =
     obtenerPorcentaje("kpi", proyecto.evaluacion.kpi) + "%";
 
@@ -624,7 +615,6 @@ function renderSemaforos() {
   document.getElementById("porc-pdca").innerText =
     obtenerPorcentaje("pdca", proyecto.evaluacion.pdca) + "%";
 }
-
 /* ===== GUARDAR ===== */
 async function guardar() {
   const before = await db.collection("proyectos").doc(proyectoId).get();
@@ -1007,11 +997,21 @@ function toggleCrear() {
   }
 }
 
+async function initApp() {
+  aplicarRol();
+  cargarProyectos();
 
-  
-aplicarRol();
-cargarProyectos();
-cargarSelect();
+  if (ROL !== "admin") {
+    await cargarSelect();
+
+    // 🔥 SI NO SE CARGA AUTOMÁTICO, FORZARLO
+    if (selectProyectoUser.value) {
+      await cargarProyecto(selectProyectoUser.value);
+    }
+  }
+}
+
+initApp();
 
 </script>
 
