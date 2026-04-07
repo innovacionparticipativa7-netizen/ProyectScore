@@ -402,7 +402,11 @@ function aplicarRol() {
     // fallback para evitar pantalla blanca
     vistaAdmin.style.display = "none";
     vistaUser.style.display = "block";
+    
   }
+  if (!ROL) {
+  ROL = "user"; // o "user" para probar
+}
 }
 console.log("ROL:", ROL);
 console.log("Vista user:", vistaUser);
