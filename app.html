@@ -441,34 +441,30 @@ await db.collection("proyectos").add({
 
 
 /* ===== SELECT USER ===== */
-function cargarSelect() {
-  db.collection("proyectos").onSnapshot(snap => {
-    selectProyectoUser.innerHTML = "";
+async function cargarSelect() {
+  const snap = await db.collection("proyectos").get();
 
-    // 🔴 Si no hay proyectos
-    if (snap.empty) {
-      const op = document.createElement("option");
-      op.textContent = "No hay proyectos";
-      op.value = "";
-      selectProyectoUser.appendChild(op);
-      return;
-    }
+  selectProyectoUser.innerHTML = "";
 
-    // ✅ Llenar select
-    snap.forEach(doc => {
-      const op = document.createElement("option");
-      op.value = doc.id;
-      op.textContent = doc.data().nombre;
-      selectProyectoUser.appendChild(op);
-    });
+  if (snap.empty) {
+    const op = document.createElement("option");
+    op.textContent = "No hay proyectos";
+    op.value = "";
+    selectProyectoUser.appendChild(op);
+    return;
+  }
 
-    // 🔥 FORZAR selección del primero
-    if (selectProyectoUser.options.length > 0) {
-      const primerId = selectProyectoUser.options[0].value;
-      selectProyectoUser.value = primerId;
-      cargarProyecto(primerId);
-    }
+  snap.forEach(doc => {
+    const op = document.createElement("option");
+    op.value = doc.id;
+    op.textContent = doc.data().nombre;
+    selectProyectoUser.appendChild(op);
   });
+
+  // seleccionar primero
+  const primerId = selectProyectoUser.options[0].value;
+  selectProyectoUser.value = primerId;
+  cargarProyecto(primerId);
 }
 
 /* ===== CARGAR PROYECTO ===== */
