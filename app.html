@@ -362,7 +362,9 @@ select:focus {
 </div>
 
 <script>
-
+window.onerror = function (msg, url, line) {
+  alert("Error: " + msg + " en línea " + line);
+};
 /* ===== FIREBASE ===== */
 firebase.initializeApp({
   apiKey: "AIzaSyAoVH8wQ2ofolAaJYdFnu1COcwI-xvaNnM",
@@ -743,7 +745,7 @@ const championsPorSeccion = {
   /* ===== ACTUALIZAR CHAMPIONS DINAMICAMENTE  ===== */
 
 document.getElementById("filtroSeccion").addEventListener("change", () => {
-  const seccion = filtroSeccion.value;
+  const seccion = document.getElementById("filtroSeccion").value;
   const selectChampion = document.getElementById("filtroChampion");
 
   selectChampion.innerHTML = '<option value="">Todos los Champions</option>';
@@ -763,8 +765,12 @@ async function aplicarFiltros() {
   const tier = document.getElementById("filtroTier").value;
   const seccion = document.getElementById("filtroSeccion").value;
   const champion = document.getElementById("filtroChampion").value;
-
+  const selectProyectoUser = document.getElementById("selectProyectoUser");
   const snap = await db.collection("proyectos").get();
+  const listaProyectos = document.getElementById("listaProyectos");
+
+
+  
 
   selectProyectoUser.innerHTML = "";
 
