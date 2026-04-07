@@ -183,6 +183,20 @@ select:focus {
   outline: none;
   box-shadow: 0 0 5px rgba(76,175,80,0.4);
 }
+
+.admin-content {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.card {
+  min-height: 200px;
+}
+
+#formCrear {
+  transition: all 0.3s ease;
+}
     
 </style>
 
@@ -203,55 +217,56 @@ select:focus {
   <div class="admin-content">
     <!-- Tarjeta lista de proyectos -->
     <div class="card">
-      <h3>Proyectos</h3>
-      <input id="nombreProyecto" placeholder="Nombre del proyecto">
+  <h3>Proyectos</h3>
 
-<select id="tierProyecto">
-  <option value="">Selecciona Tier</option>
-  <option>Tier 1</option>
-  <option>Tier 2</option>
-  <option>Tier 3</option>
-  <option>Tier 4</option>
-  <option>Tier 5</option>
-  <option>Tier 6</option>
-</select>
+  <button class="btn" onclick="toggleCrear()">+ Nuevo Proyecto</button>
 
-<select id="seccionProyecto" onchange="cargarChampionsProyecto()">
-  <option value="">Selecciona Sección</option>
-  <option>Buy to Make</option>
-  <option>DTC</option>
-  <option>Material Optimization</option>
-  <option>OH Cost Control</option>
-  <option>Resourcing</option>
-</select>
+  <div id="formCrear" style="display:none; margin-top:10px;">
 
-<select id="championProyecto">
-  <option value="">Selecciona Champion</option>
-</select>
+    <input id="nombreProyecto" placeholder="Nombre del proyecto">
 
-<input id="sponsorProyecto" placeholder="Sponsor">
-<input id="ownerProyecto" placeholder="Owner">
-      
-<button onclick="crearProyecto()">Crear</button>
-      <ul id="listaProyectos"></ul>
-      <button class="btn" onclick="exportarExcel()">Exportar Proyectos a Excel</button>
-    </div>
-  <input type="file" id="inputExcel" accept=".xlsx, .xls">
-<button onclick="cargarExcel()">Cargar Excel</button>
-    <button onclick="descargarPlantilla()">Descargar Plantilla Excel</button>
+    <select id="tierProyecto">
+      <option value="">Selecciona Tier</option>
+      <option>Tier 1</option>
+      <option>Tier 2</option>
+      <option>Tier 3</option>
+      <option>Tier 4</option>
+      <option>Tier 5</option>
+      <option>Tier 6</option>
+    </select>
 
-    <!-- Tarjeta gráfica -->
-    <div class="card card-grafica">
-    <h3>Progreso semanal</h3>
-    <canvas id="grafica"></canvas>
-    </div>
+    <select id="seccionProyecto" onchange="cargarChampionsProyecto()">
+      <option value="">Selecciona Sección</option>
+      <option>Buy to Make</option>
+      <option>DTC</option>
+      <option>Material Optimization</option>
+      <option>OH Cost Control</option>
+      <option>Resourcing</option>
+    </select>
+
+    <select id="championProyecto">
+      <option value="">Selecciona Champion</option>
+    </select>
+
+    <input id="sponsorProyecto" placeholder="Sponsor">
+    <input id="ownerProyecto" placeholder="Owner">
+
+    <button class="btn" onclick="crearProyecto()">Crear</button>
+
   </div>
-  
-  <!-- Tarjeta gráfica antes/después -->
-<div class="card card-grafica">
-  <h3>Antes / Después por proyecto</h3>
-  <canvas id="graficaAntesDespues"></canvas>
+
+  <hr>
+
+  <ul id="listaProyectos"></ul>
+
+  <button class="btn" onclick="exportarExcel()">Exportar</button>
+  <button class="btn" onclick="descargarPlantilla()">Plantilla</button>
+
+  <input type="file" id="inputExcel" accept=".xlsx, .xls">
+  <button onclick="cargarExcel()">Cargar Excel</button>
+
 </div>
+
   
 </div>
 
@@ -309,7 +324,7 @@ select:focus {
     <div id="porc-gantt">0%</div>
   </div>
 </div>
-
+<p><b>Proyecto:</b> <span id="userNombreProyecto"></span></p>
       <select id="selectProyectoUser"></select>
 
       <div>
@@ -362,7 +377,6 @@ const db = firebase.firestore();
 /* ===== VARIABLES ===== */
 let ROL = localStorage.getItem("rol");
 let UID = localStorage.getItem("uid");
-let chart = null;
 let proyectoId = null;
 let proyecto = null;
 
@@ -435,7 +449,6 @@ async function cargarProyectos() {
       proyecto = doc.data();
       document.querySelectorAll("#listaProyectos li").forEach(el => el.classList.remove("activo"));
       li.classList.add("activo");
-      cargarGrafica(proyectoId);
     };
 
     const btn = document.createElement("button");
@@ -445,7 +458,6 @@ async function cargarProyectos() {
       if (confirm("Eliminar este proyecto?")) {
         await db.collection("proyectos").doc(doc.id).delete();
         cargarProyectos();
-        cargarGrafica();
       }
     };
 
@@ -456,20 +468,23 @@ async function cargarProyectos() {
 
 /* ===== SELECT USER ===== */
 async function cargarSelect() {
-  const snap = await db.collection("proyectos").get();
-  selectProyectoUser.innerHTML = "";
+  db.collection("proyectos").onSnapshot(snap => {
+  listaProyectos.innerHTML = "";
 
   snap.forEach(doc => {
-    const op = document.createElement("option");
-    op.value = doc.id;
-    op.textContent = doc.data().nombre;
-    selectProyectoUser.appendChild(op);
-  });
+    const li = document.createElement("li");
+    li.textContent = doc.data().nombre;
 
-  if (selectProyectoUser.value) {
-    cargarProyecto(selectProyectoUser.value);
-  }
-}
+    li.onclick = () => {
+      proyectoId = doc.id;
+      proyecto = doc.data();
+      document.querySelectorAll("#listaProyectos li").forEach(el => el.classList.remove("activo"));
+      li.classList.add("activo");
+    };
+
+    listaProyectos.appendChild(li);
+  });
+});
 
 /* ===== CARGAR PROYECTO ===== */
 async function cargarProyecto(id) {
@@ -492,13 +507,21 @@ async function cargarProyecto(id) {
 function marcarRadios() {
   if (!proyecto || !proyecto.evaluacion) return;
 
-  Object.keys(proyecto.evaluacion).forEach(tipo => {
+  // KPI y GANTT
+  ["kpi", "gantt"].forEach(tipo => {
     const valor = proyecto.evaluacion[tipo];
     const radios = document.querySelectorAll(`input[name="${tipo}"]`);
-    
+
     radios.forEach(r => {
       r.checked = r.value === valor;
     });
+  });
+
+  // PDCA (checkboxes)
+  const checks = document.querySelectorAll('input[type="checkbox"]');
+
+  checks.forEach(c => {
+    c.checked = proyecto.evaluacion.pdca?.includes(c.value);
   });
 }
 
@@ -609,41 +632,6 @@ function promedioEvaluacion(ev) {
   ) / 3;
 }
 
-/* ===== GRAFICA ===== */
-async function cargarGrafica(filtroProyectoId = null) {
-  const snap = await db.collection("historial").orderBy("fecha").get();
-  const semanas = {};
-
-  snap.forEach(doc => {
-    const d = doc.data();
-    if (filtroProyectoId && d.proyectoId !== filtroProyectoId) return;
-
-    const f = d.fecha.toDate();
-    const semana = f.getFullYear() + "-W" + Math.ceil(f.getDate()/7);
-
-    if (!semanas[semana]) semanas[semana] = [];
-    semanas[semana].push(promedioEvaluacion(d.despues));
-  });
-
-  const labels = Object.keys(semanas).sort();
-  const data = labels.map(sem => {
-    const arr = semanas[sem];
-    return arr.reduce((a,b)=>a+b,0)/arr.length;
-  });
-
-  const ctx = document.getElementById("grafica").getContext("2d");
-  if(chart) chart.destroy();
-
-  chart = new Chart(ctx, {
-    type: 'bar',
-    data: { labels, datasets:[{ label:"Promedio semanal", data }] },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      scales: { y: { beginAtZero:true, max:100 } }
-    }
-  });
-}
 
 /* ===== EXCEL ===== */
 function exportarExcel() {
@@ -663,7 +651,7 @@ function exportarExcel() {
         Proyecto: p.nombre,
         KPI: map[p.evaluacion.kpi] ?? 0,
         GANTT: map[p.evaluacion.gantt] ?? 0,
-        PDCA: map[p.evaluacion.pdca] ?? 0
+        PDCA: obtenerPorcentaje("pdca", p.evaluacion.pdca)
       });
     });
 
@@ -953,12 +941,28 @@ function descargarPlantilla() {
   XLSX.writeFile(wb, "Plantilla_Proyectos.xlsx");
 }
 
+
+function toggleCrear() {
+  const form = document.getElementById("formCrear");
+
+  if (form.style.display === "none") {
+    form.style.display = "block";
+    form.style.opacity = "0";
+    setTimeout(() => form.style.opacity = "1", 50);
+  } else {
+    form.style.opacity = "0";
+    setTimeout(() => form.style.display = "none", 200);
+  }
+}
+
+
+
+  
   
 /* ===== INIT ===== */
 aplicarRol();
 cargarProyectos();
 cargarSelect();
-cargarGrafica();
 
 </script>
 
