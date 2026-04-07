@@ -497,19 +497,35 @@ function cargarProyectos() {
     listaProyectos.innerHTML = "";
 
     snap.forEach(doc => {
+      const data = doc.data();
+
       const li = document.createElement("li");
-      li.textContent = doc.data().nombre;
+      li.textContent = data.nombre || "Sin nombre";
 
       li.onclick = () => {
         proyectoId = doc.id;
-        proyecto = doc.data();
+        proyecto = data;
+
+        // 🔥 asegurar estructura
+        if (!proyecto.evaluacion) {
+          proyecto.evaluacion = {
+            kpi: "",
+            gantt: "",
+            pdca: []
+          };
+        }
+
+        console.log("Proyecto seleccionado:", proyecto);
+
         document.querySelectorAll("#listaProyectos li")
           .forEach(el => el.classList.remove("activo"));
+
         li.classList.add("activo");
       };
 
       const btn = document.createElement("button");
       btn.textContent = "Eliminar";
+
       btn.onclick = async (e) => {
         e.stopPropagation();
         if (confirm("Eliminar este proyecto?")) {
@@ -521,13 +537,6 @@ function cargarProyectos() {
       listaProyectos.appendChild(li);
     });
   });
-  if (!proyecto.evaluacion) {
-  proyecto.evaluacion = {
-    kpi: "",
-    gantt: "",
-    pdca: []
-  };
-}
 }
 /* ===== MARCAR RADIOS ===== */
 function marcarRadios() {
@@ -561,6 +570,14 @@ async function cargarProyecto(id) {
     if (!snap.exists) return;
 
     proyecto = snap.data();
+
+if (!proyecto.evaluacion) {
+  proyecto.evaluacion = {
+    kpi: "",
+    gantt: "",
+    pdca: []
+  };
+}
 
     document.getElementById("userNombreProyecto").innerText = proyecto.nombre || "-";
     document.getElementById("infoChampion").innerText = proyecto.champion || "-";
