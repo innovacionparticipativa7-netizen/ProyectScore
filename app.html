@@ -229,6 +229,9 @@ select:focus {
   <option value="">Selecciona Champion</option>
 </select>
 
+<input id="sponsorProyecto" placeholder="Sponsor">
+<input id="ownerProyecto" placeholder="Owner">
+      
 <button onclick="crearProyecto()">Crear</button>
       <ul id="listaProyectos"></ul>
       <button class="btn" onclick="exportarExcel()">Exportar Proyectos a Excel</button>
@@ -284,7 +287,9 @@ select:focus {
   </select>
 
 </div>
-
+<p><b>Champion:</b> <span id="infoChampion"></span></p>
+<p><b>Sponsor:</b> <span id="infoSponsor"></span></p>
+<p><b>Owner:</b> <span id="infoOwner"></span></p>
       <div class="resumen-semaforos">
   <div style="text-align:center;">
     PDCA
@@ -384,22 +389,26 @@ async function crearProyecto() {
   const seccion = document.getElementById("seccionProyecto").value;
   const champion = document.getElementById("championProyecto").value;
 
-  if (!nombre || !tier || !seccion || !champion) {
-    return alert("Completa todos los campos");
+  const sponsor = document.getElementById("sponsorProyecto").value;
+const owner = document.getElementById("ownerProyecto").value;
+
+if (!nombre || !tier || !seccion || !champion || !sponsor || !owner) {
+  return alert("Completa todos los campos");
+}
+
+await db.collection("proyectos").add({
+  nombre,
+  tier,
+  seccion,
+  champion,
+  sponsor,
+  owner,
+  evaluacion: {
+    kpi: "",
+    gantt: "",
+    pdca: []
   }
-
-  await db.collection("proyectos").add({
-    nombre,
-    tier,
-    seccion,
-    champion,
-    evaluacion: {
-      kpi: "",
-      gantt: "",
-      pdca: []
-    }
-  });
-
+});
   // limpiar campos
   nombreProyecto.value = "";
   tierProyecto.value = "";
@@ -470,6 +479,10 @@ async function cargarProyecto(id) {
 
   proyecto = snap.data();
   userNombreProyecto.textContent = proyecto.nombre;
+
+  document.getElementById("infoChampion").innerText = proyecto.champion || "-";
+  document.getElementById("infoSponsor").innerText = proyecto.sponsor || "-";
+  document.getElementById("infoOwner").innerText = proyecto.owner || "-";
 
   renderSemaforos();
   marcarRadios();
@@ -842,9 +855,10 @@ async function guardarMasivo(data) {
     const tier = row.tier;
     const seccion = row.seccion;
     const champion = row.champion;
-
-    // VALIDAR VACÍOS
-    if (!nombre || !tier || !seccion || !champion) {
+    const sponsor = row.sponsor;
+    const owner = row.owner;
+    
+    if (!nombre || !tier || !seccion || !champion || !sponsor || !owner) {
       errores.push(`Fila ${i+2} incompleta`);
       continue;
     }
@@ -856,17 +870,19 @@ async function guardarMasivo(data) {
     }
 
     try {
-      await db.collection("proyectos").add({
-        nombre,
-        tier,
-        seccion,
-        champion,
-        evaluacion: {
-          kpi: "",
-          gantt: "",
-          pdca: []
-        }
-      });
+     await db.collection("proyectos").add({
+      nombre,
+      tier,
+      seccion,
+      champion,
+      sponsor,
+      owner,
+      evaluacion: {
+        kpi: "",
+        gantt: "",
+        pdca: []
+      }
+    });
 
       exitos++;
 
@@ -906,31 +922,33 @@ function validarDatos(row) {
   
 function descargarPlantilla() {
 
-  const data = [
+  const plantilla = [
     {
       nombre: "Proyecto ejemplo",
       tier: "Tier 1",
       seccion: "Buy to Make",
-      champion: "Antonio Aguilar"
-    },
-    {
-      nombre: "Proyecto ejemplo 2",
-      tier: "Tier 2",
-      seccion: "DTC",
-      champion: "Jaime Castro"
-    },
-    {
-      nombre: "Proyecto ejemplo 3",
-      tier: "Tier 3",
-      seccion: "Material Optimization",
-      champion: "Fabian Perez"
+      champion: "Antonio Aguilar",
+      sponsor: "Nombre Sponsor",
+      owner: "Nombre Owner"
     }
   ];
 
-  const ws = XLSX.utils.json_to_sheet(data);
+  const catalogo = [
+    { tier: "Tier 1", seccion: "Buy to Make", champion: "Antonio Aguilar" },
+    { tier: "Tier 2", seccion: "DTC", champion: "Jaime Castro" },
+    { tier: "Tier 3", seccion: "Material Optimization", champion: "Fabian Perez" },
+    { tier: "Tier 3", seccion: "Material Optimization", champion: "Jorge Millan" },
+    { tier: "Tier 4", seccion: "Resourcing", champion: "Gerardo Loredo" },
+    { tier: "Tier 5", seccion: "OH Cost Control", champion: "Carlos Perez" }
+  ];
 
   const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, "Plantilla");
+
+  const ws1 = XLSX.utils.json_to_sheet(plantilla);
+  const ws2 = XLSX.utils.json_to_sheet(catalogo);
+
+  XLSX.utils.book_append_sheet(wb, ws1, "Plantilla");
+  XLSX.utils.book_append_sheet(wb, ws2, "Catalogo");
 
   XLSX.writeFile(wb, "Plantilla_Proyectos.xlsx");
 }
