@@ -235,6 +235,7 @@ select:focus {
     </div>
   <input type="file" id="inputExcel" accept=".xlsx, .xls">
 <button onclick="cargarExcel()">Cargar Excel</button>
+    <button onclick="descargarPlantilla()">Descargar Plantilla Excel</button>
 
     <!-- Tarjeta gráfica -->
     <div class="card card-grafica">
@@ -901,7 +902,38 @@ function validarDatos(row) {
 }
 
 
+/* ===== PLANTILLA ===== */
+  
+function descargarPlantilla() {
 
+  const data = [
+    {
+      nombre: "Proyecto ejemplo",
+      tier: "Tier 1",
+      seccion: "Buy to Make",
+      champion: "Antonio Aguilar"
+    },
+    {
+      nombre: "Proyecto ejemplo 2",
+      tier: "Tier 2",
+      seccion: "DTC",
+      champion: "Jaime Castro"
+    },
+    {
+      nombre: "Proyecto ejemplo 3",
+      tier: "Tier 3",
+      seccion: "Material Optimization",
+      champion: "Fabian Perez"
+    }
+  ];
+
+  const ws = XLSX.utils.json_to_sheet(data);
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Plantilla");
+
+  XLSX.writeFile(wb, "Plantilla_Proyectos.xlsx");
+}
 
   
 /* ===== INIT ===== */
