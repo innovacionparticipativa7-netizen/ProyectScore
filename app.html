@@ -456,6 +456,16 @@ function cargarSelect() {
   db.collection("proyectos").onSnapshot(snap => {
     selectProyectoUser.innerHTML = "";
 
+    // 🔴 Si no hay proyectos
+    if (snap.empty) {
+      const op = document.createElement("option");
+      op.textContent = "No hay proyectos";
+      op.value = "";
+      selectProyectoUser.appendChild(op);
+      return;
+    }
+
+    // ✅ Llenar select
     snap.forEach(doc => {
       const op = document.createElement("option");
       op.value = doc.id;
@@ -463,9 +473,11 @@ function cargarSelect() {
       selectProyectoUser.appendChild(op);
     });
 
-    // cargar automáticamente el primero
-    if (selectProyectoUser.value) {
-      cargarProyecto(selectProyectoUser.value);
+    // 🔥 FORZAR selección del primero
+    if (selectProyectoUser.options.length > 0) {
+      const primerId = selectProyectoUser.options[0].value;
+      selectProyectoUser.value = primerId;
+      cargarProyecto(primerId);
     }
   });
 }
