@@ -443,32 +443,54 @@ await db.collection("proyectos").add({
 
 /* ===== SELECT USER ===== */
 async function cargarSelect() {
-  const snap = await db.collection("proyectos").get();
+  try {
+    const snap = await db.collection("proyectos").get();
 
-  selectProyectoUser.innerHTML = "";
+    selectProyectoUser.innerHTML = "";
 
-  if (snap.empty) {
-    selectProyectoUser.innerHTML = "<option>No hay proyectos</option>";
-    return;
+    if (snap.empty) {
+      console.warn("No hay proyectos en Firestore");
+
+      document.getElementById("userNombreProyecto").innerText = "No hay proyectos";
+      document.getElementById("infoChampion").innerText = "-";
+      document.getElementById("infoSponsor").innerText = "-";
+      document.getElementById("infoOwner").innerText = "-";
+
+      return;
+    }
+
+    let primerId = null;
+
+    snap.forEach(doc => {
+      const data = doc.data();
+
+      const op = document.createElement("option");
+      op.value = doc.id;
+      op.textContent = data.nombre || "Sin nombre";
+
+      selectProyectoUser.appendChild(op);
+
+      if (!primerId) primerId = doc.id;
+    });
+
+    // 🔥 FORZAR CARGA DEL PRIMERO
+    if (primerId) {
+      selectProyectoUser.value = primerId;
+
+      console.log("Cargando primer proyecto:", primerId);
+
+      await cargarProyecto(primerId);
+      
+    }
+
+  } catch (error) {
+    console.error("Error en cargarSelect:", error);
+    alert("Error cargando proyectos");
   }
-
-  let primerId = null;
-
-  snap.forEach(doc => {
-    const op = document.createElement("option");
-    op.value = doc.id;
-    op.textContent = doc.data().nombre;
-    selectProyectoUser.appendChild(op);
-
-    if (!primerId) primerId = doc.id;
-  });
-
-  // 🔥 FORZAR SELECCIÓN
-  selectProyectoUser.value = primerId;
-
-  await cargarProyecto(primerId);
 }
 
+
+  
 /* ===== CARGAR PROYECTO ===== */
 function cargarProyectos() {
   db.collection("proyectos").onSnapshot(snap => {
@@ -499,6 +521,13 @@ function cargarProyectos() {
       listaProyectos.appendChild(li);
     });
   });
+  if (!proyecto.evaluacion) {
+  proyecto.evaluacion = {
+    kpi: "",
+    gantt: "",
+    pdca: []
+  };
+}
 }
 /* ===== MARCAR RADIOS ===== */
 function marcarRadios() {
