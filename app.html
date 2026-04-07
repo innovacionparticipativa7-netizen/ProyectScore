@@ -442,29 +442,40 @@ await db.collection("proyectos").add({
 
 /* ===== SELECT USER ===== */
 async function cargarSelect() {
-  const snap = await db.collection("proyectos").get();
+  try {
+    const snap = await db.collection("proyectos").get();
 
-  selectProyectoUser.innerHTML = "";
+    selectProyectoUser.innerHTML = "";
 
-  if (snap.empty) {
-    const op = document.createElement("option");
-    op.textContent = "No hay proyectos";
-    op.value = "";
-    selectProyectoUser.appendChild(op);
-    return;
+    if (snap.empty) {
+      const op = document.createElement("option");
+      op.textContent = "No hay proyectos";
+      op.value = "";
+      selectProyectoUser.appendChild(op);
+      return;
+    }
+
+    let primerId = null;
+
+    snap.forEach(doc => {
+      const op = document.createElement("option");
+      op.value = doc.id;
+      op.textContent = doc.data().nombre;
+      selectProyectoUser.appendChild(op);
+
+      if (!primerId) primerId = doc.id;
+    });
+
+    // 🔥 SOLO si hay ID válido
+    if (primerId) {
+      selectProyectoUser.value = primerId;
+      await cargarProyecto(primerId);
+    }
+
+  } catch (error) {
+    console.error("Error cargarSelect:", error);
+    alert("Error cargando proyectos");
   }
-
-  snap.forEach(doc => {
-    const op = document.createElement("option");
-    op.value = doc.id;
-    op.textContent = doc.data().nombre;
-    selectProyectoUser.appendChild(op);
-  });
-
-  // seleccionar primero
-  const primerId = selectProyectoUser.options[0].value;
-  selectProyectoUser.value = primerId;
-  cargarProyecto(primerId);
 }
 
 /* ===== CARGAR PROYECTO ===== */
@@ -521,19 +532,27 @@ function marcarRadios() {
 }
   
 async function cargarProyecto(id) {
-  proyectoId = id;
-  const snap = await db.collection("proyectos").doc(id).get();
-  if (!snap.exists) return;
+  if (!id) return;
 
-  proyecto = snap.data();
+  try {
+    proyectoId = id;
+    const snap = await db.collection("proyectos").doc(id).get();
 
-  document.getElementById("userNombreProyecto").innerText = proyecto.nombre;
-  document.getElementById("infoChampion").innerText = proyecto.champion || "-";
-  document.getElementById("infoSponsor").innerText = proyecto.sponsor || "-";
-  document.getElementById("infoOwner").innerText = proyecto.owner || "-";
+    if (!snap.exists) return;
 
-  renderSemaforos();
-  marcarRadios();
+    proyecto = snap.data();
+
+    document.getElementById("userNombreProyecto").innerText = proyecto.nombre || "-";
+    document.getElementById("infoChampion").innerText = proyecto.champion || "-";
+    document.getElementById("infoSponsor").innerText = proyecto.sponsor || "-";
+    document.getElementById("infoOwner").innerText = proyecto.owner || "-";
+
+    renderSemaforos();
+    marcarRadios();
+
+  } catch (error) {
+    console.error("Error cargarProyecto:", error);
+  }
 }
   
   
