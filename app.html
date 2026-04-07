@@ -204,8 +204,32 @@ select:focus {
     <!-- Tarjeta lista de proyectos -->
     <div class="card">
       <h3>Proyectos</h3>
-      <input id="nombreProyecto" placeholder="Nuevo proyecto">
-      <button onclick="crearProyecto()">Crear</button>
+      <input id="nombreProyecto" placeholder="Nombre del proyecto">
+
+<select id="tierProyecto">
+  <option value="">Selecciona Tier</option>
+  <option>Tier 1</option>
+  <option>Tier 2</option>
+  <option>Tier 3</option>
+  <option>Tier 4</option>
+  <option>Tier 5</option>
+  <option>Tier 6</option>
+</select>
+
+<select id="seccionProyecto" onchange="cargarChampionsProyecto()">
+  <option value="">Selecciona Sección</option>
+  <option>Buy to Make</option>
+  <option>DTC</option>
+  <option>Material Optimization</option>
+  <option>OH Cost Control</option>
+  <option>Resourcing</option>
+</select>
+
+<select id="championProyecto">
+  <option value="">Selecciona Champion</option>
+</select>
+
+<button onclick="crearProyecto()">Crear</button>
       <ul id="listaProyectos"></ul>
       <button class="btn" onclick="exportarExcel()">Exportar Proyectos a Excel</button>
     </div>
@@ -352,23 +376,37 @@ function aplicarRol() {
 
 /* ===== CREAR ===== */
 async function crearProyecto() {
-  const nombre = nombreProyecto.value.trim();
-  if (!nombre) return alert("Escribe nombre");
+  const nombre = document.getElementById("nombreProyecto").value.trim();
+  const tier = document.getElementById("tierProyecto").value;
+  const seccion = document.getElementById("seccionProyecto").value;
+  const champion = document.getElementById("championProyecto").value;
 
-await db.collection("proyectos").add({
-  nombre,
-  tier: "Tier 1",
-  seccion: "Buy to Make",
-  champion: "Antonio Aguilar",
-  evaluacion: {  
-    kpi:"", 
-    gantt:"",
-    pdca:[]
+  if (!nombre || !tier || !seccion || !champion) {
+    return alert("Completa todos los campos");
   }
-});
+
+  await db.collection("proyectos").add({
+    nombre,
+    tier,
+    seccion,
+    champion,
+    evaluacion: {
+      kpi: "",
+      gantt: "",
+      pdca: []
+    }
+  });
+
+  // limpiar campos
+  nombreProyecto.value = "";
+  tierProyecto.value = "";
+  seccionProyecto.value = "";
+  championProyecto.innerHTML = '<option value="">Selecciona Champion</option>';
 
   cargarProyectos();
   cargarSelect();
+
+  alert("Proyecto creado ✅");
 }
 
 /* ===== LISTA ===== */
@@ -745,7 +783,23 @@ async function aplicarFiltros() {
   }
 }
 
+/* ===== CARGA DE CHAMPIONS AUTOMATICO  ===== */
+  
+function cargarChampionsProyecto() {
+  const seccion = document.getElementById("seccionProyecto").value;
+  const select = document.getElementById("championProyecto");
 
+  select.innerHTML = '<option value="">Selecciona Champion</option>';
+
+  if (championsPorSeccion[seccion]) {
+    championsPorSeccion[seccion].forEach(ch => {
+      const op = document.createElement("option");
+      op.value = ch;
+      op.textContent = ch;
+      select.appendChild(op);
+    });
+  }
+}
 
 
 
