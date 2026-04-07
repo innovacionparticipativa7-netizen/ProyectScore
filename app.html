@@ -183,20 +183,6 @@ select:focus {
   outline: none;
   box-shadow: 0 0 5px rgba(76,175,80,0.4);
 }
-
-.admin-content {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 20px;
-}
-
-.card {
-  min-height: 200px;
-}
-
-#formCrear {
-  transition: all 0.3s ease;
-}
     
 </style>
 
@@ -217,56 +203,25 @@ select:focus {
   <div class="admin-content">
     <!-- Tarjeta lista de proyectos -->
     <div class="card">
-  <h3>Proyectos</h3>
+      <h3>Proyectos</h3>
+      <input id="nombreProyecto" placeholder="Nuevo proyecto">
+      <button onclick="crearProyecto()">Crear</button>
+      <ul id="listaProyectos"></ul>
+      <button class="btn" onclick="exportarExcel()">Exportar Proyectos a Excel</button>
+    </div>
 
-  <button class="btn" onclick="toggleCrear()">+ Nuevo Proyecto</button>
-
-  <div id="formCrear" style="display:none; margin-top:10px;">
-
-    <input id="nombreProyecto" placeholder="Nombre del proyecto">
-
-    <select id="tierProyecto">
-      <option value="">Selecciona Tier</option>
-      <option>Tier 1</option>
-      <option>Tier 2</option>
-      <option>Tier 3</option>
-      <option>Tier 4</option>
-      <option>Tier 5</option>
-      <option>Tier 6</option>
-    </select>
-
-    <select id="seccionProyecto" onchange="cargarChampionsProyecto()">
-      <option value="">Selecciona Sección</option>
-      <option>Buy to Make</option>
-      <option>DTC</option>
-      <option>Material Optimization</option>
-      <option>OH Cost Control</option>
-      <option>Resourcing</option>
-    </select>
-
-    <select id="championProyecto">
-      <option value="">Selecciona Champion</option>
-    </select>
-
-    <input id="sponsorProyecto" placeholder="Sponsor">
-    <input id="ownerProyecto" placeholder="Owner">
-
-    <button class="btn" onclick="crearProyecto()">Crear</button>
-
+    <!-- Tarjeta gráfica -->
+    <div class="card card-grafica">
+    <h3>Progreso semanal</h3>
+    <canvas id="grafica"></canvas>
+    </div>
   </div>
-
-  <hr>
-
-  <ul id="listaProyectos"></ul>
-
-  <button class="btn" onclick="exportarExcel()">Exportar</button>
-  <button class="btn" onclick="descargarPlantilla()">Plantilla</button>
-
-  <input type="file" id="inputExcel" accept=".xlsx, .xls">
-  <button onclick="cargarExcel()">Cargar Excel</button>
-
+  
+  <!-- Tarjeta gráfica antes/después -->
+<div class="card card-grafica">
+  <h3>Antes / Después por proyecto</h3>
+  <canvas id="graficaAntesDespues"></canvas>
 </div>
-
   
 </div>
 
@@ -302,9 +257,7 @@ select:focus {
   </select>
 
 </div>
-<p><b>Champion:</b> <span id="infoChampion"></span></p>
-<p><b>Sponsor:</b> <span id="infoSponsor"></span></p>
-<p><b>Owner:</b> <span id="infoOwner"></span></p>
+
       <div class="resumen-semaforos">
   <div style="text-align:center;">
     PDCA
@@ -324,7 +277,7 @@ select:focus {
     <div id="porc-gantt">0%</div>
   </div>
 </div>
-<p><b>Proyecto:</b> <span id="userNombreProyecto"></span></p>
+
       <select id="selectProyectoUser"></select>
 
       <div>
@@ -362,10 +315,6 @@ select:focus {
 </div>
 
 <script>
-/* ===== DEBUG ===== */
-window.onerror = function (msg, url, line) {
-  alert("Error: " + msg + " en línea " + line);
-};
 
 /* ===== FIREBASE ===== */
 firebase.initializeApp({
@@ -374,17 +323,14 @@ firebase.initializeApp({
   projectId: "panel-proyectos-f119f"
 });
 
-const db = firebase.firestore();
-
-/* ===== DOM ===== */
 const vistaAdmin = document.getElementById("vista-admin");
 const vistaUser = document.getElementById("vista-user");
-const selectProyectoUser = document.getElementById("selectProyectoUser");
-const listaProyectos = document.getElementById("listaProyectos");
+const db = firebase.firestore();
 
 /* ===== VARIABLES ===== */
-let ROL = (localStorage.getItem("rol") || "").toLowerCase().trim();
+let ROL = localStorage.getItem("rol");
 let UID = localStorage.getItem("uid");
+let chart = null;
 let proyectoId = null;
 let proyecto = null;
 
@@ -394,7 +340,6 @@ if (!UID || !ROL) {
   window.location.href = "login.html";
 }
 
-/* ===== ROLES ===== */
 function aplicarRol() {
   if (ROL === "admin") {
     vistaAdmin.style.display = "block";
@@ -405,83 +350,75 @@ function aplicarRol() {
   }
 }
 
-/* ===== CREAR PROYECTO ===== */
+/* ===== CREAR ===== */
 async function crearProyecto() {
   const nombre = nombreProyecto.value.trim();
-  const tier = tierProyecto.value;
-  const seccion = seccionProyecto.value;
-  const champion = championProyecto.value;
-  const sponsor = sponsorProyecto.value;
-  const owner = ownerProyecto.value;
+  if (!nombre) return alert("Escribe nombre");
 
-  if (!nombre || !tier || !seccion || !champion || !sponsor || !owner) {
-    return alert("Completa todos los campos");
+await db.collection("proyectos").add({
+  nombre,
+  tier: "Tier 1",
+  seccion: "Buy to Make",
+  champion: "Antonio Aguilar",
+  evaluacion: {  
+    kpi:"", 
+    gantt:"",
+    pdca:[]
   }
-
-  await db.collection("proyectos").add({
-    nombre, tier, seccion, champion, sponsor, owner,
-    evaluacion: { kpi: "", gantt: "", pdca: [] }
-  });
-
-  nombreProyecto.value = "";
-  tierProyecto.value = "";
-  seccionProyecto.value = "";
-  championProyecto.innerHTML = '<option value="">Selecciona Champion</option>';
+});
 
   cargarProyectos();
   cargarSelect();
-
-  alert("Proyecto creado ✅");
 }
 
-/* ===== CARGAR SELECT USER ===== */
-function cargarSelect() {
-  db.collection("proyectos").onSnapshot(snap => {
-    selectProyectoUser.innerHTML = "";
+/* ===== LISTA ===== */
+async function cargarProyectos() {
+  const snap = await db.collection("proyectos").get();
+  listaProyectos.innerHTML = "";
 
-    snap.forEach(doc => {
-      const op = document.createElement("option");
-      op.value = doc.id;
-      op.textContent = doc.data().nombre;
-      selectProyectoUser.appendChild(op);
-    });
+  snap.forEach(doc => {
+    const li = document.createElement("li");
+    li.textContent = doc.data().nombre;
 
-    if (selectProyectoUser.value) {
-      cargarProyecto(selectProyectoUser.value);
-    }
+    li.onclick = () => {
+      proyectoId = doc.id;
+      proyecto = doc.data();
+      document.querySelectorAll("#listaProyectos li").forEach(el => el.classList.remove("activo"));
+      li.classList.add("activo");
+      cargarGrafica(proyectoId);
+    };
+
+    const btn = document.createElement("button");
+    btn.textContent = "Eliminar";
+    btn.onclick = async (e) => {
+      e.stopPropagation();
+      if (confirm("Eliminar este proyecto?")) {
+        await db.collection("proyectos").doc(doc.id).delete();
+        cargarProyectos();
+        cargarGrafica();
+      }
+    };
+
+    li.appendChild(btn);
+    listaProyectos.appendChild(li);
   });
 }
 
-/* ===== LISTA ADMIN ===== */
-function cargarProyectos() {
-  db.collection("proyectos").onSnapshot(snap => {
-    listaProyectos.innerHTML = "";
+/* ===== SELECT USER ===== */
+async function cargarSelect() {
+  const snap = await db.collection("proyectos").get();
+  selectProyectoUser.innerHTML = "";
 
-    snap.forEach(doc => {
-      const li = document.createElement("li");
-      li.textContent = doc.data().nombre;
-
-      li.onclick = () => {
-        proyectoId = doc.id;
-        proyecto = doc.data();
-        document.querySelectorAll("#listaProyectos li")
-          .forEach(el => el.classList.remove("activo"));
-        li.classList.add("activo");
-      };
-
-      const btn = document.createElement("button");
-      btn.textContent = "Eliminar";
-      btn.onclick = async (e) => {
-        e.stopPropagation();
-        if (confirm("Eliminar este proyecto?")) {
-          await db.collection("proyectos").doc(doc.id).delete();
-        }
-      };
-
-      li.appendChild(btn);
-      listaProyectos.appendChild(li);
-    });
+  snap.forEach(doc => {
+    const op = document.createElement("option");
+    op.value = doc.id;
+    op.textContent = doc.data().nombre;
+    selectProyectoUser.appendChild(op);
   });
+
+  if (selectProyectoUser.value) {
+    cargarProyecto(selectProyectoUser.value);
+  }
 }
 
 /* ===== CARGAR PROYECTO ===== */
@@ -491,37 +428,210 @@ async function cargarProyecto(id) {
   if (!snap.exists) return;
 
   proyecto = snap.data();
-
-  userNombreProyecto.innerText = proyecto.nombre;
-  infoChampion.innerText = proyecto.champion || "-";
-  infoSponsor.innerText = proyecto.sponsor || "-";
-  infoOwner.innerText = proyecto.owner || "-";
+  userNombreProyecto.textContent = proyecto.nombre;
 
   renderSemaforos();
   marcarRadios();
 }
 
-/* ===== RADIOS ===== */
+/* ===== MARCAR RADIOS ===== */
 function marcarRadios() {
-  if (!proyecto?.evaluacion) return;
+  if (!proyecto || !proyecto.evaluacion) return;
 
-  ["kpi", "gantt"].forEach(tipo => {
-    document.querySelectorAll(`input[name="${tipo}"]`)
-      .forEach(r => r.checked = r.value === proyecto.evaluacion[tipo]);
+  Object.keys(proyecto.evaluacion).forEach(tipo => {
+    const valor = proyecto.evaluacion[tipo];
+    const radios = document.querySelectorAll(`input[name="${tipo}"]`);
+    
+    radios.forEach(r => {
+      r.checked = r.value === valor;
+    });
   });
-
-  document.querySelectorAll('input[type="checkbox"]')
-    .forEach(c => c.checked = proyecto.evaluacion.pdca?.includes(c.value));
 }
 
-/* ===== VALORES ===== */
+  
+/* ===== SET VALOR ===== */
 function setValor(tipo, valor) {
   if (!proyecto) return;
   proyecto.evaluacion[tipo] = valor;
   renderSemaforos();
 }
 
-/* ===== PDCA ===== */
+function color(tipo, v) {
+  if (!v || (Array.isArray(v) && v.length === 0)) {
+    return "#808080";
+  }
+
+  // ===== KPI =====
+  if (tipo === "kpi") {
+    if (["en_tiempo"].includes(v)) return "#008000";
+    if (["cumple"].includes(v)) return "#90EE90";
+    if (["mitigado"].includes(v)) return "#FFD700";
+    if (["retraso"].includes(v)) return "#FF8C00";
+    if (["programado"].includes(v)) return "#FF0000";
+  }
+
+  // ===== GANTT =====
+  if (tipo === "gantt") {
+    if (["valor"].includes(v)) return "#008000";
+    if (["retraso"].includes(v)) return "#FFD700";
+    if (["r2"].includes(v)) return "#FF8C00";
+    if (["r3"].includes(v)) return "#FF0000";
+  }
+
+  // ===== PDCA =====
+  if (tipo === "pdca") {
+
+    const cantidad = Array.isArray(v) ? v.length : 0;
+
+    if (cantidad === 5) return "#008000";
+    if (cantidad === 4) return "#90EE90";
+    if (cantidad === 3) return "#FFD700";
+    if (cantidad === 2) return "#FF8C00";
+    if (cantidad === 1) return "#FF0000";
+    if (cantidad === 0) return "#FF8C00";
+  }
+
+  return "#808080";
+}
+/* ===== SEMAFORO VISUAL ===== */
+function renderSemaforos() {
+  if (!proyecto || !proyecto.evaluacion) return;
+
+  // COLORES
+  document.getElementById("sem-kpi").style.background =
+    color("kpi", proyecto.evaluacion.kpi);
+
+  document.getElementById("sem-plan").style.background =
+    color("gantt", proyecto.evaluacion.gantt);
+
+  document.getElementById("sem-pdca").style.background =
+    color("pdca", proyecto.evaluacion.pdca);
+
+  // PORCENTAJES
+  document.getElementById("porc-kpi").innerText =
+    obtenerPorcentaje("kpi", proyecto.evaluacion.kpi) + "%";
+
+  document.getElementById("porc-gantt").innerText =
+    obtenerPorcentaje("gantt", proyecto.evaluacion.gantt) + "%";
+
+  document.getElementById("porc-pdca").innerText =
+    obtenerPorcentaje("pdca", proyecto.evaluacion.pdca) + "%";
+}
+
+/* ===== GUARDAR ===== */
+async function guardar() {
+  const before = await db.collection("proyectos").doc(proyectoId).get();
+  const oldData = before.data();
+
+  await db.collection("proyectos").doc(proyectoId).update({
+    evaluacion: proyecto.evaluacion
+  });
+
+  await db.collection("historial").add({
+    proyectoId,
+    proyectoNombre: proyecto.nombre,
+    usuario: UID,
+    fecha: new Date(),
+    antes: oldData.evaluacion,
+    despues: proyecto.evaluacion
+  });
+
+  alert("Guardado ✅");
+}
+
+/* ===== PROMEDIO ===== */
+function promedioEvaluacion(ev) {
+  const map = {
+    en_tiempo:100, cumple:90, valor:100, "6pack":100,
+    mitigado:70, programado:60, r3:65,
+    retraso:40, r2:20,
+    na:0
+  };
+
+  return (
+    (map[ev.kpi] ?? 0) +
+    (map[ev.gantt] ?? 0) +
+    (map[ev.pdca] ?? 0)
+  ) / 3;
+}
+
+/* ===== GRAFICA ===== */
+async function cargarGrafica(filtroProyectoId = null) {
+  const snap = await db.collection("historial").orderBy("fecha").get();
+  const semanas = {};
+
+  snap.forEach(doc => {
+    const d = doc.data();
+    if (filtroProyectoId && d.proyectoId !== filtroProyectoId) return;
+
+    const f = d.fecha.toDate();
+    const semana = f.getFullYear() + "-W" + Math.ceil(f.getDate()/7);
+
+    if (!semanas[semana]) semanas[semana] = [];
+    semanas[semana].push(promedioEvaluacion(d.despues));
+  });
+
+  const labels = Object.keys(semanas).sort();
+  const data = labels.map(sem => {
+    const arr = semanas[sem];
+    return arr.reduce((a,b)=>a+b,0)/arr.length;
+  });
+
+  const ctx = document.getElementById("grafica").getContext("2d");
+  if(chart) chart.destroy();
+
+  chart = new Chart(ctx, {
+    type: 'bar',
+    data: { labels, datasets:[{ label:"Promedio semanal", data }] },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: { y: { beginAtZero:true, max:100 } }
+    }
+  });
+}
+
+/* ===== EXCEL ===== */
+function exportarExcel() {
+  db.collection("proyectos").get().then(snap => {
+    const data = [];
+
+    const map = {
+      en_tiempo:100, cumple:90, valor:100, "6pack":100,
+      mitigado:70, programado:60, r3:65,
+      retraso:40, r2:20,
+      na:0
+    };
+
+    snap.forEach(doc => {
+      const p = doc.data();
+      data.push({
+        Proyecto: p.nombre,
+        KPI: map[p.evaluacion.kpi] ?? 0,
+        GANTT: map[p.evaluacion.gantt] ?? 0,
+        PDCA: map[p.evaluacion.pdca] ?? 0
+      });
+    });
+
+    const ws = XLSX.utils.json_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Proyectos");
+    XLSX.writeFile(wb, "Proyectos.xlsx");
+  });
+}
+
+/* ===== LOGOUT ===== */
+function logout() {
+  localStorage.clear();
+  window.location.href = "index.html";
+}
+
+/* ===== EVENTOS ===== */
+selectProyectoUser.onchange = () => {
+  cargarProyecto(selectProyectoUser.value);
+};
+
+/* ===== TOGGLE ===== */
 function togglePDCA(checkbox) {
   if (!proyecto) return;
 
@@ -539,100 +649,122 @@ function togglePDCA(checkbox) {
   renderSemaforos();
 }
 
-/* ===== COLORES ===== */
-function color(tipo, v) {
-  if (!v || (Array.isArray(v) && v.length === 0)) return "#808080";
 
+  /* ===== PORCENTAJES ===== */
+  function obtenerPorcentaje(tipo, v) {
+
+  // ===== KPI =====
   if (tipo === "kpi") {
-    if (v === "en_tiempo") return "#008000";
-    if (v === "cumple") return "#90EE90";
-    if (v === "mitigado") return "#FFD700";
-    if (v === "retraso") return "#FF8C00";
-    if (v === "programado") return "#FF0000";
+    if (v === "en_tiempo") return 100;
+    if (v === "cumple") return 90;
+    if (v === "mitigado") return 70;
+    if (v === "retraso") return 50;
+    if (v === "programado") return 30;
+    return 0;
   }
 
+  // ===== GANTT =====
   if (tipo === "gantt") {
-    if (v === "valor") return "#008000";
-    if (v === "retraso") return "#FFD700";
-    if (v === "r2") return "#FF8C00";
-    if (v === "r3") return "#FF0000";
+    if (v === "valor") return 100;
+    if (v === "retraso") return 70;
+    if (v === "r2") return 50;
+    if (v === "r3") return 30;
+    return 0;
   }
 
+  // ===== PDCA =====
   if (tipo === "pdca") {
-    const n = v.length;
-    if (n >= 5) return "#008000";
-    if (n === 4) return "#90EE90";
-    if (n === 3) return "#FFD700";
-    if (n === 2) return "#FF8C00";
-    return "#FF0000";
-  }
+    const cantidad = Array.isArray(v) ? v.length : 0;
 
-  return "#808080";
-}
-
-/* ===== PORCENTAJES ===== */
-function obtenerPorcentaje(tipo, v) {
-  if (tipo === "kpi") {
-    return { en_tiempo:100, cumple:90, mitigado:70, retraso:50, programado:30 }[v] || 0;
-  }
-
-  if (tipo === "gantt") {
-    return { valor:100, retraso:70, r2:50, r3:30 }[v] || 0;
-  }
-
-  if (tipo === "pdca") {
-    const n = v?.length || 0;
-    return [0,20,40,60,80,100][n] || 0;
+    if (cantidad >= 5) return 100;
+    if (cantidad === 4) return 80;
+    if (cantidad === 3) return 60;
+    if (cantidad === 2) return 40;
+    if (cantidad === 1) return 20;
+    return 0;
   }
 
   return 0;
 }
 
-/* ===== SEMAFOROS ===== */
-function renderSemaforos() {
-  if (!proyecto || !proyecto.evaluacion) return;
-
-  document.getElementById("sem-kpi").style.background =
-    color("kpi", proyecto.evaluacion.kpi);
-
-  document.getElementById("sem-plan").style.background =
-    color("gantt", proyecto.evaluacion.gantt);
-
-  document.getElementById("sem-pdca").style.background =
-    color("pdca", proyecto.evaluacion.pdca);
-
-  document.getElementById("porc-kpi").innerText =
-    obtenerPorcentaje("kpi", proyecto.evaluacion.kpi) + "%";
-
-  document.getElementById("porc-gantt").innerText =
-    obtenerPorcentaje("gantt", proyecto.evaluacion.gantt) + "%";
-
-  document.getElementById("porc-pdca").innerText =
-    obtenerPorcentaje("pdca", proyecto.evaluacion.pdca) + "%";
-}
-  await db.collection("historial").add({
-    proyectoId,
-    proyectoNombre: proyecto.nombre,
-    usuario: UID,
-    fecha: new Date(),
-    antes: before.data().evaluacion,
-    despues: proyecto.evaluacion
-  });
-
-  alert("Guardado ✅");
-}
-
-/* ===== EVENTOS ===== */
-selectProyectoUser.onchange = () => {
-  cargarProyecto(selectProyectoUser.value);
+/* ===== RELACION SECCION → CHAMPIONS  ===== */
+const championsPorSeccion = {
+  "Buy to Make": ["Antonio Aguilar"],
+  "DTC": ["Jaime Castro"],
+  "Material Optimization": ["Fabian Perez", "Jorge Millan"],
+  "Resourcing": ["Gerardo Loredo"],
+  "OH Cost Control": ["Carlos Perez"]
 };
 
+
+  /* ===== ACTUALIZAR CHAMPIONS DINAMICAMENTE  ===== */
+
+document.getElementById("filtroSeccion").addEventListener("change", () => {
+  const seccion = filtroSeccion.value;
+  const selectChampion = document.getElementById("filtroChampion");
+
+  selectChampion.innerHTML = '<option value="">Todos los Champions</option>';
+
+  if (championsPorSeccion[seccion]) {
+    championsPorSeccion[seccion].forEach(ch => {
+      const op = document.createElement("option");
+      op.value = ch;
+      op.textContent = ch;
+      selectChampion.appendChild(op);
+    });
+  }
+});
+  
+/* ===== FUNCION DE FILTRADO  ===== */
+async function aplicarFiltros() {
+  const tier = document.getElementById("filtroTier").value;
+  const seccion = document.getElementById("filtroSeccion").value;
+  const champion = document.getElementById("filtroChampion").value;
+
+  const snap = await db.collection("proyectos").get();
+
+  selectProyectoUser.innerHTML = "";
+
+  snap.forEach(doc => {
+    const p = doc.data();
+
+    if (tier && p.tier !== tier) return;
+    if (seccion && p.seccion !== seccion) return;
+    if (champion && p.champion !== champion) return;
+
+    const op = document.createElement("option");
+    op.value = doc.id;
+    op.textContent = p.nombre;
+
+    selectProyectoUser.appendChild(op);
+  });
+
+  // cargar el primero filtrado automáticamente
+  if (selectProyectoUser.value) {
+    cargarProyecto(selectProyectoUser.value);
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
 /* ===== INIT ===== */
 aplicarRol();
 cargarProyectos();
 cargarSelect();
+cargarGrafica();
 
-console.log("APP OK 🚀");
 </script>
 
 </body>
