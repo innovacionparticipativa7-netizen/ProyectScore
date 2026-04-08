@@ -162,6 +162,9 @@ table tr:hover {
   border-radius: 50%;
   margin: auto;
 }
+  canvas {
+  max-height: 250px;
+}
 </style>
 
   
@@ -219,7 +222,31 @@ table tr:hover {
       </div>
 
       <hr>
-
+      <!-- GRAFICAS -->
+      <div class="grid">
+      
+        <div class="card">
+          <h3>Promedio KPI</h3>
+          <canvas id="grafKPI"></canvas>
+        </div>
+      
+        <div class="card">
+          <h3>Promedio GANTT</h3>
+          <canvas id="grafGANTT"></canvas>
+        </div>
+      
+        <div class="card">
+          <h3>Promedio PDCA</h3>
+          <canvas id="grafPDCA"></canvas>
+        </div>
+      
+        <div class="card">
+          <h3>Promedio General</h3>
+          <canvas id="grafGENERAL"></canvas>
+        </div>
+      
+      </div>
+      <!-- TABLA DE PROYECTOS -->
       <div style="overflow-x:auto;">
         <table id="tablaProyectos" style="width:100%; border-collapse: collapse;">
           <thead>
@@ -370,6 +397,7 @@ let ROL = (localStorage.getItem("rol") || "").toLowerCase().trim();
 let UID = localStorage.getItem("uid");
 let proyectoId = null;
 let proyecto = null;
+let chartKPI, chartGANTT, chartPDCA, chartGENERAL;
 
 /* ===== LOGIN ===== */
 if (!UID || !ROL) {
@@ -486,6 +514,8 @@ function cargarProyectos() {
   db.collection("proyectos").onSnapshot(snap => {
     tbody.innerHTML = "";
 
+    const proyectosArray = [];
+
     snap.forEach(doc => {
       const p = doc.data();
 
@@ -493,6 +523,8 @@ function cargarProyectos() {
       if (!p.evaluacion) {
         p.evaluacion = { kpi: "", gantt: "", pdca: [] };
       }
+
+      proyectosArray.push(p);
 
       const tr = document.createElement("tr");
 
@@ -502,18 +534,24 @@ function cargarProyectos() {
         <td>${p.sponsor || "-"}</td>
         <td>${p.owner || "-"}</td>
 
-        <td><div class="semaforo" style="background:${color("kpi", p.evaluacion.kpi)}"></div></td>
-
-        <td><div class="semaforo" style="background:${color("gantt", p.evaluacion.gantt)}"></div></td>
-
-        <td><div class="semaforo" style="background:${color("pdca", p.evaluacion.pdca)}"></div></td>
+        <td>
+          <div class="semaforo" style="background:${color("kpi", p.evaluacion.kpi)}"></div>
+        </td>
 
         <td>
-          <button onclick="eliminarProyecto('${doc.id}')">🗑</button>
+          <div class="semaforo" style="background:${color("gantt", p.evaluacion.gantt)}"></div>
+        </td>
+
+        <td>
+          <div class="semaforo" style="background:${color("pdca", p.evaluacion.pdca)}"></div>
+        </td>
+
+        <td>
+          <button onclick="event.stopPropagation(); eliminarProyecto('${doc.id}')">🗑</button>
         </td>
       `;
 
-      // click para seleccionar
+      // seleccionar proyecto al hacer click
       tr.onclick = () => {
         proyectoId = doc.id;
         proyecto = p;
@@ -522,6 +560,10 @@ function cargarProyectos() {
 
       tbody.appendChild(tr);
     });
+
+    // 🔥 ACTUALIZA GRÁFICAS
+    actualizarGraficas(proyectosArray);
+
   });
 }
 /* ===== MARCAR RADIOS ===== */
@@ -1047,6 +1089,80 @@ async function eliminarProyecto(id) {
     await db.collection("proyectos").doc(id).delete();
   }
 }
+
+function actualizarGraficas(proyectos) {
+
+  let totalKPI = 0;
+  let totalGANTT = 0;
+  let totalPDCA = 0;
+  let totalGeneral = 0;
+
+  const map = {
+    en_tiempo:100, cumple:90,
+    mitigado:70, retraso:50,
+    programado:30, na:0,
+    valor:100, r2:50, r3:30
+  };
+
+  proyectos.forEach(p => {
+
+    const ev = p.evaluacion || {};
+
+    const kpi = map[ev.kpi] ?? 0;
+    const gantt = map[ev.gantt] ?? 0;
+    const pdca = (ev.pdca?.length || 0) * 20;
+
+    const general = (kpi + gantt + pdca) / 3;
+
+    totalKPI += kpi;
+    totalGANTT += gantt;
+    totalPDCA += pdca;
+    totalGeneral += general;
+  });
+
+  const n = proyectos.length || 1;
+
+  const promKPI = totalKPI / n;
+  const promGANTT = totalGANTT / n;
+  const promPDCA = totalPDCA / n;
+  const promGENERAL = totalGeneral / n;
+
+  crearGrafica("grafKPI", promKPI, "KPI", chartKPI, c => chartKPI = c);
+  crearGrafica("grafGANTT", promGANTT, "GANTT", chartGANTT, c => chartGANTT = c);
+  crearGrafica("grafPDCA", promPDCA, "PDCA", chartPDCA, c => chartPDCA = c);
+  crearGrafica("grafGENERAL", promGENERAL, "GENERAL", chartGENERAL, c => chartGENERAL = c);
+}
+
+function crearGrafica(id, valor, label, chartRef, setChart) {
+
+  const ctx = document.getElementById(id).getContext("2d");
+
+  if (chartRef) chartRef.destroy();
+
+  const chart = new Chart(ctx, {
+    type: "doughnut",
+    data: {
+      labels: [label, "Restante"],
+      datasets: [{
+        data: [valor, 100 - valor],
+      }]
+    },
+    options: {
+      plugins: {
+        legend: { display: false },
+        title: {
+          display: true,
+          text: valor.toFixed(1) + "%"
+        }
+      }
+    }
+  });
+
+  setChart(chart);
+}
+
+
+  
 initApp();
 
 </script>
