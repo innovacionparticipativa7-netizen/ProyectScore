@@ -145,6 +145,23 @@ button {
     gap: 10px;
   }
 }
+  table th, table td {
+  padding: 10px;
+  text-align: center;
+  border-bottom: 1px solid #ddd;
+}
+
+table tr:hover {
+  background: #f4f6f8;
+}
+
+/* semaforos */
+.semaforo {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  margin: auto;
+}
 </style>
 
   
@@ -203,7 +220,23 @@ button {
 
       <hr>
 
-      <ul id="listaProyectos"></ul>
+      <div style="overflow-x:auto;">
+        <table id="tablaProyectos" style="width:100%; border-collapse: collapse;">
+          <thead>
+            <tr style="background:#1f2937; color:white;">
+              <th>Proyecto</th>
+              <th>Champion</th>
+              <th>Sponsor</th>
+              <th>Owner</th>
+              <th>KPI</th>
+              <th>GANTT</th>
+              <th>PDCA</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
 
       <button class="btn" onclick="exportarExcel()">Exportar</button>
     </div>
@@ -286,19 +319,19 @@ button {
       <!-- EVALUACION -->
       <div class="card">
         <p>KPI</p> <div class="check-opciones"> 
-          <label><input type="radio" name="kpi" value="en_tiempo" onclick="setValor('kpi','en_tiempo')"> En tiempo</label>
+          <label><input type="radio" name="kpi" value="en_tiempo" onclick="setValor('kpi','en_tiempo')"> Exede </label>
           <label><input type="radio" name="kpi" value="cumple" onclick="setValor('kpi','cumple')"> Cumple</label> 
           <label><input type="radio" name="kpi" value="mitigado" onclick="setValor('kpi','mitigado')"> Retraso mitigado</label> 
           <label><input type="radio" name="kpi" value="retraso" onclick="setValor('kpi','retraso')"> Retraso</label>
           <label><input type="radio" name="kpi" value="programado" onclick="setValor('kpi','programado')"> Retraso programado</label>
-          <label><input type="radio" name="kpi" value="na" onclick="setValor('kpi','na')"> N/A</label> </div>
+          <label><input type="radio" name="kpi" value="na" onclick="setValor('kpi','na')"> No presento </label> </div>
 
         <p>GANTT</p> <div class="check-opciones">
           <label><input type="radio" name="gantt" value="valor" onclick="setValor('gantt','valor')"> En plan</label>
           <label><input type="radio" name="gantt" value="retraso" onclick="setValor('gantt','retraso')"> Retraso</label> 
           <label><input type="radio" name="gantt" value="r2" onclick="setValor('gantt','r2')"> Retraso >2</label>
           <label><input type="radio" name="gantt" value="r3" onclick="setValor('gantt','r3')"> Retraso >3</label>
-          <label><input type="radio" name="gantt" value="na" onclick="setValor('gantt','na')"> N/A</label> </div>
+          <label><input type="radio" name="gantt" value="na" onclick="setValor('gantt','na')"> No presento </label> </div>
 
         <p>PDCA</p> <div class="check-opciones"> 
           <label><input type="checkbox" value="6pack" onchange="togglePDCA(this)"> 6 Pack</label>
@@ -448,48 +481,46 @@ async function cargarSelect() {
   
 /* ===== CARGAR PROYECTO ===== */
 function cargarProyectos() {
+  const tbody = document.querySelector("#tablaProyectos tbody");
+
   db.collection("proyectos").onSnapshot(snap => {
-    listaProyectos.innerHTML = "";
+    tbody.innerHTML = "";
 
     snap.forEach(doc => {
-      const data = doc.data();
+      const p = doc.data();
 
-      const li = document.createElement("li");
-      li.textContent = data.nombre || "Sin nombre";
+      // asegurar estructura
+      if (!p.evaluacion) {
+        p.evaluacion = { kpi: "", gantt: "", pdca: [] };
+      }
 
-      li.onclick = () => {
+      const tr = document.createElement("tr");
+
+      tr.innerHTML = `
+        <td>${p.nombre || "-"}</td>
+        <td>${p.champion || "-"}</td>
+        <td>${p.sponsor || "-"}</td>
+        <td>${p.owner || "-"}</td>
+
+        <td><div class="semaforo" style="background:${color("kpi", p.evaluacion.kpi)}"></div></td>
+
+        <td><div class="semaforo" style="background:${color("gantt", p.evaluacion.gantt)}"></div></td>
+
+        <td><div class="semaforo" style="background:${color("pdca", p.evaluacion.pdca)}"></div></td>
+
+        <td>
+          <button onclick="eliminarProyecto('${doc.id}')">🗑</button>
+        </td>
+      `;
+
+      // click para seleccionar
+      tr.onclick = () => {
         proyectoId = doc.id;
-        proyecto = data;
-
-        // 🔥 asegurar estructura
-        if (!proyecto.evaluacion) {
-          proyecto.evaluacion = {
-            kpi: "",
-            gantt: "",
-            pdca: []
-          };
-        }
-
-        console.log("Proyecto seleccionado:", proyecto);
-
-        document.querySelectorAll("#listaProyectos li")
-          .forEach(el => el.classList.remove("activo"));
-
-        li.classList.add("activo");
+        proyecto = p;
+        console.log("Seleccionado:", p);
       };
 
-      const btn = document.createElement("button");
-      btn.textContent = "Eliminar";
-
-      btn.onclick = async (e) => {
-        e.stopPropagation();
-        if (confirm("Eliminar este proyecto?")) {
-          await db.collection("proyectos").doc(doc.id).delete();
-        }
-      };
-
-      li.appendChild(btn);
-      listaProyectos.appendChild(li);
+      tbody.appendChild(tr);
     });
   });
 }
@@ -1006,13 +1037,16 @@ async function initApp() {
   if (ROL !== "admin") {
     await cargarSelect();
 
-    // 🔥 SI NO SE CARGA AUTOMÁTICO, FORZARLO
     if (selectProyectoUser.value) {
       await cargarProyecto(selectProyectoUser.value);
     }
   }
 }
-
+async function eliminarProyecto(id) {
+  if (confirm("¿Eliminar proyecto?")) {
+    await db.collection("proyectos").doc(id).delete();
+  }
+}
 initApp();
 
 </script>
