@@ -197,10 +197,6 @@ select:focus {
 #formCrear {
   transition: all 0.3s ease;
 }
-    #vista-user {
-  display: block;
-  width: 100%;
-}
 
 .user-wrapper {
   display: flex;
@@ -214,6 +210,11 @@ select:focus {
 }
     #vista-user {
   background: red;
+}
+    #vista-user {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh; /* 🔥 CLAVE */
 }
 </style>
 
@@ -288,7 +289,7 @@ select:focus {
 </div>
 
 <!-- USER -->
-<div id="vista-user" style="display:none;">
+<div id="vista-user" >
   <div class="user-wrapper">
     <div class="card card-user">
 <button onclick="logout()">Salir</button>
@@ -414,7 +415,7 @@ function aplicarRol() {
     vistaUser.style.display = "none";
   } else {
     vistaAdmin.style.display = "none";
-    vistaUser.style.display = "flex"; // 👈 CAMBIO CLAVE
+    vistaUser.style.display = "block";
     vistaUser.style.flexDirection = "column";
   }
 }
