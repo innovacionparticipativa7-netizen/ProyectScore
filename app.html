@@ -176,14 +176,20 @@ button {
 
         <select id="tierProyecto">
           <option value="">Tier</option>
-          <option>Tier 1</option>
-          <option>Tier 2</option>
-          <option>Tier 3</option>
+          <option>Tier 1</option> 
+          <option>Tier 2</option> 
+          <option>Tier 3</option> 
+          <option>Tier 4</option> 
+          <option>Tier 5</option> 
+          <option>Tier 6</option>
         </select>
 
         <select id="seccionProyecto" onchange="cargarChampionsProyecto()">
-          <option value="">Sección</option>
-          <option>DTC</option>
+          <option value="">Selecciona Sección</option> 
+          <option>Buy to Make</option> 
+          <option>DTC</option> 
+          <option>Material Optimization</option> 
+          <option>OH Cost Control</option> 
           <option>Resourcing</option>
         </select>
 
@@ -218,12 +224,30 @@ button {
 
       <!-- FILTROS -->
       <div class="card">
-        <h3>Filtros</h3>
+        <h3>Filtros</h3> 
+        <select id="filtroTier" onchange="aplicarFiltros()"> 
+          <option value="">Todos los Tier</option> <option>Tier 1</option>
+          <option>Tier 2</option>
+          <option>Tier 3</option>
+          <option>Tier 4</option> 
+          <option>Tier 5</option>
+          <option>Tier 6</option>
+        </select>
 
-        <select id="filtroTier" onchange="aplicarFiltros()"></select>
-        <select id="filtroSeccion" onchange="aplicarFiltros()"></select>
-        <select id="filtroChampion" onchange="aplicarFiltros()"></select>
-      </div>
+        <select id="filtroSeccion" onchange="aplicarFiltros()"> 
+          <option value="">Todas las Secciones</option>
+          <option>Buy to Make</option> 
+          <option>DTC</option>
+          <option>Material Optimization</option>
+          <option>OH Cost Control</option>
+          <option>Resourcing</option>
+        </select>
+       
+        <select id="filtroChampion" onchange="aplicarFiltros()"> 
+          <option value="">Todos los Champions</option> 
+        </select>
+
+        
 
       <!-- INFO -->
       <div class="card">
@@ -261,23 +285,27 @@ button {
 
       <!-- EVALUACION -->
       <div class="card">
-        <p>KPI</p>
-        <div class="check-opciones">
-          <label><input type="radio" name="kpi" onclick="setValor('kpi','en_tiempo')"> En tiempo</label>
-          <label><input type="radio" name="kpi" onclick="setValor('kpi','retraso')"> Retraso</label>
-        </div>
+        <p>KPI</p> <div class="check-opciones"> 
+          <label><input type="radio" name="kpi" value="en_tiempo" onclick="setValor('kpi','en_tiempo')"> En tiempo</label>
+          <label><input type="radio" name="kpi" value="cumple" onclick="setValor('kpi','cumple')"> Cumple</label> 
+          <label><input type="radio" name="kpi" value="mitigado" onclick="setValor('kpi','mitigado')"> Retraso mitigado</label> 
+          <label><input type="radio" name="kpi" value="retraso" onclick="setValor('kpi','retraso')"> Retraso</label>
+          <label><input type="radio" name="kpi" value="programado" onclick="setValor('kpi','programado')"> Retraso programado</label>
+          <label><input type="radio" name="kpi" value="na" onclick="setValor('kpi','na')"> N/A</label> </div>
 
-        <p>GANTT</p>
-        <div class="check-opciones">
-          <label><input type="radio" name="gantt" onclick="setValor('gantt','valor')"> OK</label>
-          <label><input type="radio" name="gantt" onclick="setValor('gantt','r2')"> Retraso</label>
-        </div>
+        <p>GANTT</p> <div class="check-opciones">
+          <label><input type="radio" name="gantt" value="valor" onclick="setValor('gantt','valor')"> En plan</label>
+          <label><input type="radio" name="gantt" value="retraso" onclick="setValor('gantt','retraso')"> Retraso</label> 
+          <label><input type="radio" name="gantt" value="r2" onclick="setValor('gantt','r2')"> Retraso >2</label>
+          <label><input type="radio" name="gantt" value="r3" onclick="setValor('gantt','r3')"> Retraso >3</label>
+          <label><input type="radio" name="gantt" value="na" onclick="setValor('gantt','na')"> N/A</label> </div>
 
-        <p>PDCA</p>
-        <div class="check-opciones">
+        <p>PDCA</p> <div class="check-opciones"> 
+          <label><input type="checkbox" value="6pack" onchange="togglePDCA(this)"> 6 Pack</label>
           <label><input type="checkbox" value="kpi" onchange="togglePDCA(this)"> KPI</label>
-          <label><input type="checkbox" value="gantt" onchange="togglePDCA(this)"> GANTT</label>
-        </div>
+          <label><input type="checkbox" value="gantt" onchange="togglePDCA(this)"> GANTT</label> 
+          <label><input type="checkbox" value="psr" onchange="togglePDCA(this)"> PSR</label>
+          <label><input type="checkbox" value="iplayers" onchange="togglePDCA(this)"> IP Layers</label> </div>
 
         <button class="btn" onclick="guardar()">Guardar</button>
       </div>
