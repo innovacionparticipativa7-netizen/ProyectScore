@@ -12,51 +12,54 @@
 <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 
   
-  <style>
+<style>
 * {
   box-sizing: border-box;
+  margin: 0;
+  padding: 0;
 }
 
 body {
   font-family: 'Segoe UI', Arial, sans-serif;
-  margin: 0;
   background: linear-gradient(135deg, #eef2f7, #e3e9f0);
 }
 
 /* ===== HEADER ===== */
-.admin-header {
+.header {
   background: #1f2937;
   color: white;
-  padding: 15px;
-  border-radius: 0 0 15px 15px;
+  padding: 15px 20px;
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
 
-/* ===== LAYOUT ===== */
-.admin-content {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 15px;
-  padding: 15px;
+/* ===== LAYOUT GENERAL ===== */
+.container {
+  padding: 20px;
+}
+
+/* ===== GRID RESPONSIVE ===== */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
 }
 
 /* ===== CARDS ===== */
 .card {
   background: white;
-  border-radius: 18px;
+  border-radius: 16px;
   padding: 15px;
-  box-shadow: 0 8px 25px rgba(0,0,0,0.08);
-  flex: 1 1 300px;
-  transition: 0.3s;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+  transition: 0.2s;
 }
 
 .card:hover {
   transform: translateY(-3px);
 }
 
-/* ===== INPUT ===== */
+/* ===== INPUTS ===== */
 input, select {
   width: 100%;
   padding: 10px;
@@ -81,16 +84,12 @@ button {
   color: white;
 }
 
-button:hover {
-  opacity: 0.9;
-}
-
 /* ===== LISTA ===== */
 #listaProyectos li {
+  background: #f4f6f8;
   padding: 10px;
   border-radius: 10px;
   margin-bottom: 5px;
-  background: #f4f6f8;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -100,13 +99,13 @@ button:hover {
   background: #c8f7c5;
 }
 
-/* ===== USER CARD ===== */
-.user-wrapper {
-  padding: 15px;
+/* ===== USER ===== */
+#vista-user {
+  min-height: 100vh;
 }
 
-.card-user {
-  max-width: 420px;
+.user-wrapper {
+  max-width: 600px;
   margin: auto;
 }
 
@@ -122,99 +121,29 @@ button:hover {
   height: 35px;
   border-radius: 50%;
   background: gray;
-  margin-top: 5px;
-  box-shadow: 0 0 10px rgba(0,0,0,0.2);
+  margin: 5px auto;
 }
 
-/* ===== CHECKS BONITOS ===== */
+/* ===== CHECKS ===== */
 .check-opciones label {
   display: block;
   background: #f4f6f8;
   padding: 10px;
   border-radius: 10px;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
   cursor: pointer;
-  transition: 0.2s;
-}
-
-.check-opciones input {
-  margin-right: 8px;
 }
 
 .check-opciones label:hover {
   background: #e0e7ff;
 }
 
-/* ===== GRAFICAS ===== */
-.card-grafica {
-  height: 350px;
-  display: flex;
-  flex-direction: column;
-}
-
-canvas {
-  flex: 1;
-}
-
 /* ===== MOBILE ===== */
 @media (max-width: 600px) {
-  .admin-content {
-    flex-direction: column;
-  }
-
-  .card {
-    width: 100%;
-  }
-
-  .admin-header {
+  .header {
     flex-direction: column;
     gap: 10px;
   }
-}
-
-select {
-  background: #f9fafb;
-  border: 1px solid #ddd;
-  transition: 0.2s;
-}
-
-select:focus {
-  border-color: #4caf50;
-  outline: none;
-  box-shadow: 0 0 5px rgba(76,175,80,0.4);
-}
-
-.admin-content {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 20px;
-}
-
-.card {
-  min-height: 200px;
-}
-
-#formCrear {
-  transition: all 0.3s ease;
-}
-
-.user-wrapper {
-  display: flex;
-  justify-content: center;
-  padding: 20px;
-}
-
-.card-user {
-  width: 100%;
-  max-width: 500px;
-}
-    #vista-user {
-  background: red;
-}
-    #vista-user {
-  display: flex;
-  flex-direction: column;
-  min-height: 100vh; /* 🔥 CLAVE */
 }
 </style>
 
@@ -222,163 +151,143 @@ select:focus {
 </head>
 
 <body>
-  
-<!-- ADMIN -->
-<div id="vista-admin" class="admin-wrapper">
-  <div class="admin-header">
+
+<!-- ===== ADMIN ===== -->
+<div id="vista-admin">
+
+  <div class="header">
     <h2>Admin</h2>
-    <span id="rol"></span>
+    <div>
+      <span id="rol"></span>
+      <button onclick="logout()">Salir</button>
+    </div>
+  </div>
+
+  <div class="container grid">
+
+    <!-- PROYECTOS -->
+    <div class="card">
+      <h3>Proyectos</h3>
+
+      <button class="btn" onclick="toggleCrear()">+ Nuevo</button>
+
+      <div id="formCrear" style="display:none;">
+        <input id="nombreProyecto" placeholder="Nombre">
+
+        <select id="tierProyecto">
+          <option value="">Tier</option>
+          <option>Tier 1</option>
+          <option>Tier 2</option>
+          <option>Tier 3</option>
+        </select>
+
+        <select id="seccionProyecto" onchange="cargarChampionsProyecto()">
+          <option value="">Sección</option>
+          <option>DTC</option>
+          <option>Resourcing</option>
+        </select>
+
+        <select id="championProyecto"></select>
+
+        <input id="sponsorProyecto" placeholder="Sponsor">
+        <input id="ownerProyecto" placeholder="Owner">
+
+        <button class="btn" onclick="crearProyecto()">Crear</button>
+      </div>
+
+      <hr>
+
+      <ul id="listaProyectos"></ul>
+
+      <button class="btn" onclick="exportarExcel()">Exportar</button>
+    </div>
+
+  </div>
+</div>
+
+<!-- ===== USER ===== -->
+<div id="vista-user" style="display:none;">
+
+  <div class="header">
+    <h2>Usuario</h2>
     <button onclick="logout()">Salir</button>
   </div>
-  
 
-  <div class="admin-content">
-    <!-- Tarjeta lista de proyectos -->
-    <div class="card">
-  <h3>Proyectos</h3>
+  <div class="container">
+    <div class="user-wrapper">
 
-  <button class="btn" onclick="toggleCrear()">+ Nuevo Proyecto</button>
-
-  <div id="formCrear" style="display:none; margin-top:10px;">
-
-    <input id="nombreProyecto" placeholder="Nombre del proyecto">
-
-    <select id="tierProyecto">
-      <option value="">Selecciona Tier</option>
-      <option>Tier 1</option>
-      <option>Tier 2</option>
-      <option>Tier 3</option>
-      <option>Tier 4</option>
-      <option>Tier 5</option>
-      <option>Tier 6</option>
-    </select>
-
-    <select id="seccionProyecto" onchange="cargarChampionsProyecto()">
-      <option value="">Selecciona Sección</option>
-      <option>Buy to Make</option>
-      <option>DTC</option>
-      <option>Material Optimization</option>
-      <option>OH Cost Control</option>
-      <option>Resourcing</option>
-    </select>
-
-    <select id="championProyecto">
-      <option value="">Selecciona Champion</option>
-    </select>
-
-    <input id="sponsorProyecto" placeholder="Sponsor">
-    <input id="ownerProyecto" placeholder="Owner">
-
-    <button class="btn" onclick="crearProyecto()">Crear</button>
-
-  </div>
-
-  <hr>
-
-  <ul id="listaProyectos"></ul>
-
-  <button class="btn" onclick="exportarExcel()">Exportar</button>
-  <button class="btn" onclick="descargarPlantilla()">Plantilla</button>
-
-  <input type="file" id="inputExcel" accept=".xlsx, .xls">
-  <button onclick="cargarExcel()">Cargar Excel</button>
-
-</div>
-
-  
-</div>
-
-<!-- USER -->
-<div id="vista-user" >
-  <div class="user-wrapper">
-    <div class="card card-user">
-<button onclick="logout()">Salir</button>
+      <!-- FILTROS -->
       <div class="card">
-  <h3>Filtros</h3>
+        <h3>Filtros</h3>
 
-  <select id="filtroTier" onchange="aplicarFiltros()">
-    <option value="">Todos los Tier</option>
-    <option>Tier 1</option>
-    <option>Tier 2</option>
-    <option>Tier 3</option>
-    <option>Tier 4</option>
-    <option>Tier 5</option>
-    <option>Tier 6</option>
-  </select>
+        <select id="filtroTier" onchange="aplicarFiltros()"></select>
+        <select id="filtroSeccion" onchange="aplicarFiltros()"></select>
+        <select id="filtroChampion" onchange="aplicarFiltros()"></select>
+      </div>
 
-  <select id="filtroSeccion" onchange="aplicarFiltros()">
-    <option value="">Todas las Secciones</option>
-    <option>Buy to Make</option>
-    <option>DTC</option>
-    <option>Material Optimization</option>
-    <option>OH Cost Control</option>
-    <option>Resourcing</option>
-  </select>
+      <!-- INFO -->
+      <div class="card">
+        <p><b>Proyecto:</b> <span id="userNombreProyecto"></span></p>
+        <p><b>Champion:</b> <span id="infoChampion"></span></p>
+        <p><b>Sponsor:</b> <span id="infoSponsor"></span></p>
+        <p><b>Owner:</b> <span id="infoOwner"></span></p>
+      </div>
 
-  <select id="filtroChampion" onchange="aplicarFiltros()">
-    <option value="">Todos los Champions</option>
-  </select>
+      <!-- SEMAFOROS -->
+      <div class="card">
+        <div class="resumen-semaforos">
+          <div>
+            PDCA
+            <div id="sem-pdca" class="luz"></div>
+            <div id="porc-pdca">0%</div>
+          </div>
+          <div>
+            KPI
+            <div id="sem-kpi" class="luz"></div>
+            <div id="porc-kpi">0%</div>
+          </div>
+          <div>
+            GANTT
+            <div id="sem-plan" class="luz"></div>
+            <div id="porc-gantt">0%</div>
+          </div>
+        </div>
+      </div>
 
-</div>
-<p><b>Champion:</b> <span id="infoChampion"></span></p>
-<p><b>Sponsor:</b> <span id="infoSponsor"></span></p>
-<p><b>Owner:</b> <span id="infoOwner"></span></p>
-      <div class="resumen-semaforos">
-  <div style="text-align:center;">
-    PDCA
-    <div class="luz" id="sem-pdca"></div>
-    <div id="porc-pdca">0%</div>
-  </div>
+      <!-- SELECT -->
+      <div class="card">
+        <select id="selectProyectoUser"></select>
+      </div>
 
-  <div style="text-align:center;">
-    KPI
-    <div class="luz" id="sem-kpi"></div>
-    <div id="porc-kpi">0%</div>
-  </div>
+      <!-- EVALUACION -->
+      <div class="card">
+        <p>KPI</p>
+        <div class="check-opciones">
+          <label><input type="radio" name="kpi" onclick="setValor('kpi','en_tiempo')"> En tiempo</label>
+          <label><input type="radio" name="kpi" onclick="setValor('kpi','retraso')"> Retraso</label>
+        </div>
 
-  <div style="text-align:center;">
-    GANTT
-    <div class="luz" id="sem-plan"></div>
-    <div id="porc-gantt">0%</div>
-  </div>
-</div>
-<p><b>Proyecto:</b> <span id="userNombreProyecto"></span></p>
-      <select id="selectProyectoUser"></select>
+        <p>GANTT</p>
+        <div class="check-opciones">
+          <label><input type="radio" name="gantt" onclick="setValor('gantt','valor')"> OK</label>
+          <label><input type="radio" name="gantt" onclick="setValor('gantt','r2')"> Retraso</label>
+        </div>
 
-      <div>
-<p>KPI</p>
-<div class="check-opciones">
-<label><input type="radio" name="kpi" value="en_tiempo" onclick="setValor('kpi','en_tiempo')"> En tiempo</label>
-<label><input type="radio" name="kpi" value="cumple" onclick="setValor('kpi','cumple')"> Cumple</label>
-<label><input type="radio" name="kpi" value="mitigado" onclick="setValor('kpi','mitigado')"> Retraso mitigado</label>
-<label><input type="radio" name="kpi" value="retraso" onclick="setValor('kpi','retraso')"> Retraso</label>
-<label><input type="radio" name="kpi" value="programado" onclick="setValor('kpi','programado')"> Retraso programado</label>
-<label><input type="radio" name="kpi" value="na" onclick="setValor('kpi','na')"> N/A</label>
-</div>
-<p>GANTT</p>
-<div class="check-opciones">
-<label><input type="radio" name="gantt" value="valor" onclick="setValor('gantt','valor')"> Valor agregado</label>
-<label><input type="radio" name="gantt" value="retraso" onclick="setValor('gantt','retraso')"> Retraso</label>
-<label><input type="radio" name="gantt" value="r2" onclick="setValor('gantt','r2')"> Retraso >2</label>
-<label><input type="radio" name="gantt" value="r3" onclick="setValor('gantt','r3')"> Retraso <3</label>
-<label><input type="radio" name="gantt" value="na" onclick="setValor('gantt','na')"> N/A</label>
-</div>
+        <p>PDCA</p>
+        <div class="check-opciones">
+          <label><input type="checkbox" value="kpi" onchange="togglePDCA(this)"> KPI</label>
+          <label><input type="checkbox" value="gantt" onchange="togglePDCA(this)"> GANTT</label>
+        </div>
 
-<p>PDCA</p>
-<div class="check-opciones">
-<label><input type="checkbox" value="6pack" onchange="togglePDCA(this)"> 6 Pack</label>
-<label><input type="checkbox" value="kpi" onchange="togglePDCA(this)"> KPI</label>
-<label><input type="checkbox" value="gantt" onchange="togglePDCA(this)"> GANTT</label>
-<label><input type="checkbox" value="psr" onchange="togglePDCA(this)"> PSR</label>
-<label><input type="checkbox" value="iplayers" onchange="togglePDCA(this)"> IP Layers</label>
-</div>
-
-      <button class="btn" onclick="guardar()">Guardar</button>
+        <button class="btn" onclick="guardar()">Guardar</button>
+      </div>
 
     </div>
   </div>
 </div>
 
+</body>
+  
 <script>
 window.onerror = function (msg, url, line) {
   alert("Error: " + msg + " en línea " + line);
@@ -416,7 +325,6 @@ function aplicarRol() {
   } else {
     vistaAdmin.style.display = "none";
     vistaUser.style.display = "block";
-    vistaUser.style.flexDirection = "column";
   }
 }
 /* ===== CREAR ===== */
