@@ -351,21 +351,25 @@ table tr:hover {
           <label><input type="radio" name="kpi" value="mitigado" onclick="setValor('kpi','mitigado')"> Retraso mitigado</label> 
           <label><input type="radio" name="kpi" value="retraso" onclick="setValor('kpi','retraso')"> Retraso</label>
           <label><input type="radio" name="kpi" value="programado" onclick="setValor('kpi','programado')"> Retraso programado</label>
-          <label><input type="radio" name="kpi" value="na" onclick="setValor('kpi','na')"> No presento </label> </div>
-
+          <label><input type="radio" name="kpi" value="na" onclick="setValor('kpi','na')"> No presento </label> 
+          <textarea id="comentarioKPI" placeholder="Comentario KPI"></textarea>
+        </div>
         <p>GANTT</p> <div class="check-opciones">
           <label><input type="radio" name="gantt" value="valor" onclick="setValor('gantt','valor')"> En plan</label>
           <label><input type="radio" name="gantt" value="retraso" onclick="setValor('gantt','retraso')"> Retraso</label> 
           <label><input type="radio" name="gantt" value="r2" onclick="setValor('gantt','r2')"> Retraso >2</label>
           <label><input type="radio" name="gantt" value="r3" onclick="setValor('gantt','r3')"> Retraso >3</label>
-          <label><input type="radio" name="gantt" value="na" onclick="setValor('gantt','na')"> No presento </label> </div>
-
+          <label><input type="radio" name="gantt" value="na" onclick="setValor('gantt','na')"> No presento </label>
+          <textarea id="comentarioGANTT" placeholder="Comentario GANTT"></textarea>
+         </div>
         <p>PDCA</p> <div class="check-opciones"> 
           <label><input type="checkbox" value="6pack" onchange="togglePDCA(this)"> 6 Pack</label>
           <label><input type="checkbox" value="kpi" onchange="togglePDCA(this)"> KPI</label>
           <label><input type="checkbox" value="gantt" onchange="togglePDCA(this)"> GANTT</label> 
           <label><input type="checkbox" value="psr" onchange="togglePDCA(this)"> PSR</label>
-          <label><input type="checkbox" value="iplayers" onchange="togglePDCA(this)"> IP Layers</label> </div>
+          <label><input type="checkbox" value="iplayers" onchange="togglePDCA(this)"> IP Layers</label> 
+          <textarea id="comentarioPDCA" placeholder="Comentario PDCA"></textarea>
+        </div>
 
         <button class="btn" onclick="guardar()">Guardar</button>
       </div>
@@ -438,10 +442,15 @@ await db.collection("proyectos").add({
   sponsor,
   owner,
   evaluacion: {
+  kpi: "",
+  gantt: "",
+  pdca: [],
+  comentarios: {
     kpi: "",
     gantt: "",
-    pdca: []
+    pdca: ""
   }
+}
 });
   // limpiar campos
   nombreProyecto.value = "";
@@ -611,6 +620,24 @@ if (!proyecto.evaluacion) {
     document.getElementById("infoChampion").innerText = proyecto.champion || "-";
     document.getElementById("infoSponsor").innerText = proyecto.sponsor || "-";
     document.getElementById("infoOwner").innerText = proyecto.owner || "-";
+          
+    
+    if (!proyecto.evaluacion.comentarios) {
+        proyecto.evaluacion.comentarios = {
+          kpi: "",
+          gantt: "",
+          pdca: ""
+        };
+      }
+      
+      document.getElementById("comentarioKPI").value =
+        proyecto.evaluacion.comentarios.kpi || "";
+      
+      document.getElementById("comentarioGANTT").value =
+        proyecto.evaluacion.comentarios.gantt || "";
+      
+      document.getElementById("comentarioPDCA").value =
+        proyecto.evaluacion.comentarios.pdca || "";
 
     renderSemaforos();
     marcarRadios();
@@ -692,6 +719,11 @@ function renderSemaforos() {
 }
 /* ===== GUARDAR ===== */
 async function guardar() {
+  proyecto.evaluacion.comentarios = {
+  kpi: document.getElementById("comentarioKPI").value,
+  gantt: document.getElementById("comentarioGANTT").value,
+  pdca: document.getElementById("comentarioPDCA").value
+};
   const before = await db.collection("proyectos").doc(proyectoId).get();
   const oldData = before.data();
 
@@ -707,6 +739,8 @@ async function guardar() {
     antes: oldData.evaluacion,
     despues: proyecto.evaluacion
   });
+
+  
 
   alert("Guardado ✅");
 }
