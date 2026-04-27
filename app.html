@@ -714,7 +714,7 @@ async function guardar() {
 /* ===== PROMEDIO ===== */
 function promedioEvaluacion(ev) {
   const map = {
-    en_tiempo:100, cumple:90, valor:100, "6pack":100,
+    en_tiempo:100, cumple:100, valor:100, "6pack":100,
     mitigado:70, programado:60, r3:65,
     retraso:40, r2:20,
     na:0
@@ -735,7 +735,7 @@ function exportarExcel() {
     const data = [];
 
     const map = {
-      en_tiempo:100, cumple:90, valor:100, "6pack":100,
+      en_tiempo:100, cumple:100, valor:100, "6pack":100,
       mitigado:70, programado:60, r3:65,
       retraso:40, r2:20,
       na:0
@@ -794,7 +794,7 @@ function togglePDCA(checkbox) {
   // ===== KPI =====
   if (tipo === "kpi") {
     if (v === "en_tiempo") return 100;
-    if (v === "cumple") return 90;
+    if (v === "cumple") return 100;
     if (v === "mitigado") return 70;
     if (v === "retraso") return 50;
     if (v === "programado") return 30;
@@ -1098,7 +1098,7 @@ function actualizarGraficas(proyectos) {
   let totalGeneral = 0;
 
   const map = {
-    en_tiempo:100, cumple:90,
+    en_tiempo:100, cumple:100,
     mitigado:70, retraso:50,
     programado:30, na:0,
     valor:100, r2:50, r3:30
