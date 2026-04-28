@@ -395,7 +395,10 @@ table tr:hover {
           <label><input type="radio" name="kpi" value="retraso" onclick="setValor('kpi','retraso')"> Retraso</label>
           <label><input type="radio" name="kpi" value="programado" onclick="setValor('kpi','programado')"> Retraso programado</label>
           <label><input type="radio" name="kpi" value="na" onclick="setValor('kpi','na')"> No presento </label> 
-          <textarea id="comentarioKPI" placeholder="Comentario KPI"></textarea>
+          <div class="comentario-box">
+          <label class="comentario-label">Comentario KPI</label>
+          <textarea id="comentarioKPI" placeholder="Agrega detalle o justificación..."></textarea>
+        </div>
         </div>
         <p>GANTT</p> <div class="check-opciones">
           <label><input type="radio" name="gantt" value="valor" onclick="setValor('gantt','valor')"> En plan</label>
@@ -403,7 +406,10 @@ table tr:hover {
           <label><input type="radio" name="gantt" value="r2" onclick="setValor('gantt','r2')"> Retraso >2</label>
           <label><input type="radio" name="gantt" value="r3" onclick="setValor('gantt','r3')"> Retraso >3</label>
           <label><input type="radio" name="gantt" value="na" onclick="setValor('gantt','na')"> No presento </label>
-          <textarea id="comentarioGANTT" placeholder="Comentario GANTT"></textarea>
+          <div class="comentario-box">
+          <label class="comentario-label">Comentario GANTT</label>
+          <textarea id="comentarioGANTT" placeholder="Describe avances o retrasos..."></textarea>
+        </div>
          </div>
         <p>PDCA</p> <div class="check-opciones"> 
           <label><input type="checkbox" value="6pack" onchange="togglePDCA(this)"> 6 Pack</label>
@@ -411,7 +417,10 @@ table tr:hover {
           <label><input type="checkbox" value="gantt" onchange="togglePDCA(this)"> GANTT</label> 
           <label><input type="checkbox" value="psr" onchange="togglePDCA(this)"> PSR</label>
           <label><input type="checkbox" value="iplayers" onchange="togglePDCA(this)"> IP Layers</label> 
-          <textarea id="comentarioPDCA" placeholder="Comentario PDCA"></textarea>
+          <div class="comentario-box">
+          <label class="comentario-label">Comentario PDCA</label>
+          <textarea id="comentarioPDCA" placeholder="Notas sobre implementación..."></textarea>
+        </div>
         </div>
 
         <button class="btn" onclick="guardar()">Guardar</button>
