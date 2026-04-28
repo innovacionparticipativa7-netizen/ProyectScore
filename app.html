@@ -815,21 +815,25 @@ async function guardar() {
 /* ===== PROMEDIO ===== */
 function promedioEvaluacion(ev) {
   const map = {
-    en_tiempo:100, cumple:100, valor:100, "6pack":100,
+    en_tiempo:100, cumple:100, valor:100,
     mitigado:70, programado:60, r3:65,
     retraso:40, r2:20,
     na:0
   };
 
-const pdcaScore = Array.isArray(ev.pdca) ? ev.pdca.length * 20 : 0;
+  const kpi = map[ev.kpi] ?? 0;
+  const gantt = map[ev.gantt] ?? 0;
 
-return (
-  (map[ev.kpi] ?? 0) +
-  (map[ev.gantt] ?? 0) +
-  pdcaScore
-) / 3;
+  // 🔹 PDCA sin IP Layers
+  const pdcaBase = Array.isArray(ev.pdca)
+    ? ev.pdca.filter(v => v !== "iplayers").length * 25
+    : 0;
+
+  // 🔹 BONUS IP Layers
+  const bonus = ev.pdca?.includes("iplayers") ? 5 : 0;
+
+  return Math.min(((kpi + gantt + pdcaBase) / 3) + bonus, 100);
 }
-
 /* ===== EXCEL ===== */
 function exportarExcel() {
   db.collection("proyectos").get().then(snap => {
