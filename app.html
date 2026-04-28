@@ -926,17 +926,18 @@ function togglePDCA(checkbox) {
     return 0;
   }
 
-  // ===== PDCA =====
-  if (tipo === "pdca") {
-    const cantidad = Array.isArray(v) ? v.length : 0;
+// ===== PDCA =====
+if (tipo === "pdca") {
 
-    if (cantidad >= 5) return 100;
-    if (cantidad === 4) return 80;
-    if (cantidad === 3) return 60;
-    if (cantidad === 2) return 40;
-    if (cantidad === 1) return 20;
-    return 0;
-  }
+  const lista = Array.isArray(v) ? v.filter(x => x !== "iplayers") : [];
+  const cantidad = lista.length;
+
+  if (cantidad >= 4) return 100;
+  if (cantidad === 3) return 75;
+  if (cantidad === 2) return 50;
+  if (cantidad === 1) return 25;
+  return 0;
+}
 
   return 0;
 }
