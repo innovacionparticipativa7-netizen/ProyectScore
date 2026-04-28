@@ -312,6 +312,15 @@ table tr:hover {
     </div>
 
   </div>
+  <div class="card">
+  <h3>Progreso semanal</h3>
+
+  <select id="selectHistorialProyecto"></select>
+
+  <canvas id="grafHistorial"></canvas>
+</div>
+
+  
 </div>
 
 <!-- ===== USER ===== -->
@@ -784,13 +793,19 @@ async function guardar() {
   });
 
   await db.collection("historial").add({
-    proyectoId,
-    proyectoNombre: proyecto.nombre,
-    usuario: UID,
-    fecha: new Date(),
-    antes: oldData.evaluacion,
-    despues: proyecto.evaluacion
-  });
+  proyectoId,
+  proyectoNombre: proyecto.nombre,
+  usuario: UID,
+  fecha: new Date(),
+
+  semana: obtenerSemana(new Date()),
+
+  kpi: obtenerPorcentaje("kpi", proyecto.evaluacion.kpi),
+  gantt: obtenerPorcentaje("gantt", proyecto.evaluacion.gantt),
+  pdca: obtenerPorcentaje("pdca", proyecto.evaluacion.pdca),
+
+  general: promedioEvaluacion(proyecto.evaluacion)
+});
 
   
 
@@ -855,6 +870,17 @@ document.addEventListener("change", (e) => {
     cargarProyecto(e.target.value);
   }
 });
+
+
+document.getElementById("selectHistorialProyecto")
+  .addEventListener("change", (e) => {
+    cargarHistorial(e.target.value);
+});
+
+
+
+
+  
 /* ===== TOGGLE ===== */
 function togglePDCA(checkbox) {
   if (!proyecto) return;
@@ -1032,6 +1058,20 @@ async function cargarExcel() {
   reader.readAsArrayBuffer(file);
 }
 
+  /* ===== ObtenerSemana ===== */
+  
+  function obtenerSemana(fecha) {
+  const d = new Date(fecha);
+  const inicio = new Date(d.getFullYear(), 0, 1);
+  const dias = Math.floor((d - inicio) / (24 * 60 * 60 * 1000));
+  return Math.ceil((dias + inicio.getDay() + 1) / 7);
+}
+
+
+
+
+
+  
   /* ===== CARGA MASIVA ===== */
 
 async function guardarMasivo(data) {
@@ -1162,6 +1202,10 @@ async function initApp() {
   aplicarRol();
   cargarProyectos();
 
+  if (ROL === "admin") {
+    cargarSelectHistorial(); // 
+  }
+
   if (ROL !== "admin") {
     await cargarSelect();
 
@@ -1170,12 +1214,33 @@ async function initApp() {
     }
   }
 }
+
+  
 async function eliminarProyecto(id) {
   if (confirm("¿Eliminar proyecto?")) {
     await db.collection("proyectos").doc(id).delete();
   }
 }
+async function cargarSelectHistorial() {
+  const snap = await db.collection("proyectos").get();
+  const select = document.getElementById("selectHistorialProyecto");
 
+  select.innerHTML = "";
+
+  snap.forEach(doc => {
+    const op = document.createElement("option");
+    op.value = doc.id;
+    op.textContent = doc.data().nombre;
+    select.appendChild(op);
+  });
+
+  if (select.value) {
+    cargarHistorial(select.value);
+  }
+}
+
+
+  
 function actualizarGraficas(proyectos) {
 
   let totalKPI = 0;
@@ -1246,6 +1311,54 @@ function crearGrafica(id, valor, label, chartRef, setChart) {
 
   setChart(chart);
 }
+
+let chartHistorial;
+
+async function cargarHistorial(proyectoId) {
+
+  const snap = await db.collection("historial")
+    .where("proyectoId", "==", proyectoId)
+    .orderBy("fecha")
+    .get();
+
+  const semanas = [];
+  const general = [];
+
+  snap.forEach(doc => {
+    const d = doc.data();
+    semanas.push("Sem " + d.semana);
+    general.push(d.general || 0);
+  });
+
+  const ctx = document.getElementById("grafHistorial").getContext("2d");
+
+  if (chartHistorial) chartHistorial.destroy();
+
+  chartHistorial = new Chart(ctx, {
+    type: "line",
+    data: {
+      labels: semanas,
+      datasets: [{
+        label: "Progreso",
+        data: general,
+        tension: 0.3
+      }]
+    },
+    options: {
+      plugins: {
+        legend: { display: true }
+      },
+      scales: {
+        y: {
+          min: 0,
+          max: 100
+        }
+      }
+    }
+  });
+}
+
+  
 
 
   
