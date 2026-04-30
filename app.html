@@ -629,6 +629,10 @@ async function cargarSelect() {
   
 /* ===== CARGAR PROYECTO ===== */
 function cargarProyectos() {
+
+
+
+  
   const tbody = document.querySelector("#tablaProyectos tbody");
 
   db.collection("proyectos").onSnapshot(snap => {
@@ -765,8 +769,6 @@ document.getElementById("porc-general").innerText = general.toFixed(0) + "%";
       document.getElementById("comentarioPDCA").value =
         proyecto.evaluacion.comentarios.pdca || "";
     
-      document.getElementById("porc-general").innerText = 
-        general.toFixed(0) + "%";
 
     renderSemaforos();
     marcarRadios();
@@ -844,10 +846,12 @@ function renderSemaforos() {
 
   document.getElementById("porc-pdca").innerText =
     obtenerPorcentaje("pdca", proyecto.evaluacion.pdca) + "%";
-  
+  const general = promedioEvaluacion(proyecto.evaluacion);
   document.getElementById("porc-general").innerText =
   promedioEvaluacion(proyecto.evaluacion).toFixed(0) + "%";
 
+
+  renderGauge(general); // 👈 AGREGA ESTA LÍNEA
 
   
 }
