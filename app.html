@@ -622,8 +622,8 @@ function cargarProyectos() {
     proyectosCache = [];
     const proyectosArray = [];
 
-    snap.forEach(doc => {
-  const p = doc.data();
+snap.forEach(doc => {
+  const p = { id: doc.id, ...doc.data() };
   const id = doc.id;
 
       // asegurar estructura
@@ -1425,7 +1425,12 @@ function renderTablaAdmin(lista) {
     const tr = document.createElement("tr");
 
     tr.innerHTML = `
-      <td>${p.estado || "-"}</td>
+      <td>
+      <div style="cursor:pointer; font-size:14px; font-weight:bold;"
+           onclick="toggleEstado('${p.id}', '${p.estado}')">
+        ${p.estado === "activo" ? "🟢 Activo" : "🟡 En espera"}
+      </div>
+    </td>
       <td>${p.nombre || "-"}</td>
       <td>${p.champion || "-"}</td>
       <td>${p.sponsor || "-"}</td>
@@ -1494,6 +1499,7 @@ document.getElementById("adminFiltroSeccion").addEventListener("change", () => {
   await db.collection("proyectos").doc(id).update({
     estado: nuevoEstado
   });
+    filtrarAdmin();
 }
 initApp();
 
