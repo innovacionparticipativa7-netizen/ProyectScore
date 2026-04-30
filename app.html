@@ -623,7 +623,7 @@ function cargarProyectos() {
     const proyectosArray = [];
 
     snap.forEach(doc => {
-      const p = doc.data();
+      const p = { id: doc.id, ...doc.data() };
 
       // asegurar estructura
       if (!p.evaluacion) {
@@ -676,7 +676,8 @@ function cargarProyectos() {
     });
 
     // 🔥 ACTUALIZA GRÁFICAS
-    actualizarGraficas(proyectosArray);
+    proyectosCache = proyectosArray;
+
     renderTablaAdmin(proyectosCache);
     actualizarGraficas(proyectosCache);
 
@@ -1423,6 +1424,7 @@ function renderTablaAdmin(lista) {
     const tr = document.createElement("tr");
 
     tr.innerHTML = `
+      <td>${p.estado || "-"}</td>
       <td>${p.nombre || "-"}</td>
       <td>${p.champion || "-"}</td>
       <td>${p.sponsor || "-"}</td>
