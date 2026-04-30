@@ -327,6 +327,7 @@ table tr:hover {
         <table id="tablaProyectos" style="width:100%; border-collapse: collapse;">
           <thead>
             <tr style="background:#1f2937; color:white;">
+              <th>Estado</th>
               <th>Proyecto</th>
               <th>Champion</th>
               <th>Sponsor</th>
@@ -535,6 +536,7 @@ await db.collection("proyectos").add({
   champion,
   sponsor,
   owner,
+  estado: "activo", // 🔥 NUEVO
   evaluacion: {
   kpi: "",
   gantt: "",
@@ -639,6 +641,13 @@ function cargarProyectos() {
         <td>${p.sponsor || "-"}</td>
         <td>${p.owner || "-"}</td>
 
+        <td>
+          <select onchange="cambiarEstado('${p.id}', this.value)">
+            <option value="activo" ${p.estado === "activo" ? "selected" : ""}>Activo</option>
+            <option value="espera" ${p.estado === "espera" ? "selected" : ""}>En espera</option>
+          </select>
+        </td>
+        
         <td>
           <div class="semaforo" style="background:${color("kpi", p.evaluacion.kpi)}"></div>
         </td>
@@ -1302,16 +1311,19 @@ function actualizarGraficas(proyectos) {
     na:0
   };
 
-  proyectos.forEach(p => {
+ proyectos
+  .filter(p => p.estado !== "espera") // 🔥 EXCLUIR
+  .forEach(p => {
 
     const ev = p.evaluacion || {};
 
     const kpi = map[ev.kpi] ?? 0;
     const gantt = map[ev.gantt] ?? 0;
     const pdca = (ev.pdca?.length || 0) * 20;
-
+    const activos = proyectos.filter(p => p.estado !== "espera");
+    const n = activos.length || 1;
     const general = (kpi + gantt + pdca) / 3;
-
+    
     totalKPI += kpi;
     totalGANTT += gantt;
     totalPDCA += pdca;
@@ -1461,6 +1473,19 @@ document.getElementById("adminFiltroSeccion").addEventListener("change", () => {
 
   filtrarAdmin();
 });
+
+  async function cambiarEstado(id, estado) {
+  await db.collection("proyectos").doc(id).update({
+    estado
+  });
+
+  // actualiza cache local si existe
+  const p = proyectosCache.find(x => x.id === id);
+  if (p) p.estado = estado;
+
+  filtrarAdmin();
+}
+
   
 initApp();
 
