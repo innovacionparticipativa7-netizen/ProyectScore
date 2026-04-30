@@ -1294,6 +1294,8 @@ async function cargarSelectHistorial() {
   
 function actualizarGraficas(proyectos) {
 
+  const activos = proyectos.filter(p => p.estado !== "espera");
+
   let totalKPI = 0;
   let totalGANTT = 0;
   let totalPDCA = 0;
@@ -1311,26 +1313,23 @@ function actualizarGraficas(proyectos) {
     na:0
   };
 
- proyectos
-  .filter(p => p.estado !== "espera") // 🔥 EXCLUIR
-  .forEach(p => {
+  activos.forEach(p => {
 
     const ev = p.evaluacion || {};
 
     const kpi = map[ev.kpi] ?? 0;
     const gantt = map[ev.gantt] ?? 0;
     const pdca = (ev.pdca?.length || 0) * 20;
-    const activos = proyectos.filter(p => p.estado !== "espera");
-    const n = activos.length || 1;
+
     const general = (kpi + gantt + pdca) / 3;
-    
+
     totalKPI += kpi;
     totalGANTT += gantt;
     totalPDCA += pdca;
     totalGeneral += general;
   });
 
-  const n = proyectos.length || 1;
+  const n = activos.length || 1;
 
   const promKPI = totalKPI / n;
   const promGANTT = totalGANTT / n;
