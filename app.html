@@ -295,6 +295,33 @@ table tr:hover {
         </div>
       
       </div>
+
+      <div class="card" style="margin-top:10px;">
+  <h3>Filtros Admin</h3>
+
+  <select id="adminFiltroTier" onchange="filtrarAdmin()">
+    <option value="">Todos los Tier</option>
+    <option>Tier 1</option>
+    <option>Tier 2</option>
+    <option>Tier 3</option>
+    <option>Tier 4</option>
+    <option>Tier 5</option>
+    <option>Tier 6</option>
+  </select>
+
+  <select id="adminFiltroSeccion" onchange="filtrarAdmin()">
+    <option value="">Todas las Secciones</option>
+    <option>Buy to Make</option>
+    <option>DTC</option>
+    <option>Material Optimization</option>
+    <option>OH Cost Control</option>
+    <option>Resourcing</option>
+  </select>
+
+  <select id="adminFiltroChampion" onchange="filtrarAdmin()">
+    <option value="">Todos los Champions</option>
+  </select>
+</div>
       <!-- TABLA DE PROYECTOS -->
       <div style="overflow-x:auto;">
         <table id="tablaProyectos" style="width:100%; border-collapse: collapse;">
@@ -468,6 +495,7 @@ let UID = localStorage.getItem("uid");
 let proyectoId = null;
 let proyecto = null;
 let chartKPI, chartGANTT, chartPDCA, chartGENERAL;
+let proyectosCache = [];
 
 /* ===== LOGIN ===== */
 if (!UID || !ROL) {
@@ -588,7 +616,8 @@ function cargarProyectos() {
 
   db.collection("proyectos").onSnapshot(snap => {
     tbody.innerHTML = "";
-
+     
+    proyectosCache = [];
     const proyectosArray = [];
 
     snap.forEach(doc => {
@@ -600,6 +629,7 @@ function cargarProyectos() {
       }
 
       proyectosArray.push(p);
+      proyectosCache.push(p);
 
       const tr = document.createElement("tr");
 
@@ -638,6 +668,8 @@ function cargarProyectos() {
 
     // 🔥 ACTUALIZA GRÁFICAS
     actualizarGraficas(proyectosArray);
+    renderTablaAdmin(proyectosCache);
+    actualizarGraficas(proyectosCache);
 
   });
 }
@@ -1372,10 +1404,63 @@ async function cargarHistorial(proyectoId) {
     }
   });
 }
+function renderTablaAdmin(lista) {
+  const tbody = document.querySelector("#tablaProyectos tbody");
+  tbody.innerHTML = "";
 
+  lista.forEach(p => {
+    const tr = document.createElement("tr");
+
+    tr.innerHTML = `
+      <td>${p.nombre || "-"}</td>
+      <td>${p.champion || "-"}</td>
+      <td>${p.sponsor || "-"}</td>
+      <td>${p.owner || "-"}</td>
+
+      <td><div class="semaforo" style="background:${color("kpi", p.evaluacion.kpi)}"></div></td>
+      <td><div class="semaforo" style="background:${color("gantt", p.evaluacion.gantt)}"></div></td>
+      <td><div class="semaforo" style="background:${color("pdca", p.evaluacion.pdca)}"></div></td>
+
+      <td>
+        <button onclick="event.stopPropagation(); eliminarProyecto('${p.id}')">🗑</button>
+      </td>
+    `;
+
+    tbody.appendChild(tr);
+  });
+}
   
+function filtrarAdmin() {
+  const tier = document.getElementById("adminFiltroTier").value;
+  const seccion = document.getElementById("adminFiltroSeccion").value;
+  const champion = document.getElementById("adminFiltroChampion").value;
 
+  let filtrados = proyectosCache;
 
+  if (tier) filtrados = filtrados.filter(p => p.tier === tier);
+  if (seccion) filtrados = filtrados.filter(p => p.seccion === seccion);
+  if (champion) filtrados = filtrados.filter(p => p.champion === champion);
+
+  renderTablaAdmin(filtrados);
+  actualizarGraficas(filtrados);
+}
+document.getElementById("adminFiltroSeccion").addEventListener("change", () => {
+  const seccion = document.getElementById("adminFiltroSeccion").value;
+  const select = document.getElementById("adminFiltroChampion");
+
+  select.innerHTML = '<option value="">Todos los Champions</option>';
+
+  if (championsPorSeccion[seccion]) {
+    championsPorSeccion[seccion].forEach(ch => {
+      const op = document.createElement("option");
+      op.value = ch;
+      op.textContent = ch;
+      select.appendChild(op);
+    });
+  }
+
+  filtrarAdmin();
+});
   
 initApp();
 
