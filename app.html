@@ -404,33 +404,39 @@ table tr:hover {
       </div>
 
       <!-- SEMAFOROS -->
-      <div class="card">
-        <div class="resumen-semaforos">
-          <div>
-            <!-- PROMEDIO GENERAL -->
-          <!-- PROMEDIO GENERAL -->
-          <div class="card" style="text-align:center;">
-            <h3>Calificación General</h3>
-            <div style="font-size:40px; font-weight:bold;" id="porc-general">0%</div>
-            <div style="margin-top:8px; color:#666;">Promedio KPI + GANTT + PDCA</div>
-          </div>
-            
-            PDCA
-            <div id="sem-pdca" class="luz"></div>
-            <div id="porc-pdca">0%</div>
-          </div>
-          <div>
-            KPI
-            <div id="sem-kpi" class="luz"></div>
-            <div id="porc-kpi">0%</div>
-          </div>
-          <div>
-            GANTT
-            <div id="sem-plan" class="luz"></div>
-            <div id="porc-gantt">0%</div>
-          </div>
-        </div>
-      </div>
+      <!-- ===== GENERAL ARRIBA ===== -->
+<div class="card" style="text-align:center;">
+  <h3>Calificación General</h3>
+
+  <canvas id="gaugeGeneral" style="max-height:220px;"></canvas>
+
+  <div style="font-size:28px; font-weight:bold;" id="porc-general">0%</div>
+</div>
+
+<!-- ===== KPI / GANTT / PDCA ABAJO ===== -->
+<div class="card">
+  <div class="resumen-semaforos">
+
+    <div>
+      KPI
+      <div id="sem-kpi" class="luz"></div>
+      <div id="porc-kpi">0%</div>
+    </div>
+
+    <div>
+      GANTT
+      <div id="sem-plan" class="luz"></div>
+      <div id="porc-gantt">0%</div>
+    </div>
+
+    <div>
+      PDCA
+      <div id="sem-pdca" class="luz"></div>
+      <div id="porc-pdca">0%</div>
+    </div>
+
+  </div>
+</div>
 
       <!-- SELECT -->
       <div class="card">
