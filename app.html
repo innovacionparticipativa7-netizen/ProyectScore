@@ -262,6 +262,12 @@ table tr:hover {
         <input id="ownerProyecto" placeholder="Owner">
 
         <button class="btn" onclick="crearProyecto()">Crear</button>
+        <input type="file" id="inputExcel" accept=".xlsx,.xls" style="margin-top:10px;">
+        <button class="btn" onclick="cargarExcel()">Subir Excel</button>
+        
+        <button class="btn" onclick="descargarPlantilla()" style="margin-top:10px;">
+          Descargar Plantilla
+        </button>
       </div>
 
       <hr>
@@ -398,11 +404,10 @@ table tr:hover {
       <!-- EVALUACION -->
       <div class="card">
         <p>KPI</p> <div class="check-opciones"> 
-          <label><input type="radio" name="kpi" value="en_tiempo" onclick="setValor('kpi','en_tiempo')"> Excede </label>
-          <label><input type="radio" name="kpi" value="cumple" onclick="setValor('kpi','cumple')"> Cumple</label> 
-          <label><input type="radio" name="kpi" value="mitigado" onclick="setValor('kpi','mitigado')"> Retraso mitigado</label> 
-          <label><input type="radio" name="kpi" value="retraso" onclick="setValor('kpi','retraso')"> Retraso</label>
-          <label><input type="radio" name="kpi" value="programado" onclick="setValor('kpi','programado')"> Retraso programado</label>
+          <label><input type="radio" name="kpi" value="en_tiempo" onclick="setValor('kpi','en_tiempo')"> KPI current vs target comply </label>
+          <label><input type="radio" name="kpi" value="cumple" onclick="setValor('kpi','cumple')"> KPI current vs target at 80% - 75% </label> 
+          <label><input type="radio" name="kpi" value="mitigado" onclick="setValor('kpi','mitigado')"> KPI current vs target at 70% - 50% </label> 
+          <label><input type="radio" name="kpi" value="retraso_kpi" onclick="setValor('kpi','retraso_kpi')"> KPI current vs target lees than 49% </label>
           <label><input type="radio" name="kpi" value="na" onclick="setValor('kpi','na')"> No presento </label> 
           <div class="comentario-box">
           <label class="comentario-label">Comentario KPI</label>
@@ -410,10 +415,10 @@ table tr:hover {
         </div>
         </div>
         <p>GANTT</p> <div class="check-opciones">
-          <label><input type="radio" name="gantt" value="valor" onclick="setValor('gantt','valor')"> En plan</label>
-          <label><input type="radio" name="gantt" value="retraso" onclick="setValor('gantt','retraso')"> Retraso</label> 
-          <label><input type="radio" name="gantt" value="r2" onclick="setValor('gantt','r2')"> Retraso >2</label>
-          <label><input type="radio" name="gantt" value="r3" onclick="setValor('gantt','r3')"> Retraso >3</label>
+          <label><input type="radio" name="gantt" value="valor" onclick="setValor('gantt','valor')"> Gantt without delay action</label>
+          <label><input type="radio" name="gantt" value="retraso_gantt" onclick="setValor('gantt','retraso_gantt')"> Gantt with 2 delayed actions </label> 
+          <label><input type="radio" name="gantt" value="r2" onclick="setValor('gantt','r2')"> Gantt with more than 3 delayed actions</label>
+          <label><input type="radio" name="gantt" value="r3" onclick="setValor('gantt','r3')"> Gantt with more than 4 delayed actions </label>
           <label><input type="radio" name="gantt" value="na" onclick="setValor('gantt','na')"> No presento </label>
           <div class="comentario-box">
           <label class="comentario-label">Comentario GANTT</label>
@@ -421,11 +426,11 @@ table tr:hover {
         </div>
          </div>
         <p>PDCA</p> <div class="check-opciones"> 
-          <label><input type="checkbox" value="6pack" onchange="togglePDCA(this)"> 6 Pack</label>
-          <label><input type="checkbox" value="kpi" onchange="togglePDCA(this)"> KPI</label>
-          <label><input type="checkbox" value="gantt" onchange="togglePDCA(this)"> GANTT</label> 
-          <label><input type="checkbox" value="psr" onchange="togglePDCA(this)"> PSR</label>
-          <label><input type="checkbox" value="iplayers" onchange="togglePDCA(this)"> IP Layers</label> 
+          <label><input type="checkbox" value="6pack" onchange="togglePDCA(this)"> Is 6pack available</label>
+          <label><input type="checkbox" value="kpi" onchange="togglePDCA(this)"> Is the KPI presented and updated</label>
+          <label><input type="checkbox" value="gantt" onchange="togglePDCA(this)"> Is the GANTT presented and updated </label> 
+          <label><input type="checkbox" value="psr" onchange="togglePDCA(this)"> Is the PSR presented and updated </label>
+          <label><input type="checkbox" value="iplayers" onchange="togglePDCA(this)"> Have an improve IP </label> 
           <div class="comentario-box">
           <label class="comentario-label">Comentario PDCA</label>
           <textarea id="comentarioPDCA" placeholder="Notas sobre implementación..."></textarea>
@@ -726,14 +731,13 @@ function color(tipo, v) {
     if (["en_tiempo"].includes(v)) return "#008000";
     if (["cumple"].includes(v)) return "#90EE90";
     if (["mitigado"].includes(v)) return "#FFD700";
-    if (["retraso"].includes(v)) return "#FF8C00";
-    if (["programado"].includes(v)) return "#FF0000";
+    if (["retraso_kpi"].includes(v)) return "#FF8C00";
   }
 
   // ===== GANTT =====
   if (tipo === "gantt") {
     if (["valor"].includes(v)) return "#008000";
-    if (["retraso"].includes(v)) return "#FFD700";
+    if (["retraso_gantt"].includes(v)) return "#FFD700";
     if (["r2"].includes(v)) return "#FF8C00";
     if (["r3"].includes(v)) return "#FF0000";
   }
@@ -815,9 +819,9 @@ async function guardar() {
 /* ===== PROMEDIO ===== */
 function promedioEvaluacion(ev) {
   const map = {
-    en_tiempo:100, cumple:100, valor:100,
-    mitigado:70, programado:60, r3:65,
-    retraso:40, r2:20,
+    en_tiempo:100, cumple:75, valor:100,
+    mitigado:75, r3:0,retraso_gantt:50,
+    retraso_kpi:0, r2:50,
     na:0
   };
 
@@ -840,9 +844,11 @@ function exportarExcel() {
     const data = [];
 
     const map = {
-      en_tiempo:100, cumple:100, valor:100, "6pack":100,
-      mitigado:70, programado:60, r3:65,
-      retraso:40, r2:20,
+      en_tiempo:100 , valor:100, "6pack":100,
+      cumple:75, r3:65,
+      mitigado:50,
+      retraso_kpi:0,
+      retraso_gantt:75, r2:20,
       na:0
     };
 
@@ -910,19 +916,18 @@ function togglePDCA(checkbox) {
   // ===== KPI =====
   if (tipo === "kpi") {
     if (v === "en_tiempo") return 100;
-    if (v === "cumple") return 100;
-    if (v === "mitigado") return 70;
-    if (v === "retraso") return 50;
-    if (v === "programado") return 30;
+    if (v === "cumple") return 75;
+    if (v === "mitigado") return 50;
+    if (v === "retraso_kpi") return 0;
     return 0;
   }
 
   // ===== GANTT =====
   if (tipo === "gantt") {
     if (v === "valor") return 100;
-    if (v === "retraso") return 70;
+    if (v === "retraso_gantt") return 75;
     if (v === "r2") return 50;
-    if (v === "r3") return 30;
+    if (v === "r3") return 0;
     return 0;
   }
 
@@ -1254,10 +1259,15 @@ function actualizarGraficas(proyectos) {
   let totalGeneral = 0;
 
   const map = {
-    en_tiempo:100, cumple:100,
-    mitigado:70, retraso:50,
-    programado:30, na:0,
-    valor:100, r2:50, r3:30
+    en_tiempo:100,
+    cumple:75,
+    mitigado:50,
+    retraso_kpi:0,
+    retraso_gantt:75,
+    valor:100,
+    r2:50,
+    r3:0,
+    na:0
   };
 
   proyectos.forEach(p => {
