@@ -408,13 +408,13 @@ table tr:hover {
         <div class="resumen-semaforos">
           <div>
             <!-- PROMEDIO GENERAL -->
+          <!-- PROMEDIO GENERAL -->
           <div class="card" style="text-align:center;">
             <h3>Calificación General</h3>
-          
-            <canvas id="gaugeGeneral" style="max-height:220px;"></canvas>
-          
-            <div style="font-size:28px; font-weight:bold;" id="porc-general">0%</div>
+            <div style="font-size:40px; font-weight:bold;" id="porc-general">0%</div>
+            <div style="margin-top:8px; color:#666;">Promedio KPI + GANTT + PDCA</div>
           </div>
+            
             PDCA
             <div id="sem-pdca" class="luz"></div>
             <div id="porc-pdca">0%</div>
@@ -759,10 +759,8 @@ document.getElementById("porc-general").innerText = general.toFixed(0) + "%";
       document.getElementById("comentarioPDCA").value =
         proyecto.evaluacion.comentarios.pdca || "";
     
-      document.getElementById("porc-general").innerText =
+      document.getElementById("porc-general").innerText = 
         general.toFixed(0) + "%";
-
-    renderGauge(general);
 
     renderSemaforos();
     marcarRadios();
