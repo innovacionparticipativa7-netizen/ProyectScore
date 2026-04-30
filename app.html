@@ -643,10 +643,10 @@ function cargarProyectos() {
         <td>${p.owner || "-"}</td>
 
         <td>
-          <select onchange="cambiarEstado('${id}', this.value)">
-            <option value="activo" ${p.estado === "activo" ? "selected" : ""}>Activo</option>
-            <option value="espera" ${p.estado === "espera" ? "selected" : ""}>En espera</option>
-          </select>
+            <div style="cursor:pointer; font-size:18px;" 
+                 onclick="toggleEstado('${doc.id}', '${p.estado}')">
+                  ${p.estado === "activo" ? "🟢 Activo" : "🟡 En espera"}
+            </div>
         </td>
         
         <td>
@@ -1488,7 +1488,13 @@ document.getElementById("adminFiltroSeccion").addEventListener("change", () => {
   filtrarAdmin();
 }
 
-  
+  async function toggleEstado(id, estadoActual) {
+  const nuevoEstado = estadoActual === "activo" ? "espera" : "activo";
+
+  await db.collection("proyectos").doc(id).update({
+    estado: nuevoEstado
+  });
+}
 initApp();
 
 </script>
