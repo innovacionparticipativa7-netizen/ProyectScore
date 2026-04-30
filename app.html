@@ -410,8 +410,10 @@ table tr:hover {
             <!-- PROMEDIO GENERAL -->
           <div class="card" style="text-align:center;">
             <h3>Calificación General</h3>
-            <div style="font-size:40px; font-weight:bold;" id="porc-general">0%</div>
-            <div style="margin-top:8px; color:#666;">Promedio KPI + GANTT + PDCA</div>
+          
+            <canvas id="gaugeGeneral" style="max-height:220px;"></canvas>
+          
+            <div style="font-size:28px; font-weight:bold;" id="porc-general">0%</div>
           </div>
             PDCA
             <div id="sem-pdca" class="luz"></div>
@@ -503,6 +505,7 @@ let proyectoId = null;
 let proyecto = null;
 let chartKPI, chartGANTT, chartPDCA, chartGENERAL;
 let proyectosCache = [];
+let gaugeChart;
 
 /* ===== LOGIN ===== */
 if (!UID || !ROL) {
@@ -755,6 +758,11 @@ document.getElementById("porc-general").innerText = general.toFixed(0) + "%";
       
       document.getElementById("comentarioPDCA").value =
         proyecto.evaluacion.comentarios.pdca || "";
+    
+      document.getElementById("porc-general").innerText =
+        general.toFixed(0) + "%";
+
+    renderGauge(general);
 
     renderSemaforos();
     marcarRadios();
@@ -835,6 +843,11 @@ function renderSemaforos() {
   
   document.getElementById("porc-general").innerText =
   promedioEvaluacion(proyecto.evaluacion).toFixed(0) + "%";
+
+  
+
+
+  
 }
 /* ===== GUARDAR ===== */
 async function guardar() {
@@ -1512,6 +1525,47 @@ document.getElementById("adminFiltroSeccion").addEventListener("change", () => {
   });
     filtrarAdmin();
 }
+
+
+
+function renderGauge(valor) {
+  const ctx = document.getElementById("gaugeGeneral").getContext("2d");
+
+  if (gaugeChart) gaugeChart.destroy();
+
+  gaugeChart = new Chart(ctx, {
+    type: "doughnut",
+    data: {
+      datasets: [{
+        data: [valor, 100 - valor],
+        backgroundColor: [
+          valor >= 75 ? "#2ecc71" :
+          valor >= 50 ? "#f1c40f" :
+          "#e74c3c",
+          "#e5e7eb"
+        ],
+        borderWidth: 0,
+        cutout: "75%"
+      }]
+    },
+    options: {
+      responsive: true,
+      rotation: -90,
+      circumference: 180,
+      plugins: {
+        legend: { display: false },
+        tooltip: { enabled: false }
+      }
+    }
+  });
+}
+
+
+
+
+
+
+  
 initApp();
 
 </script>
