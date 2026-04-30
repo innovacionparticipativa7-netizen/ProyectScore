@@ -623,7 +623,8 @@ function cargarProyectos() {
     const proyectosArray = [];
 
     snap.forEach(doc => {
-      const p = { id: doc.id, ...doc.data() };
+  const p = doc.data();
+  const id = doc.id;
 
       // asegurar estructura
       if (!p.evaluacion) {
@@ -642,7 +643,7 @@ function cargarProyectos() {
         <td>${p.owner || "-"}</td>
 
         <td>
-          <select onchange="cambiarEstado('${p.id}', this.value)">
+          <select onchange="cambiarEstado('${id}', this.value)">
             <option value="activo" ${p.estado === "activo" ? "selected" : ""}>Activo</option>
             <option value="espera" ${p.estado === "espera" ? "selected" : ""}>En espera</option>
           </select>
