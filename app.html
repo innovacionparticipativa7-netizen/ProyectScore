@@ -407,6 +407,12 @@ table tr:hover {
       <div class="card">
         <div class="resumen-semaforos">
           <div>
+            <!-- PROMEDIO GENERAL -->
+          <div class="card" style="text-align:center;">
+            <h3>Calificación General</h3>
+            <div style="font-size:40px; font-weight:bold;" id="porc-general">0%</div>
+            <div style="margin-top:8px; color:#666;">Promedio KPI + GANTT + PDCA</div>
+          </div>
             PDCA
             <div id="sem-pdca" class="luz"></div>
             <div id="porc-pdca">0%</div>
@@ -723,6 +729,8 @@ if (!proyecto.evaluacion) {
     gantt: "",
     pdca: []
   };
+  const general = promedioEvaluacion(proyecto.evaluacion);
+document.getElementById("porc-general").innerText = general.toFixed(0) + "%";
 }
 
     document.getElementById("userNombreProyecto").innerText = proyecto.nombre || "-";
@@ -824,6 +832,9 @@ function renderSemaforos() {
 
   document.getElementById("porc-pdca").innerText =
     obtenerPorcentaje("pdca", proyecto.evaluacion.pdca) + "%";
+  
+  document.getElementById("porc-general").innerText =
+  promedioEvaluacion(proyecto.evaluacion).toFixed(0) + "%";
 }
 /* ===== GUARDAR ===== */
 async function guardar() {
