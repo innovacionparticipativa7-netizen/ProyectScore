@@ -844,7 +844,10 @@ function renderSemaforos() {
   document.getElementById("porc-general").innerText =
   promedioEvaluacion(proyecto.evaluacion).toFixed(0) + "%";
 
-  
+  document.getElementById("porc-general").innerText =
+  general.toFixed(0) + "%";
+
+renderGauge(general);
 
 
   
