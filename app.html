@@ -930,25 +930,28 @@ async function exportarExcel() {
   snap.forEach(doc => {
     const h = doc.data();
 
-    data.push({
+   data.push({
   Proyecto: h.proyectoNombre,
   Champion: h.champion,
   Seccion: h.seccion,
   Tier: h.tier,
 
-  Fecha: h.fecha 
+  Fecha: h.fecha
     ? new Date(h.fecha.seconds * 1000).toLocaleString()
     : "-",
 
   Semana: h.semana,
+
   KPI: h.kpi,
   Comentario_KPI: h.comentariosKPI,
+
   GANTT: h.gantt,
   Comentario_GANTT: h.comentariosGANTT,
+
   PDCA: h.pdca,
   Comentario_PDCA: h.comentariosPDCA,
-  General: h.general
 
+  General: h.general
 });
 
   const ws = XLSX.utils.json_to_sheet(data);
