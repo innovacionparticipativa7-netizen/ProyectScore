@@ -869,18 +869,22 @@ async function guardar() {
     evaluacion: proyecto.evaluacion
   });
 
-  await db.collection("historial").add({
+await db.collection("historial").add({
   proyectoId,
   proyectoNombre: proyecto.nombre,
+
+  // 🔥 NUEVOS CAMPOS
+  champion: proyecto.champion || "-",
+  seccion: proyecto.seccion || "-",
+  tier: proyecto.tier || "-",
+
   usuario: UID,
   fecha: new Date(),
-
   semana: obtenerSemana(new Date()),
 
   kpi: obtenerPorcentaje("kpi", proyecto.evaluacion.kpi),
   gantt: obtenerPorcentaje("gantt", proyecto.evaluacion.gantt),
   pdca: obtenerPorcentaje("pdca", proyecto.evaluacion.pdca),
-
   general: promedioEvaluacion(proyecto.evaluacion)
 });
 
@@ -924,17 +928,22 @@ async function exportarExcel() {
     const h = doc.data();
 
     data.push({
-      Proyecto: h.proyectoNombre,
-      Fecha: h.fecha 
-        ? new Date(h.fecha.seconds * 1000).toLocaleString()
-        : "-",
-      Semana: h.semana,
-      KPI: h.kpi,
-      GANTT: h.gantt,
-      PDCA: h.pdca,
-      General: h.general
-    });
-  });
+  Proyecto: h.proyectoNombre,
+  Champion: h.champion,
+  Seccion: h.seccion,
+  Tier: h.tier,
+
+  Fecha: h.fecha 
+    ? new Date(h.fecha.seconds * 1000).toLocaleString()
+    : "-",
+
+  Semana: h.semana,
+  KPI: h.kpi,
+  GANTT: h.gantt,
+  PDCA: h.pdca,
+  General: h.general,
+  Usuario: h.usuario
+});
 
   const ws = XLSX.utils.json_to_sheet(data);
   const wb = XLSX.utils.book_new();
