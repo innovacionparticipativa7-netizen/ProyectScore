@@ -416,7 +416,7 @@ table tr:hover {
         </div>
        
         <div class="filtro-group" id="filtroChampionBtns">
-        <button class="filtro-btn active" onclick="setFiltro('champion','',event)">Todos</button>
+        <button class="filtro-btn active" onclick="setFiltro('champion','',this)">Todos</button>
         </div>
 
         
@@ -658,13 +658,15 @@ let filtrosAdmin = {
   champion: ""
 };
 
-function setFiltro(tipo, valor, el) {
+function setFiltroAdmin(tipo, valor, el) {
   filtrosAdmin[tipo] = valor;
 
-  document.querySelectorAll(`#filtro${capitalize(tipo)} .filtro-btn`)
-    .forEach(btn => btn.classList.remove("active"));
+  document.querySelectorAll(`#adminFiltro${capitalize(tipo)} option`)
+    .forEach(btn => btn.classList?.remove("active"));
 
-  if (el) el.classList.add("active"); // 👈 evita que truene
+ if (el && el.classList) {
+  el.classList.add("active");
+
 
   filtrarAdmin();
 }
@@ -673,14 +675,18 @@ let filtrosUser = {
   seccion: "",
   champion: ""
 };
-  function setFiltro(tipo, valor, el) {
+function setFiltroUser(tipo, valor, el) {
   filtrosUser[tipo] = valor;
 
-  // activar botón visual
-  document.querySelectorAll(`#filtro${capitalize(tipo)} .filtro-btn`)
-    .forEach(btn => btn.classList.remove("active"));
+  const container = document.getElementById(`filtro${capitalize(tipo)}`);
 
-  if (el) el.classList.add("active");
+  if (container) {
+    container.querySelectorAll(".filtro-btn")
+      .forEach(btn => btn.classList.remove("active"));
+  }
+
+ if (el && el.classList) {
+  el.classList.add("active");
 
   aplicarFiltros();
 }
