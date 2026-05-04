@@ -1557,18 +1557,18 @@ function filtrarAdmin() {
   const seccion = document.getElementById("adminFiltroSeccion").value;
   const champion = document.getElementById("adminFiltroChampion").value;
 
-  let filtrados = proyectosCache;
+  let filtrados = [...proyectosCache];
 
-  if (filtrosAdmin.tier) {
-    filtrados = filtrados.filter(p => p.tier === filtrosAdmin.tier);
+  if (tier) {
+    filtrados = filtrados.filter(p => p.tier === tier);
   }
 
-  if (filtrosAdmin.seccion) {
-    filtrados = filtrados.filter(p => p.seccion === filtrosAdmin.seccion);
+  if (seccion) {
+    filtrados = filtrados.filter(p => p.seccion === seccion);
   }
 
-  if (filtrosAdmin.champion) {
-    filtrados = filtrados.filter(p => p.champion === filtrosAdmin.champion);
+  if (champion) {
+    filtrados = filtrados.filter(p => p.champion === champion);
   }
 
   renderTablaAdmin(filtrados);
