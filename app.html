@@ -668,7 +668,33 @@ function setFiltro(tipo, valor, el) {
 
   filtrarAdmin();
 }
+let filtrosUser = {
+  tier: "",
+  seccion: "",
+  champion: ""
+};
+  function setFiltro(tipo, valor, el) {
+  filtrosUser[tipo] = valor;
 
+  // activar botón visual
+  document.querySelectorAll(`#filtro${capitalize(tipo)} .filtro-btn`)
+    .forEach(btn => btn.classList.remove("active"));
+
+  if (el) el.classList.add("active");
+
+  aplicarFiltros();
+}
+
+document.getElementById("filtroChampion")
+  .addEventListener("change", (e) => {
+    filtrosUser.champion = e.target.value;
+    aplicarFiltros();
+  });
+
+
+
+
+  
 function capitalize(str) {
   return str.charAt(0).toUpperCase() + str.slice(1);
 }
@@ -1121,41 +1147,38 @@ document.getElementById("filtroSeccion").addEventListener("change", () => {
 });
   
 /* ===== FUNCION DE FILTRADO  ===== */
-async function aplicarFiltros() {
-  const tier = document.getElementById("filtroTier").value;
-  const seccion = document.getElementById("filtroSeccion").value;
-  const champion = document.getElementById("filtroChampion").value;
+function aplicarFiltros() {
+  let filtrados = [...proyectosCache];
 
-  
+  if (filtrosUser.tier) {
+    filtrados = filtrados.filter(p => p.tier === filtrosUser.tier);
+  }
 
-  const snap = await db.collection("proyectos").get();
+  if (filtrosUser.seccion) {
+    filtrados = filtrados.filter(p => p.seccion === filtrosUser.seccion);
+  }
+
+  if (filtrosUser.champion) {
+    filtrados = filtrados.filter(p => p.champion === filtrosUser.champion);
+  }
 
   // limpiar select
   selectProyectoUser.innerHTML = "";
 
-  snap.forEach(doc => {
-    const p = doc.data();
-
-    // aplicar filtros
-    if (tier && p.tier !== tier) return;
-    if (seccion && p.seccion !== seccion) return;
-    if (champion && p.champion !== champion) return;
-
+  filtrados.forEach(p => {
     const op = document.createElement("option");
-    op.value = doc.id;
+    op.value = p.id;
     op.textContent = p.nombre;
-
     selectProyectoUser.appendChild(op);
   });
 
-  // 🔴 SI NO HAY RESULTADOS
-  if (selectProyectoUser.options.length === 0) {
+  // si no hay resultados
+  if (filtrados.length === 0) {
     const op = document.createElement("option");
     op.textContent = "Sin resultados";
     op.value = "";
     selectProyectoUser.appendChild(op);
 
-    // limpiar vista
     document.getElementById("userNombreProyecto").innerText = "Sin resultados";
     document.getElementById("infoChampion").innerText = "-";
     document.getElementById("infoSponsor").innerText = "-";
@@ -1164,12 +1187,10 @@ async function aplicarFiltros() {
     return;
   }
 
-  // 🔥 FORZAR selección del primero
-  const primerId = selectProyectoUser.options[0].value;
-  selectProyectoUser.value = primerId;
-
-  // cargar proyecto automáticamente
-  cargarProyecto(primerId);
+  // cargar primero automáticamente
+  const primer = filtrados[0];
+  selectProyectoUser.value = primer.id;
+  cargarProyecto(primer.id);
 }
 /* ===== CARGA DE CHAMPIONS AUTOMATICO  ===== */
   
