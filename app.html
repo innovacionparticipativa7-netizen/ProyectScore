@@ -658,14 +658,13 @@ let filtrosAdmin = {
   champion: ""
 };
 
-function setFiltro(tipo, valor) {
+function setFiltro(tipo, valor, el) {
   filtrosAdmin[tipo] = valor;
 
-  // marcar activo visualmente
   document.querySelectorAll(`#filtro${capitalize(tipo)} .filtro-btn`)
     .forEach(btn => btn.classList.remove("active"));
 
-  event.target.classList.add("active");
+  el.classList.add("active");
 
   filtrarAdmin();
 }
