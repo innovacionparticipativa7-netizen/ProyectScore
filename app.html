@@ -912,34 +912,37 @@ function promedioEvaluacion(ev) {
   return Math.min(((kpi + gantt + pdcaBase) / 3) + bonus, 100);
 }
 /* ===== EXCEL ===== */
-function exportarExcel() {
-  db.collection("proyectos").get().then(snap => {
-    const data = [];
+async function exportarExcel() {
 
-    const map = {
-      en_tiempo:100 , valor:100, "6pack":100,
-      cumple:75, r3:65,
-      mitigado:50,
-      retraso_kpi:0,
-      retraso_gantt:75, r2:20,
-      na:0
-    };
+  const snap = await db.collection("historial")
+    .orderBy("fecha", "desc")
+    .get();
 
-    snap.forEach(doc => {
-      const p = doc.data();
-      data.push({
-        Proyecto: p.nombre,
-        KPI: map[p.evaluacion.kpi] ?? 0,
-        GANTT: map[p.evaluacion.gantt] ?? 0,
-        PDCA: obtenerPorcentaje("pdca", p.evaluacion.pdca)
-      });
+  const data = [];
+
+  snap.forEach(doc => {
+    const h = doc.data();
+
+    data.push({
+      Proyecto: h.proyectoNombre,
+      Fecha: h.fecha 
+        ? new Date(h.fecha.seconds * 1000).toLocaleString()
+        : "-",
+      Semana: h.semana,
+      KPI: h.kpi,
+      GANTT: h.gantt,
+      PDCA: h.pdca,
+      General: h.general,
+      Usuario: h.usuario
     });
-
-    const ws = XLSX.utils.json_to_sheet(data);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Proyectos");
-    XLSX.writeFile(wb, "Proyectos.xlsx");
   });
+
+  const ws = XLSX.utils.json_to_sheet(data);
+  const wb = XLSX.utils.book_new();
+
+  XLSX.utils.book_append_sheet(wb, ws, "Historial");
+
+  XLSX.writeFile(wb, "Historial_Proyectos.xlsx");
 }
 
 /* ===== LOGOUT ===== */
