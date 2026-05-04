@@ -197,7 +197,32 @@ table tr:hover {
   display: block;
 }
 
+.filtro-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 10px;
+}
 
+.filtro-btn {
+  padding: 8px 12px;
+  border-radius: 20px;
+  border: 1px solid #d1d5db;
+  background: #fff;
+  cursor: pointer;
+  font-size: 13px;
+  transition: 0.2s;
+}
+
+.filtro-btn:hover {
+  background: #f3f4f6;
+}
+
+.filtro-btn.active {
+  background: #1f2937;
+  color: white;
+  border-color: #1f2937;
+}
 
 
 
@@ -371,23 +396,24 @@ table tr:hover {
       <!-- FILTROS -->
       <div class="card">
         <h3>Filtros</h3> 
-        <select id="filtroTier" onchange="aplicarFiltros()"> 
-          <option value="">Todos los Tier</option> <option>Tier 1</option>
-          <option>Tier 2</option>
-          <option>Tier 3</option>
-          <option>Tier 4</option> 
-          <option>Tier 5</option>
-          <option>Tier 6</option>
-        </select>
+        <div class="filtro-group" id="filtroTier">
+          <button class="filtro-btn active" onclick="setFiltro('tier','')">Todos</button>
+          <button class="filtro-btn" onclick="setFiltro('tier','Tier 1')">Tier 1</button>
+          <button class="filtro-btn" onclick="setFiltro('tier','Tier 2')">Tier 2</button>
+          <button class="filtro-btn" onclick="setFiltro('tier','Tier 3')">Tier 3</button>
+          <button class="filtro-btn" onclick="setFiltro('tier','Tier 4')">Tier 4</button>
+          <button class="filtro-btn" onclick="setFiltro('tier','Tier 5')">Tier 5</button>
+          <button class="filtro-btn" onclick="setFiltro('tier','Tier 6')">Tier 6</button>
+        </div>
 
-        <select id="filtroSeccion" onchange="aplicarFiltros()"> 
-          <option value="">Todas las Secciones</option>
-          <option>Buy to Make</option> 
-          <option>DTC</option>
-          <option>Material Optimization</option>
-          <option>OH Cost Control</option>
-          <option>Resourcing</option>
-        </select>
+        <div class="filtro-group" id="filtroSeccion">
+          <button class="filtro-btn active" onclick="setFiltro('seccion','')">Todas</button>
+          <button class="filtro-btn" onclick="setFiltro('seccion','Buy to Make')">Buy to Make</button>
+          <button class="filtro-btn" onclick="setFiltro('seccion','DTC')">DTC</button>
+          <button class="filtro-btn" onclick="setFiltro('seccion','Material Optimization')">Material Optimization</button>
+          <button class="filtro-btn" onclick="setFiltro('seccion','OH Cost Control')">OH Cost Control</button>
+          <button class="filtro-btn" onclick="setFiltro('seccion','Resourcing')">Resourcing</button>
+        </div>
        
         <select id="filtroChampion" onchange="aplicarFiltros()"> 
           <option value="">Todos los Champions</option> 
@@ -624,6 +650,30 @@ async function cargarSelect() {
     alert("Error cargando proyectos");
   }
 }
+
+
+let filtrosAdmin = {
+  tier: "",
+  seccion: "",
+  champion: ""
+};
+
+function setFiltro(tipo, valor) {
+  filtrosAdmin[tipo] = valor;
+
+  // marcar activo visualmente
+  document.querySelectorAll(`#filtro${capitalize(tipo)} .filtro-btn`)
+    .forEach(btn => btn.classList.remove("active"));
+
+  event.target.classList.add("active");
+
+  aplicarFiltrosAdmin();
+}
+
+function capitalize(str) {
+  return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
 
 
   
@@ -1509,9 +1559,17 @@ function filtrarAdmin() {
 
   let filtrados = proyectosCache;
 
-  if (tier) filtrados = filtrados.filter(p => p.tier === tier);
-  if (seccion) filtrados = filtrados.filter(p => p.seccion === seccion);
-  if (champion) filtrados = filtrados.filter(p => p.champion === champion);
+  if (filtrosAdmin.tier) {
+    filtrados = filtrados.filter(p => p.tier === filtrosAdmin.tier);
+  }
+
+  if (filtrosAdmin.seccion) {
+    filtrados = filtrados.filter(p => p.seccion === filtrosAdmin.seccion);
+  }
+
+  if (filtrosAdmin.champion) {
+    filtrados = filtrados.filter(p => p.champion === filtrosAdmin.champion);
+  }
 
   renderTablaAdmin(filtrados);
   actualizarGraficas(filtrados);
