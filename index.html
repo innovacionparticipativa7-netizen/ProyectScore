@@ -160,15 +160,10 @@ window.login = async () => {
   }
 };
 
-const userInput = document.getElementById("user");
-const passInput = document.getElementById("pass");
-
-[userInput, passInput].forEach(input => {
-  input.addEventListener("keydown", (e) => {
-    if (e.key === "Enter") {
-      login();
-    }
-  });
+passInput.addEventListener("keydown", (e) => {
+  if (e.key === "Enter") {
+    window.login();
+  }
 });
 
 
