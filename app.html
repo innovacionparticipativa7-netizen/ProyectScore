@@ -885,10 +885,10 @@ await db.collection("historial").add({
   kpi: obtenerPorcentaje("kpi", proyecto.evaluacion.kpi),
   gantt: obtenerPorcentaje("gantt", proyecto.evaluacion.gantt),
   pdca: obtenerPorcentaje("pdca", proyecto.evaluacion.pdca),
-  general: promedioEvaluacion(proyecto.evaluacion)
+  general: promedioEvaluacion(proyecto.evaluacion),
   comentariosKPI: document.getElementById("comentarioKPI").value || "",
-comentariosGANTT: document.getElementById("comentarioGANTT").value || "",
-comentariosPDCA: document.getElementById("comentarioPDCA").value || "",
+  comentariosGANTT: document.getElementById("comentarioGANTT").value || "",
+  comentariosPDCA: document.getElementById("comentarioPDCA").value || ""
 });
 
   
