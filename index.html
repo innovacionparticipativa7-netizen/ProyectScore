@@ -132,6 +132,10 @@ import { doc, getDoc } from
   "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 window.login = async () => {
+  const btn = document.querySelector(".btn-login");
+  btn.disabled = true;
+  btn.innerText = "Entrando...";
+
   const user = document.getElementById("user").value.trim();
   const pass = document.getElementById("pass").value;
 
@@ -139,17 +143,37 @@ window.login = async () => {
 
   try {
     const cred = await signInWithEmailAndPassword(auth, emailFake, pass);
-    const uid = cred.user.uid;
 
+    const uid = cred.user.uid;
     const snap = await getDoc(doc(db, "users", uid));
+
     localStorage.setItem("uid", uid);
     localStorage.setItem("rol", snap.data().rol);
 
     location.href = "app.html";
+
   } catch {
     alert("Usuario o contraseña incorrectos");
+  } finally {
+    btn.disabled = false;
+    btn.innerText = "Entrar";
   }
 };
+
+const userInput = document.getElementById("user");
+const passInput = document.getElementById("pass");
+
+[userInput, passInput].forEach(input => {
+  input.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      login();
+    }
+  });
+});
+
+
+
+ 
 </script>
 
 </body>
