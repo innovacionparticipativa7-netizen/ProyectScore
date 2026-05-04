@@ -415,9 +415,9 @@ table tr:hover {
           <button class="filtro-btn" onclick="setFiltro('seccion','Resourcing',this)">Resourcing</button>
         </div>
        
-        <select id="filtroChampion" onchange="aplicarFiltros()"> 
-          <option value="">Todos los Champions</option> 
-        </select>
+        <div class="filtro-group" id="filtroChampionBtns">
+        <button class="filtro-btn active" onclick="setFiltro('champion','',event)">Todos</button>
+        </div>
 
         
 
@@ -775,9 +775,45 @@ snap.forEach(doc => {
 
     renderTablaAdmin(proyectosCache);
     actualizarGraficas(proyectosCache);
+    renderChampionsUser();
 
   });
 }
+
+
+function renderChampionsUser() {
+  const container = document.getElementById("filtroChampionBtns");
+
+  container.innerHTML = `
+    <button class="filtro-btn active" onclick="setFiltroUser('champion','',event)">Todos</button>
+  `;
+
+  const set = new Set();
+
+  proyectosCache.forEach(p => {
+    if (p.champion) set.add(p.champion);
+  });
+
+  [...set].forEach(ch => {
+    const btn = document.createElement("button");
+    btn.className = "filtro-btn";
+    btn.textContent = ch;
+    btn.onclick = (e) => setFiltroUser("champion", ch, e);
+    container.appendChild(btn);
+  });
+}
+
+
+
+
+
+
+
+
+
+
+
+  
 /* ===== MARCAR RADIOS ===== */
 function marcarRadios() {
   if (!proyecto || !proyecto.evaluacion) return;
