@@ -397,22 +397,22 @@ table tr:hover {
       <div class="card">
         <h3>Filtros</h3> 
         <div class="filtro-group" id="filtroTier">
-          <button class="filtro-btn active" onclick="setFiltro('tier','')">Todos</button>
-          <button class="filtro-btn" onclick="setFiltro('tier','Tier 1')">Tier 1</button>
-          <button class="filtro-btn" onclick="setFiltro('tier','Tier 2')">Tier 2</button>
-          <button class="filtro-btn" onclick="setFiltro('tier','Tier 3')">Tier 3</button>
-          <button class="filtro-btn" onclick="setFiltro('tier','Tier 4')">Tier 4</button>
-          <button class="filtro-btn" onclick="setFiltro('tier','Tier 5')">Tier 5</button>
-          <button class="filtro-btn" onclick="setFiltro('tier','Tier 6')">Tier 6</button>
+          <button class="filtro-btn active" onclick="setFiltro('tier','',this)">Todos</button>
+          <button class="filtro-btn" onclick="setFiltro('tier','Tier 1',this)">Tier 1</button>
+          <button class="filtro-btn" onclick="setFiltro('tier','Tier 2',this)">Tier 2</button>
+          <button class="filtro-btn" onclick="setFiltro('tier','Tier 3',this)">Tier 3</button>
+          <button class="filtro-btn" onclick="setFiltro('tier','Tier 4',this)">Tier 4</button>
+          <button class="filtro-btn" onclick="setFiltro('tier','Tier 5',this)">Tier 5</button>
+          <button class="filtro-btn" onclick="setFiltro('tier','Tier 6',this)">Tier 6</button>
         </div>
 
         <div class="filtro-group" id="filtroSeccion">
-          <button class="filtro-btn active" onclick="setFiltro('seccion','')">Todas</button>
-          <button class="filtro-btn" onclick="setFiltro('seccion','Buy to Make')">Buy to Make</button>
-          <button class="filtro-btn" onclick="setFiltro('seccion','DTC')">DTC</button>
-          <button class="filtro-btn" onclick="setFiltro('seccion','Material Optimization')">Material Optimization</button>
-          <button class="filtro-btn" onclick="setFiltro('seccion','OH Cost Control')">OH Cost Control</button>
-          <button class="filtro-btn" onclick="setFiltro('seccion','Resourcing')">Resourcing</button>
+          <button class="filtro-btn active" onclick="setFiltro('seccion','',this)">Todas</button>
+          <button class="filtro-btn" onclick="setFiltro('seccion','Buy to Make',this)">Buy to Make</button>
+          <button class="filtro-btn" onclick="setFiltro('seccion','DTC',this)">DTC</button>
+          <button class="filtro-btn" onclick="setFiltro('seccion','Material Optimization',this)">Material Optimization</button>
+          <button class="filtro-btn" onclick="setFiltro('seccion','OH Cost Control',this)">OH Cost Control</button>
+          <button class="filtro-btn" onclick="setFiltro('seccion','Resourcing',this)">Resourcing</button>
         </div>
        
         <select id="filtroChampion" onchange="aplicarFiltros()"> 
@@ -664,7 +664,7 @@ function setFiltro(tipo, valor, el) {
   document.querySelectorAll(`#filtro${capitalize(tipo)} .filtro-btn`)
     .forEach(btn => btn.classList.remove("active"));
 
-  el.classList.add("active");
+  if (el) el.classList.add("active"); // 👈 evita que truene
 
   filtrarAdmin();
 }
