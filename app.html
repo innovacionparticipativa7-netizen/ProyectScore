@@ -886,6 +886,9 @@ await db.collection("historial").add({
   gantt: obtenerPorcentaje("gantt", proyecto.evaluacion.gantt),
   pdca: obtenerPorcentaje("pdca", proyecto.evaluacion.pdca),
   general: promedioEvaluacion(proyecto.evaluacion)
+  comentariosKPI: document.getElementById("comentarioKPI").value || "",
+comentariosGANTT: document.getElementById("comentarioGANTT").value || "",
+comentariosPDCA: document.getElementById("comentarioPDCA").value || "",
 });
 
   
@@ -939,10 +942,13 @@ async function exportarExcel() {
 
   Semana: h.semana,
   KPI: h.kpi,
+  Comentario_KPI: h.comentariosKPI,
   GANTT: h.gantt,
+  Comentario_GANTT: h.comentariosGANTT,
   PDCA: h.pdca,
+  Comentario_PDCA: h.comentariosPDCA,
   General: h.general,
-  Usuario: h.usuario
+
 });
 
   const ws = XLSX.utils.json_to_sheet(data);
