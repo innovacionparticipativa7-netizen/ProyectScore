@@ -1037,7 +1037,7 @@ async function exportarExcel() {
 
   snap.forEach(doc => {
     const p = doc.data();
-
+    const h = doc.data();
     const ev = p.evaluacion || {};
 
     const kpi = obtenerPorcentaje("kpi", ev.kpi);
