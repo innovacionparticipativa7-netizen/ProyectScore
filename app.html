@@ -1033,7 +1033,11 @@ async function exportarExcel() {
   const snap = await db.collection("historial")
     .orderBy("fecha", "desc")
     .get();
-
+  
+  const fechaObj = h.fecha
+    ? new Date(h.fecha.seconds * 1000)
+    : null;
+  
   const data = [];
 
   snap.forEach(doc => {
@@ -1045,9 +1049,13 @@ async function exportarExcel() {
       Seccion: h.seccion,
       Tier: h.tier,
 
-      Fecha: h.fecha
-        ? new Date(h.fecha.seconds * 1000).toLocaleString()
-        : "-",
+       Fecha: fechaObj
+      ? fechaObj.toLocaleDateString()
+      : "-",
+
+       Hora: fechaObj
+      ? fechaObj.toLocaleTimeString()
+      : "-",
 
       Semana: h.semana,
 
@@ -1062,8 +1070,6 @@ async function exportarExcel() {
 
       General: h.general
     });
-
-  });
 
   // 🔥 ESTO VA FUERA DEL FOREACH
   const ws = XLSX.utils.json_to_sheet(data);
