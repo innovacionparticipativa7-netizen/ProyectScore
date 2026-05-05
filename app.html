@@ -397,26 +397,26 @@ table tr:hover {
       <div class="card">
         <h3>Filtros</h3> 
         <div class="filtro-group" id="filtroTier">
-          <button class="filtro-btn active" onclick="setFiltro('tier','',this)">Todos</button>
-          <button class="filtro-btn" onclick="setFiltro('tier','Tier 1',this)">Tier 1</button>
-          <button class="filtro-btn" onclick="setFiltro('tier','Tier 2',this)">Tier 2</button>
-          <button class="filtro-btn" onclick="setFiltro('tier','Tier 3',this)">Tier 3</button>
-          <button class="filtro-btn" onclick="setFiltro('tier','Tier 4',this)">Tier 4</button>
-          <button class="filtro-btn" onclick="setFiltro('tier','Tier 5',this)">Tier 5</button>
-          <button class="filtro-btn" onclick="setFiltro('tier','Tier 6',this)">Tier 6</button>
+          <button class="filtro-btn active" onclick="setFiltroUser('tier','',this)">Todos</button>
+          <button class="filtro-btn" onclick="setFiltroUser('tier','Tier 1',this)">Tier 1</button>
+          <button class="filtro-btn" onclick="setFiltroUser('tier','Tier 2',this)">Tier 2</button>
+          <button class="filtro-btn" onclick="setFiltroUser('tier','Tier 3',this)">Tier 3</button>
+          <button class="filtro-btn" onclick="setFiltroUser('tier','Tier 4',this)">Tier 4</button>
+          <button class="filtro-btn" onclick="setFiltroUser('tier','Tier 5',this)">Tier 5</button>
+          <button class="filtro-btn" onclick="setFiltroUser('tier','Tier 6',this)">Tier 6</button>
         </div>
 
         <div class="filtro-group" id="filtroSeccion">
-          <button class="filtro-btn active" onclick="setFiltro('seccion','',this)">Todas</button>
-          <button class="filtro-btn" onclick="setFiltro('seccion','Buy to Make',this)">Buy to Make</button>
-          <button class="filtro-btn" onclick="setFiltro('seccion','DTC',this)">DTC</button>
-          <button class="filtro-btn" onclick="setFiltro('seccion','Material Optimization',this)">Material Optimization</button>
-          <button class="filtro-btn" onclick="setFiltro('seccion','OH Cost Control',this)">OH Cost Control</button>
-          <button class="filtro-btn" onclick="setFiltro('seccion','Resourcing',this)">Resourcing</button>
+          <button class="filtro-btn active" onclick="setFiltroUser('seccion','',this)">Todas</button>
+          <button class="filtro-btn" onclick="setFiltroUser('seccion','Buy to Make',this)">Buy to Make</button>
+          <button class="filtro-btn" onclick="setFiltroUser('seccion','DTC',this)">DTC</button>
+          <button class="filtro-btn" onclick="setFiltroUser('seccion','Material Optimization',this)">Material Optimization</button>
+          <button class="filtro-btn" onclick="setFiltroUser('seccion','OH Cost Control',this)">OH Cost Control</button>
+          <button class="filtro-btn" onclick="setFiltroUser('seccion','Resourcing',this)">Resourcing</button>
         </div>
        
         <div class="filtro-group" id="filtroChampionBtns">
-        <button class="filtro-btn active" onclick="setFiltro('champion','',this)">Todos</button>
+        <button class="filtro-btn active" onclick="setFiltroUser('champion','',this)">Todos</button>
         </div>
 
         
@@ -511,8 +511,6 @@ table tr:hover {
     </div>
   </div>
 </div>
-
-</body>
   
 <script>
 window.onerror = function (msg, url, line) {
@@ -529,7 +527,6 @@ const vistaAdmin = document.getElementById("vista-admin");
 const vistaUser = document.getElementById("vista-user");
 const db = firebase.firestore();
 const selectProyectoUser = document.getElementById("selectProyectoUser");
-const listaProyectos = document.getElementById("listaProyectos");
 /* ===== VARIABLES ===== */
 let ROL = (localStorage.getItem("rol") || "").toLowerCase().trim();
 let UID = localStorage.getItem("uid");
@@ -693,12 +690,6 @@ function setFiltroUser(tipo, valor, el) {
   aplicarFiltros();
 }
 
-document.getElementById("filtroChampion")
-  .addEventListener("change", (e) => {
-    filtrosUser.champion = e.target.value;
-    aplicarFiltros();
-  });
-
 
 
 
@@ -774,8 +765,7 @@ snap.forEach(doc => {
         proyecto = p;
         console.log("Seleccionado:", p);
       };
-
-      tbody.appendChild(tr);
+  
     });
 
     // 🔥 ACTUALIZA GRÁFICAS
