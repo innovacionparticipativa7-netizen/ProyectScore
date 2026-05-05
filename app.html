@@ -1033,45 +1033,47 @@ async function exportarExcel() {
   const snap = await db.collection("historial")
     .orderBy("fecha", "desc")
     .get();
-  
-  const fechaObj = h.fecha
-    ? new Date(h.fecha.seconds * 1000)
-    : null;
-  
+
   const data = [];
 
   snap.forEach(doc => {
     const h = doc.data();
 
+    // 🔥 CORRECTO: dentro del foreach
+    const fechaObj = h.fecha
+      ? new Date(h.fecha.seconds * 1000)
+      : null;
+
     data.push({
-      Proyecto: h.proyectoNombre,
-      Champion: h.champion,
-      Seccion: h.seccion,
-      Tier: h.tier,
+      Proyecto: h.proyectoNombre || "-",
+      Champion: h.champion || "-",
+      Seccion: h.seccion || "-",
+      Tier: h.tier || "-",
 
-       Fecha: fechaObj
-      ? fechaObj.toLocaleDateString()
-      : "-",
+      Fecha: fechaObj
+        ? fechaObj.toLocaleDateString()
+        : "-",
 
-       Hora: fechaObj
-      ? fechaObj.toLocaleTimeString()
-      : "-",
+      Hora: fechaObj
+        ? fechaObj.toLocaleTimeString()
+        : "-",
 
-      Semana: h.semana,
+      Semana: h.semana || "-",
 
-      KPI: h.kpi,
-      Comentario_KPI: h.comentariosKPI,
+      KPI: h.kpi ?? 0,
+      Comentario_KPI: h.comentariosKPI || "",
 
-      GANTT: h.gantt,
-      Comentario_GANTT: h.comentariosGANTT,
+      GANTT: h.gantt ?? 0,
+      Comentario_GANTT: h.comentariosGANTT || "",
 
-      PDCA: h.pdca,
-      Comentario_PDCA: h.comentariosPDCA,
+      PDCA: h.pdca ?? 0,
+      Comentario_PDCA: h.comentariosPDCA || "",
 
-      General: h.general
+      General: h.general ?? 0
     });
+  });
 
-  // 🔥 ESTO VA FUERA DEL FOREACH
+  // 🔥 GENERAR EXCEL (fuera del foreach)
   const ws = XLSX.utils.json_to_sheet(data);
   const wb = XLSX.utils.book_new();
 
