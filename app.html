@@ -1032,23 +1032,36 @@ function promedioEvaluacion(ev) {
 /* ===== EXCEL ===== */
 async function exportarExcel() {
 
-  const snap = await db.collection("proyectos").get();
+  // 👇 AQUÍ VA EL PASO 1
+  const projSnap = await db.collection("proyectos").get();
+
+  // 👇 AQUÍ VA EL PASO 1 (también)
+  const histSnap = await db.collection("historial").get();
+
+  // 👇 AQUÍ VA EL PASO 2
+  const lastHist = {};
+
+  histSnap.forEach(doc => {
+    const h = doc.data();
+    const id = h.proyectoId;
+
+    if (!lastHist[id] || lastHist[id].fecha.seconds < h.fecha.seconds) {
+      lastHist[id] = h;
+    }
+  });
 
   const data = [];
 
-  snap.forEach(doc => {
+  // 👇 AQUÍ SIGUE TU EXPORT
+  projSnap.forEach(doc => {
     const p = doc.data();
     const ev = p.evaluacion || {};
 
-    const fechaObj = p.createdAt
-      ? new Date(p.createdAt.seconds * 1000)
+    const h = lastHist[doc.id] || {};
+
+    const fechaObj = h.fecha
+      ? new Date(h.fecha.seconds * 1000)
       : null;
-
-    const kpi = obtenerPorcentaje("kpi", ev.kpi);
-    const gantt = obtenerPorcentaje("gantt", ev.gantt);
-    const pdca = obtenerPorcentaje("pdca", ev.pdca);
-
-    const general = promedioEvaluacion(ev);
 
     data.push({
       Proyecto: p.nombre || "-",
@@ -1056,22 +1069,20 @@ async function exportarExcel() {
       Seccion: p.seccion || "-",
       Tier: p.tier || "-",
 
-      Estado: p.estado || "activo",
-
       Fecha: fechaObj ? fechaObj.toLocaleDateString() : "-",
       Hora: fechaObj ? fechaObj.toLocaleTimeString() : "-",
 
-      KPI: kpi,
-      Comentario_KPI: ev.comentarios?.kpi || "",
+      KPI: obtenerPorcentaje("kpi", ev.kpi),
+      GANTT: obtenerPorcentaje("gantt", ev.gantt),
+      PDCA: obtenerPorcentaje("pdca", ev.pdca),
 
-      GANTT: gantt,
-      Comentario_GANTT: ev.comentarios?.gantt || "",
+      General: promedioEvaluacion(ev).toFixed(2),
 
-      PDCA: pdca,
-      Comentario_PDCA: ev.comentarios?.pdca || "",
+      Usuario: h.usuarioNombre || "-",
 
-      General: general.toFixed(2),
-      Usuario: p.usuarioNombre || "-"
+      Comentario_KPI: h.comentariosKPI || "",
+      Comentario_GANTT: h.comentariosGANTT || "",
+      Comentario_PDCA: h.comentariosPDCA || ""
     });
   });
 
