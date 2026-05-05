@@ -988,6 +988,7 @@ await db.collection("historial").add({
   tier: proyecto.tier || "-",
 
   usuario: UID,
+  usuarioNombre: USER_NAME,
   fecha: new Date(),
   semana: obtenerSemana(new Date()),
 
@@ -1030,75 +1031,49 @@ function promedioEvaluacion(ev) {
 /* ===== EXCEL ===== */
 async function exportarExcel() {
 
-  const snap = await db.collection("historial")
-    .orderBy("fecha", "desc")
-    .get();
+  const snap = await db.collection("proyectos").get();
 
   const data = [];
 
-  const map = {
-  en_tiempo: 100,
-  cumple: 75,
-  mitigado: 50,
-  retraso_kpi: 0,
-  valor: 100,
-  retraso_gantt: 75,
-  r2: 50,
-  r3: 0
-};
+  snap.forEach(doc => {
+    const p = doc.data();
 
-snap.forEach(doc => {
-  const h = doc.data();
+    const ev = p.evaluacion || {};
 
-  const fechaObj = h.fecha
-    ? new Date(h.fecha.seconds * 1000)
-    : null;
+    const kpi = obtenerPorcentaje("kpi", ev.kpi);
+    const gantt = obtenerPorcentaje("gantt", ev.gantt);
+    const pdca = obtenerPorcentaje("pdca", ev.pdca);
 
-  const kpi = map[h.kpi] ?? 0;
-  const gantt = map[h.gantt] ?? 0;
-
-  const pdca = Array.isArray(h.pdca)
-    ? h.pdca.length * 20
-    : 0;
-
-  const general = ((kpi + gantt + pdca) / 3).toFixed(2);
+    const general = promedioEvaluacion(ev);
 
     data.push({
-      Proyecto: h.proyectoNombre || "-",
-      Champion: h.champion || "-",
-      Seccion: h.seccion || "-",
-      Tier: h.tier || "-",
+      Proyecto: p.nombre || "-",
+      Champion: p.champion || "-",
+      Seccion: p.seccion || "-",
+      Tier: p.tier || "-",
 
-      Fecha: fechaObj
-        ? fechaObj.toLocaleDateString()
-        : "-",
+      Estado: p.estado || "activo",
 
-      Hora: fechaObj
-        ? fechaObj.toLocaleTimeString()
-        : "-",
-
-      Semana: h.semana || "-",
-
-      KPI: h.kpi ?? 0,
+      KPI: kpi,
       Comentario_KPI: h.comentariosKPI || "",
-
-      GANTT: h.gantt ?? 0,
+      GANTT: gantt,
       Comentario_GANTT: h.comentariosGANTT || "",
-
-      PDCA: h.pdca ?? 0,
+      PDCA: pdca,
       Comentario_PDCA: h.comentariosPDCA || "",
+      General: general.toFixed(2),
+      Usuario: h.usuarioNombre || "-",
 
-      General: h.general ?? 0
+
+      
     });
   });
 
-  // 🔥 GENERAR EXCEL (fuera del foreach)
   const ws = XLSX.utils.json_to_sheet(data);
   const wb = XLSX.utils.book_new();
 
-  XLSX.utils.book_append_sheet(wb, ws, "Historial");
+  XLSX.utils.book_append_sheet(wb, ws, "Estado_Final");
 
-  XLSX.writeFile(wb, "Historial_Proyectos.xlsx");
+  XLSX.writeFile(wb, "Estado_Final_Proyectos.xlsx");
 }
 
 /* ===== LOGOUT ===== */
