@@ -1036,13 +1036,32 @@ async function exportarExcel() {
 
   const data = [];
 
-  snap.forEach(doc => {
-    const h = doc.data();
+  const map = {
+  en_tiempo: 100,
+  cumple: 75,
+  mitigado: 50,
+  retraso_kpi: 0,
+  valor: 100,
+  retraso_gantt: 75,
+  r2: 50,
+  r3: 0
+};
 
-    // 🔥 CORRECTO: dentro del foreach
-    const fechaObj = h.fecha
-      ? new Date(h.fecha.seconds * 1000)
-      : null;
+snap.forEach(doc => {
+  const h = doc.data();
+
+  const fechaObj = h.fecha
+    ? new Date(h.fecha.seconds * 1000)
+    : null;
+
+  const kpi = map[h.kpi] ?? 0;
+  const gantt = map[h.gantt] ?? 0;
+
+  const pdca = Array.isArray(h.pdca)
+    ? h.pdca.length * 20
+    : 0;
+
+  const general = ((kpi + gantt + pdca) / 3).toFixed(2);
 
     data.push({
       Proyecto: h.proyectoNombre || "-",
