@@ -1078,11 +1078,11 @@ async function exportarExcel() {
 
       General: promedioEvaluacion(ev).toFixed(2),
 
-      Usuario: h.usuarioNombre || "-",
+      Usuario: h.usuarioNombre || h.usuario || "-",
 
-      Comentario_KPI: h.comentariosKPI || "",
-      Comentario_GANTT: h.comentariosGANTT || "",
-      Comentario_PDCA: h.comentariosPDCA || ""
+      Comentario_KPI:p.evaluacion?.comentarios?.kpi || h.comentariosKPI || "",
+      Comentario_GANTT: p.evaluacion?.comentarios?.gantt ||h.comentariosGANTT || "",
+      Comentario_PDCA: p.evaluacion?.comentarios?.pdca ||h.comentariosPDCA || ""
     });
   });
 
