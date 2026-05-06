@@ -700,7 +700,53 @@ function capitalize(str) {
 }
 
 
+function calcularKPI(valor) {
+  const map = {
+    en_tiempo: 100,
+    cumple: 75,
+    mitigado: 50,
+    retraso_kpi: 0,
+    na: 0
+  };
+  return map[valor] ?? 0;
+}
 
+function calcularGANTT(valor) {
+  const map = {
+    valor: 100,
+    retraso_gantt: 75,
+    r2: 50,
+    r3: 0,
+    na: 0
+  };
+  return map[valor] ?? 0;
+}
+
+function calcularPDCA(ev) {
+  if (!Array.isArray(ev?.pdca)) return 0;
+
+  // checks normales (sin IP)
+  const checks = ev.pdca.filter(x => x !== "iplayers").length;
+
+  // cada check vale 25%
+  let total = checks * 25;
+
+  // bonus IP = +25%
+  if (ev.pdca.includes("iplayers")) {
+    total += 25;
+  }
+
+  // nunca pasar de 100
+  return Math.min(total, 100);
+}
+
+function calcularGeneral(ev) {
+  const kpi = calcularKPI(ev.kpi);
+  const gantt = calcularGANTT(ev.gantt);
+  const pdca = calcularPDCA(ev);
+
+  return (kpi + gantt + pdca) / 3;
+}
   
 /* ===== CARGAR PROYECTO ===== */
 function cargarProyectos() {
@@ -918,17 +964,15 @@ function color(tipo, v) {
   }
 
   // ===== PDCA =====
-  if (tipo === "pdca") {
+if (tipo === "pdca") {
+  const porcentaje = calcularPDCA({ pdca: v });
 
-    const cantidad = Array.isArray(v) ? v.length : 0;
-
-    if (cantidad === 5) return "#008000";
-    if (cantidad === 4) return "#90EE90";
-    if (cantidad === 3) return "#FFD700";
-    if (cantidad === 2) return "#FF8C00";
-    if (cantidad === 1) return "#FF0000";
-    if (cantidad === 0) return "#FF8C00";
-  }
+  if (porcentaje >= 100) return "#008000";
+  if (porcentaje >= 75) return "#90EE90";
+  if (porcentaje >= 50) return "#FFD700";
+  if (porcentaje >= 25) return "#FF8C00";
+  return "#FF0000";
+}
 
   return "#808080";
 }
@@ -956,7 +1000,7 @@ function renderSemaforos() {
 
   document.getElementById("porc-pdca").innerText =
     obtenerPorcentaje("pdca", proyecto.evaluacion.pdca) + "%";
-  const general = promedioEvaluacion(proyecto.evaluacion);
+  const general = calcularGeneral(proyecto.evaluacion);
   document.getElementById("porc-general").innerText =
   promedioEvaluacion(proyecto.evaluacion).toFixed(0) + "%";
 
@@ -996,7 +1040,7 @@ await db.collection("historial").add({
   kpi: obtenerPorcentaje("kpi", proyecto.evaluacion.kpi),
   gantt: obtenerPorcentaje("gantt", proyecto.evaluacion.gantt),
   pdca: obtenerPorcentaje("pdca", proyecto.evaluacion.pdca),
-  general: promedioEvaluacion(proyecto.evaluacion),
+  general: calcularGeneral(proyecto.evaluacion),
   comentariosKPI: document.getElementById("comentarioKPI").value || "",
   comentariosGANTT: document.getElementById("comentarioGANTT").value || "",
   comentariosPDCA: document.getElementById("comentarioPDCA").value || ""
@@ -1007,28 +1051,6 @@ await db.collection("historial").add({
   alert("Guardado ✅");
 }
 
-/* ===== PROMEDIO ===== */
-function promedioEvaluacion(ev) {
-  const map = {
-    en_tiempo:100, cumple:75, valor:100,
-    mitigado:50, r3:0,retraso_gantt:75,
-    retraso_kpi:0, r2:50,
-    na:0
-  };
-
-  const kpi = map[ev.kpi] ?? 0;
-  const gantt = map[ev.gantt] ?? 0;
-
-  // 🔹 PDCA sin IP Layers
-  const pdcaBase = Array.isArray(ev.pdca)
-    ? ev.pdca.filter(v => v !== "iplayers").length * 25
-    : 0;
-
-  // 🔹 BONUS IP Layers
-  const bonus = ev.pdca?.includes("iplayers") ? 5 : 0;
-
-  return Math.min(((kpi + gantt + pdcaBase) / 3) + bonus, 100);
-}
 /* ===== EXCEL ===== */
 async function exportarExcel() {
 
@@ -1076,7 +1098,7 @@ async function exportarExcel() {
       GANTT: obtenerPorcentaje("gantt", ev.gantt),
       PDCA: obtenerPorcentaje("pdca", ev.pdca),
 
-      General: promedioEvaluacion(ev).toFixed(2),
+      General: calcularGeneral(ev).toFixed(2),
 
       Usuario: h.usuarioNombre || h.usuario || "-",
 
@@ -1138,32 +1160,12 @@ function togglePDCA(checkbox) {
   /* ===== PORCENTAJES ===== */
   function obtenerPorcentaje(tipo, v) {
 
-  // ===== KPI =====
-  if (tipo === "kpi") {
-    if (v === "en_tiempo") return 100;
-    if (v === "cumple") return 75;
-    if (v === "mitigado") return 50;
-    if (v === "retraso_kpi") return 0;
-    return 0;
+  if (tipo === "kpi") return calcularKPI(v);
+  if (tipo === "gantt") return calcularGANTT(v);
+
+  if (tipo === "pdca") {
+    return calcularPDCA({ pdca: v });
   }
-
-  // ===== GANTT =====
-  if (tipo === "gantt") {
-    if (v === "valor") return 100;
-    if (v === "retraso_gantt") return 75;
-    if (v === "r2") return 50;
-    if (v === "r3") return 0;
-    return 0;
-  }
-
-// ===== PDCA =====
-if (tipo === "pdca") {
-  const lista = Array.isArray(v) ? v.filter(x => x !== "iplayers") : [];
-  const base = lista.length * 25;
-  const bonus = v.includes("iplayers") ? 5 : 0;
-
-  return Math.min(base + bonus, 100);
-}
 
   return 0;
 }
@@ -1488,24 +1490,20 @@ function actualizarGraficas(proyectos) {
     na:0
   };
 
-  activos.forEach(p => {
+activos.forEach(p => {
 
-    const ev = p.evaluacion || {};
+  const ev = p.evaluacion || {};
 
-    const kpi = map[ev.kpi] ?? 0;
-    const gantt = map[ev.gantt] ?? 0;
-    const lista = ev.pdca?.filter(x => x !== "iplayers") || [];
-    const pdcaBase = lista.length * 25;
-    const bonus = ev.pdca?.includes("iplayers") ? 5 : 0;
+  const kpi = calcularKPI(ev.kpi);
+  const gantt = calcularGANTT(ev.gantt);
+  const pdca = calcularPDCA(ev);
+  const general = calcularGeneral(ev);
 
-    const pdca = Math.min(pdcaBase + bonus, 100);
-    const general = (kpi + gantt + pdca) / 3;
-
-    totalKPI += kpi;
-    totalGANTT += gantt;
-    totalPDCA += pdca;
-    totalGeneral += general;
-  });
+  totalKPI += kpi;
+  totalGANTT += gantt;
+  totalPDCA += pdca;
+  totalGeneral += general;
+});
 
   const n = activos.length || 1;
 
