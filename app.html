@@ -338,7 +338,9 @@ body {
 }
 
 
-
+#grafGENERAL {
+  max-height: 320px;
+}
 
   
   
@@ -542,42 +544,28 @@ body {
 
       <!-- SEMAFOROS -->
 <!-- CONTENEDOR ORDENADO -->
-<div style="display:flex; flex-direction:column; gap:15px;">
+<div class="card" style="text-align:center; padding:25px;">
+  <h3>Promedio General</h3>
+  <canvas id="grafGENERAL"></canvas>
+</div>
+        
+<div class="grid">
 
-  <!-- 🔝 GENERAL (GRANDE ARRIBA) -->
-  <div class="card" style="text-align:center; padding:25px;">
-    <h3 style="font-size:22px;">Calificación General</h3>
-
-    <canvas id="gaugeGeneral" style="max-height:320px; margin:auto;"></canvas>
-
-    <div style="font-size:38px; font-weight:bold; margin-top:10px;" id="porc-general">
-      0%
-    </div>
-  </div>
-
-  <!-- 🔽 KPI / GANTT / PDCA ABAJO -->
   <div class="card">
-    <div class="resumen-semaforos">
-
-    <div>
-      KPI
-      <div id="sem-kpi" class="luz"></div>
-      <div id="porc-kpi">0%</div>
-    </div>
-
-    <div>
-      GANTT
-      <div id="sem-plan" class="luz"></div>
-      <div id="porc-gantt">0%</div>
-    </div>
-
-    <div>
-      PDCA
-      <div id="sem-pdca" class="luz"></div>
-      <div id="porc-pdca">0%</div>
-    </div>
-
+    <h3>Promedio KPI</h3>
+    <canvas id="grafKPI"></canvas>
   </div>
+
+  <div class="card">
+    <h3>Promedio GANTT</h3>
+    <canvas id="grafGANTT"></canvas>
+  </div>
+
+  <div class="card">
+    <h3>Promedio PDCA</h3>
+    <canvas id="grafPDCA"></canvas>
+  </div>
+
 </div>
 
       <!-- SELECT -->
