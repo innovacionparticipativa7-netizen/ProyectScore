@@ -317,7 +317,19 @@ body {
   touch-action: manipulation;
 }
 
+.resumen-semaforos {
+  display: flex;
+  justify-content: space-around;
+  text-align: center;
+  gap: 10px;
+}
 
+.resumen-semaforos > div {
+  flex: 1;
+  background: #f9fafb;
+  padding: 12px;
+  border-radius: 12px;
+}
 
   
 </style>
@@ -519,18 +531,20 @@ body {
       </div>
 
       <!-- SEMAFOROS -->
-      <!-- ===== GENERAL ARRIBA ===== -->
-<div class="card" style="text-align:center;">
-  <h3>Calificación General</h3>
+<!-- ===== GENERAL ARRIBA GRANDE ===== -->
+<div class="card" style="text-align:center; padding:25px;">
+  <h3 style="font-size:20px;">Calificación General</h3>
 
-  <canvas id="gaugeGeneral" style="max-height:220px;"></canvas>
+  <canvas id="gaugeGeneral" style="max-height:280px; margin:auto;"></canvas>
 
-  <div style="font-size:28px; font-weight:bold;" id="porc-general">0%</div>
+  <div style="font-size:34px; font-weight:bold; margin-top:10px;" id="porc-general">
+    0%
+  </div>
 </div>
 
 <!-- ===== KPI / GANTT / PDCA ABAJO ===== -->
 <div class="card">
-  <div class="resumen-semaforos">
+  <div class="resumen-semaforos" style="margin-top:10px;">
 
     <div>
       KPI
