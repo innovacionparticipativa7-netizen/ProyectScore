@@ -1141,7 +1141,9 @@ async function guardar() {
 };
   const before = await db.collection("proyectos").doc(proyectoId).get();
   const oldData = before.data();
+  const user = firebase.auth().currentUser;
 
+  const nombre = user ? user.displayName || user.email : "Desconocido";
   await db.collection("proyectos").doc(proyectoId).update({
     evaluacion: proyecto.evaluacion
   });
@@ -1156,7 +1158,7 @@ await db.collection("historial").add({
   tier: proyecto.tier || "-",
 
   usuario: UID,
-  usuarioNombre: USER_NAME,
+  usuarioNombre: nombre,
   fecha: new Date(),
   semana: obtenerSemana(new Date()),
 
