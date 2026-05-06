@@ -1158,15 +1158,11 @@ function togglePDCA(checkbox) {
 
 // ===== PDCA =====
 if (tipo === "pdca") {
-
   const lista = Array.isArray(v) ? v.filter(x => x !== "iplayers") : [];
-  const cantidad = lista.length;
+  const base = lista.length * 25;
+  const bonus = v.includes("iplayers") ? 5 : 0;
 
-  if (cantidad >= 4) return 100;
-  if (cantidad === 3) return 75;
-  if (cantidad === 2) return 50;
-  if (cantidad === 1) return 25;
-  return 0;
+  return Math.min(base + bonus, 100);
 }
 
   return 0;
@@ -1498,8 +1494,11 @@ function actualizarGraficas(proyectos) {
 
     const kpi = map[ev.kpi] ?? 0;
     const gantt = map[ev.gantt] ?? 0;
-    const pdca = (ev.pdca?.length || 0) * 20;
+    const lista = ev.pdca?.filter(x => x !== "iplayers") || [];
+    const pdcaBase = lista.length * 25;
+    const bonus = ev.pdca?.includes("iplayers") ? 5 : 0;
 
+    const pdca = Math.min(pdcaBase + bonus, 100);
     const general = (kpi + gantt + pdca) / 3;
 
     totalKPI += kpi;
