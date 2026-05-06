@@ -223,6 +223,7 @@ table tr:hover {
   color: white;
   border-color: #1f2937;
 }
+  
 /* ===== MOBILE USER EXPERIENCE ===== */
 @media (max-width: 600px) {
 
@@ -527,15 +528,30 @@ body {
         </div>
 
         <div class="filtro-group" id="filtroSeccion">
-          <button class="filtro-btn active" onclick="setFiltroUser('seccion','',this)">Todas</button>
-          <button class="filtro-btn" onclick="setFiltroUser('seccion','Buy to Make',this)">Buy to Make</button>
-          <button class="filtro-btn" onclick="setFiltroUser('seccion','DTC',this)">DTC</button>
-          <button class="filtro-btn" onclick="setFiltroUser('seccion','Material Optimization',this)">Material Optimization</button>
-          <button class="filtro-btn" onclick="setFiltroUser('seccion','OH Cost Control',this)">OH Cost Control</button>
-          <button class="filtro-btn" onclick="setFiltroUser('seccion','Resourcing',this)">Resourcing</button>
-        </div>
+  <button class="filtro-btn active" onclick="setFiltroUser('seccion','',this)">Todas</button>
+
+  <button class="filtro-btn" onclick="setFiltroUser('seccion','Buy to Make',this); cargarChampionsPorSeccion('Buy to Make')">
+    Buy to Make
+  </button>
+
+  <button class="filtro-btn" onclick="setFiltroUser('seccion','DTC',this); cargarChampionsPorSeccion('DTC')">
+    DTC
+  </button>
+
+  <button class="filtro-btn" onclick="setFiltroUser('seccion','Material Optimization',this); cargarChampionsPorSeccion('Material Optimization')">
+    Material Optimization
+  </button>
+
+  <button class="filtro-btn" onclick="setFiltroUser('seccion','OH Cost Control',this); cargarChampionsPorSeccion('OH Cost Control')">
+    OH Cost Control
+  </button>
+
+  <button class="filtro-btn" onclick="setFiltroUser('seccion','Resourcing',this); cargarChampionsPorSeccion('Resourcing')">
+    Resourcing
+  </button>
+</div>
        
-        <div class="filtro-group" id="filtroChampionBtns">
+        <div class="filtro-group" id="filtroChampion">
         <button class="filtro-btn active" onclick="setFiltroUser('champion','',this)">Todos</button>
         </div>
 
@@ -941,7 +957,7 @@ snap.forEach(doc => {
 
 
 function renderChampionsUser() {
-  const container = document.getElementById("filtroChampionBtns");
+  const container = document.getElementById("filtroChampion");
 
   container.innerHTML = `
     <button class="filtro-btn active" onclick="setFiltroUser('champion','',event)">Todos</button>
@@ -1318,21 +1334,23 @@ const championsPorSeccion = {
 
   /* ===== ACTUALIZAR CHAMPIONS DINAMICAMENTE  ===== */
 
-document.getElementById("filtroSeccion").addEventListener("change", () => {
-  const seccion = document.getElementById("filtroSeccion").value;
-  const selectChampion = document.getElementById("filtroChampion");
+function cargarChampionsPorSeccion(seccion) {
+  const container = document.getElementById("filtroChampion");
 
-  selectChampion.innerHTML = '<option value="">Todos los Champions</option>';
+  container.innerHTML = `
+    <button class="filtro-btn active" onclick="setFiltroUser('champion','',this)">Todos</button>
+  `;
 
   if (championsPorSeccion[seccion]) {
     championsPorSeccion[seccion].forEach(ch => {
-      const op = document.createElement("option");
-      op.value = ch;
-      op.textContent = ch;
-      selectChampion.appendChild(op);
+      const btn = document.createElement("button");
+      btn.className = "filtro-btn";
+      btn.textContent = ch;
+      btn.onclick = (e) => setFiltroUser("champion", ch, btn);
+      container.appendChild(btn);
     });
   }
-});
+}
   
 /* ===== FUNCION DE FILTRADO  ===== */
 function aplicarFiltros() {
@@ -1892,7 +1910,23 @@ function renderGaugeAdmin(id, valor) {
 }
 
 
+function cargarChampionsPorSeccion(seccion) {
+  const container = document.getElementById("filtroChampion");
 
+  container.innerHTML = `
+    <button class="filtro-btn active" onclick="setFiltroUser('champion','',this)">Todos</button>
+  `;
+
+  if (championsPorSeccion[seccion]) {
+    championsPorSeccion[seccion].forEach(ch => {
+      const btn = document.createElement("button");
+      btn.className = "filtro-btn";
+      btn.textContent = ch;
+      btn.onclick = () => setFiltroUser("champion", ch, btn);
+      container.appendChild(btn);
+    });
+  }
+}
 
   
 initApp();
