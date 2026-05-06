@@ -1623,10 +1623,10 @@ activos.forEach(p => {
   const promPDCA = totalPDCA / n;
   const promGENERAL = totalGeneral / n;
 
-  crearGrafica("grafKPI", promKPI, "KPI", chartKPI, c => chartKPI = c);
-  crearGrafica("grafGANTT", promGANTT, "GANTT", chartGANTT, c => chartGANTT = c);
-  crearGrafica("grafPDCA", promPDCA, "PDCA", chartPDCA, c => chartPDCA = c);
-  crearGrafica("grafGENERAL", promGENERAL, "GENERAL", chartGENERAL, c => chartGENERAL = c);
+  renderGaugeAdmin("grafKPI", promKPI);
+  renderGaugeAdmin("grafGANTT", promGANTT);
+  renderGaugeAdmin("grafPDCA", promPDCA);
+  renderGaugeAdmin("grafGENERAL", promGENERAL);
 }
 
 function crearGrafica(id, valor, label, chartRef, setChart) {
@@ -1829,7 +1829,42 @@ function renderGauge(valor) {
   });
 }
 
+let adminGauges = {};
 
+function renderGaugeAdmin(id, valor) {
+  const ctx = document.getElementById(id).getContext("2d");
+
+  if (adminGauges[id]) adminGauges[id].destroy();
+
+  adminGauges[id] = new Chart(ctx, {
+    type: "doughnut",
+    data: {
+      datasets: [{
+        data: [valor, 100 - valor],
+        backgroundColor: [
+          valor >= 75 ? "#2ecc71" :
+          valor >= 50 ? "#f1c40f" :
+          "#e74c3c",
+          "#e5e7eb"
+        ],
+        borderWidth: 0,
+        cutout: "75%"
+      }]
+    },
+    options: {
+      rotation: -90,
+      circumference: 180,
+      plugins: {
+        legend: { display: false },
+        tooltip: { enabled: false },
+        title: {
+          display: true,
+          text: valor.toFixed(1) + "%"
+        }
+      }
+    }
+  });
+}
 
 
 
