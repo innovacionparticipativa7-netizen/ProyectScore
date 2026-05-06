@@ -410,27 +410,36 @@ body {
 
       <hr>
       <!-- GRAFICAS -->
-      <div class="grid">
-      
-        <div class="card">
-          <h3>Promedio KPI</h3>
-          <canvas id="grafKPI"></canvas>
-        </div>
-      
-        <div class="card">
-          <h3>Promedio GANTT</h3>
-          <canvas id="grafGANTT"></canvas>
-        </div>
-      
-        <div class="card">
-          <h3>Promedio PDCA</h3>
-          <canvas id="grafPDCA"></canvas>
-        </div>
-      
-        <div class="card">
-          <h3>Promedio General</h3>
-          <canvas id="grafGENERAL"></canvas>
-        </div>
+      <!-- ===== GRAFICAS ADMIN ===== -->
+<div>
+
+  <!-- GENERAL ARRIBA -->
+  <div class="card" style="margin-bottom:15px;">
+    <h3>Promedio General</h3>
+    <canvas id="grafGENERAL"></canvas>
+  </div>
+
+  <!-- KPI / GANTT / PDCA ABAJO -->
+  <div class="grid">
+
+    <div class="card">
+      <h3>Promedio KPI</h3>
+      <canvas id="grafKPI"></canvas>
+    </div>
+
+    <div class="card">
+      <h3>Promedio GANTT</h3>
+      <canvas id="grafGANTT"></canvas>
+    </div>
+
+    <div class="card">
+      <h3>Promedio PDCA</h3>
+      <canvas id="grafPDCA"></canvas>
+    </div>
+
+  </div>
+
+</div>
       
       </div>
 
