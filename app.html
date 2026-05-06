@@ -1069,6 +1069,17 @@ async function exportarExcel() {
   // 👇 AQUÍ VA EL PASO 1 (también)
   const histSnap = await db.collection("historial").get();
 
+  const usersSnap = await db.collection("users").get();
+
+  const mapaUsuarios = {};
+  
+  usersSnap.forEach(doc => {
+    const u = doc.data();
+
+  // ajusta el campo según tu estructura real
+  mapaUsuarios[doc.id] = u.usuario || u.nombre || "-";
+});
+
   // 👇 AQUÍ VA EL PASO 2
   const lastHist = {};
 
@@ -1109,7 +1120,7 @@ async function exportarExcel() {
 
       General: calcularGeneral(ev).toFixed(2),
 
-      Usuario: h.usuarioNombre || h.usuario || "-",
+      Usuario: mapaUsuarios[h.usuario] || "-",
 
       Comentario_KPI:p.evaluacion?.comentarios?.kpi || h.comentariosKPI || "",
       Comentario_GANTT: p.evaluacion?.comentarios?.gantt ||h.comentariosGANTT || "",
