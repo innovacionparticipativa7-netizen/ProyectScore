@@ -898,8 +898,10 @@ if (!proyecto.evaluacion) {
     gantt: "",
     pdca: []
   };
-  const general = promedioEvaluacion(proyecto.evaluacion);
-document.getElementById("porc-general").innerText = general.toFixed(0) + "%";
+  const general = calcularGeneral(proyecto.evaluacion);
+
+document.getElementById("porc-general").innerText =
+  general.toFixed(0) + "%";
 }
 
     document.getElementById("userNombreProyecto").innerText = proyecto.nombre || "-";
@@ -1002,13 +1004,20 @@ function renderSemaforos() {
     obtenerPorcentaje("pdca", proyecto.evaluacion.pdca) + "%";
   const general = calcularGeneral(proyecto.evaluacion);
   document.getElementById("porc-general").innerText =
-  promedioEvaluacion(proyecto.evaluacion).toFixed(0) + "%";
+  general.toFixed(0) + "%";
 
 
   renderGauge(general); // 👈 AGREGA ESTA LÍNEA
 
   
 }
+
+function promedioEvaluacion(ev) {
+  return calcularGeneral(ev);
+}
+
+
+  
 /* ===== GUARDAR ===== */
 async function guardar() {
   proyecto.evaluacion.comentarios = {
