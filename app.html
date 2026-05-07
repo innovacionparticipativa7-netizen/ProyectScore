@@ -5,11 +5,11 @@
 <title>Proyectos</title>
 
 <!-- FIREBASE COMPAT -->
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+<script defer src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script defer src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script defer src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 
   
 <style>
@@ -2005,7 +2005,26 @@ function cargarChampionsPorSeccion(seccion) {
 }
 
   
-initApp();
+window.addEventListener("DOMContentLoaded", () => {
+
+  if (typeof firebase === "undefined") {
+    alert("Firebase no cargó");
+    return;
+  }
+
+  if (typeof Chart === "undefined") {
+    alert("Chart.js no cargó");
+    return;
+  }
+
+  if (typeof XLSX === "undefined") {
+    alert("XLSX no cargó");
+    return;
+  }
+
+  initApp();
+
+});
 
 </script>
 
