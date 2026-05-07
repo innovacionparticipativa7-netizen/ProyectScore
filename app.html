@@ -467,6 +467,16 @@ body {
   <select id="adminFiltroChampion" onchange="filtrarAdmin()">
     <option value="">Todos los Champions</option>
   </select>
+
+<label>Fecha desde</label>
+<input type="date" id="adminFechaInicio" onchange="filtrarAdmin()">
+
+<label>Fecha hasta</label>
+<input type="date" id="adminFechaFin" onchange="filtrarAdmin()">
+
+
+
+        
 </div>
       <!-- TABLA DE PROYECTOS -->
       <div style="overflow-x:auto;">
@@ -1161,8 +1171,9 @@ async function guardar() {
 
   const nombre = user ? user.displayName || user.email : "Desconocido";
   await db.collection("proyectos").doc(proyectoId).update({
-    evaluacion: proyecto.evaluacion
-  });
+  evaluacion: proyecto.evaluacion,
+  fechaCalificacion: new Date()
+});
 
 await db.collection("historial").add({
   proyectoId,
@@ -1781,6 +1792,8 @@ function filtrarAdmin() {
   const tier = document.getElementById("adminFiltroTier").value;
   const seccion = document.getElementById("adminFiltroSeccion").value;
   const champion = document.getElementById("adminFiltroChampion").value;
+  const fechaInicio = document.getElementById("adminFechaInicio").value;
+const fechaFin = document.getElementById("adminFechaFin").value;
 
   let filtrados = [...proyectosCache];
 
@@ -1795,6 +1808,36 @@ function filtrarAdmin() {
   if (champion) {
     filtrados = filtrados.filter(p => p.champion === champion);
   }
+
+  // FILTRO FECHA
+if (fechaInicio) {
+  const inicio = new Date(fechaInicio);
+
+  filtrados = filtrados.filter(p => {
+    if (!p.fechaCalificacion) return false;
+
+    const fechaProyecto = p.fechaCalificacion.toDate
+      ? p.fechaCalificacion.toDate()
+      : new Date(p.fechaCalificacion);
+
+    return fechaProyecto >= inicio;
+  });
+}
+
+if (fechaFin) {
+  const fin = new Date(fechaFin);
+  fin.setHours(23,59,59,999);
+
+  filtrados = filtrados.filter(p => {
+    if (!p.fechaCalificacion) return false;
+
+    const fechaProyecto = p.fechaCalificacion.toDate
+      ? p.fechaCalificacion.toDate()
+      : new Date(p.fechaCalificacion);
+
+    return fechaProyecto <= fin;
+  });
+}
 
   renderTablaAdmin(filtrados);
   actualizarGraficas(filtrados);
