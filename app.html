@@ -1837,10 +1837,13 @@ async function filtrarAdmin() {
       if (!fechaProyecto) return false;
 
       // convertir ambas fechas a yyyy-mm-dd
-      const fechaProyectoTexto =
-        fechaProyecto.toISOString().split("T")[0];
+      const yyyy = fechaProyecto.getFullYear();
+const mm = String(fechaProyecto.getMonth() + 1).padStart(2, "0");
+const dd = String(fechaProyecto.getDate()).padStart(2, "0");
 
-      return fechaProyectoTexto === fechaFiltro;
+const fechaProyectoTexto = `${yyyy}-${mm}-${dd}`;
+
+return fechaProyectoTexto === fechaFiltro;
     });
   }
 
