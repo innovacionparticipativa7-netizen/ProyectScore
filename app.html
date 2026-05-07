@@ -1788,14 +1788,17 @@ function renderTablaAdmin(lista) {
   });
 }
   
-function filtrarAdmin() {
+async function filtrarAdmin() {
+
   const tier = document.getElementById("adminFiltroTier").value;
   const seccion = document.getElementById("adminFiltroSeccion").value;
   const champion = document.getElementById("adminFiltroChampion").value;
   const fechaInicio = document.getElementById("adminFechaInicio").value;
-const fechaFin = document.getElementById("adminFechaFin").value;
+  const fechaFin = document.getElementById("adminFechaFin").value;
 
   let filtrados = [...proyectosCache];
+
+  // ===== FILTROS NORMALES =====
 
   if (tier) {
     filtrados = filtrados.filter(p => p.tier === tier);
@@ -1809,35 +1812,56 @@ const fechaFin = document.getElementById("adminFechaFin").value;
     filtrados = filtrados.filter(p => p.champion === champion);
   }
 
-  // FILTRO FECHA
-if (fechaInicio) {
-  const inicio = new Date(fechaInicio);
+  // ===== FILTRO POR ULTIMA CALIFICACION =====
 
-  filtrados = filtrados.filter(p => {
-    if (!p.fechaCalificacion) return false;
+  if (fechaInicio || fechaFin) {
 
-    const fechaProyecto = p.fechaCalificacion.toDate
-      ? p.fechaCalificacion.toDate()
-      : new Date(p.fechaCalificacion);
+    const histSnap = await db.collection("historial").get();
 
-    return fechaProyecto >= inicio;
-  });
-}
+    const ultimaFecha = {};
 
-if (fechaFin) {
-  const fin = new Date(fechaFin);
-  fin.setHours(23,59,59,999);
+    histSnap.forEach(doc => {
 
-  filtrados = filtrados.filter(p => {
-    if (!p.fechaCalificacion) return false;
+      const h = doc.data();
 
-    const fechaProyecto = p.fechaCalificacion.toDate
-      ? p.fechaCalificacion.toDate()
-      : new Date(p.fechaCalificacion);
+      if (!h.proyectoId || !h.fecha) return;
 
-    return fechaProyecto <= fin;
-  });
-}
+      const fecha = h.fecha.toDate();
+
+      if (
+        !ultimaFecha[h.proyectoId] ||
+        fecha > ultimaFecha[h.proyectoId]
+      ) {
+        ultimaFecha[h.proyectoId] = fecha;
+      }
+    });
+
+    filtrados = filtrados.filter(p => {
+
+      const fechaProyecto = ultimaFecha[p.id];
+
+      if (!fechaProyecto) return false;
+
+      if (fechaInicio) {
+        const inicio = new Date(fechaInicio);
+
+        if (fechaProyecto < inicio) {
+          return false;
+        }
+      }
+
+      if (fechaFin) {
+        const fin = new Date(fechaFin);
+        fin.setHours(23,59,59,999);
+
+        if (fechaProyecto > fin) {
+          return false;
+        }
+      }
+
+      return true;
+    });
+  }
 
   renderTablaAdmin(filtrados);
   actualizarGraficas(filtrados);
