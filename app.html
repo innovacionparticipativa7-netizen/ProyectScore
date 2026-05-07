@@ -468,13 +468,8 @@ body {
     <option value="">Todos los Champions</option>
   </select>
 
-<label>Fecha desde</label>
-<input type="date" id="adminFechaInicio" onchange="filtrarAdmin()">
-
-<label>Fecha hasta</label>
-<input type="date" id="adminFechaFin" onchange="filtrarAdmin()">
-
-
+<label>Fecha de calificación</label>
+<input type="date" id="adminFecha" onchange="filtrarAdmin()">
 
         
 </div>
@@ -1793,8 +1788,7 @@ async function filtrarAdmin() {
   const tier = document.getElementById("adminFiltroTier").value;
   const seccion = document.getElementById("adminFiltroSeccion").value;
   const champion = document.getElementById("adminFiltroChampion").value;
-  const fechaInicio = document.getElementById("adminFechaInicio").value;
-  const fechaFin = document.getElementById("adminFechaFin").value;
+  const fechaFiltro = document.getElementById("adminFecha").value;
 
   let filtrados = [...proyectosCache];
 
@@ -1812,9 +1806,9 @@ async function filtrarAdmin() {
     filtrados = filtrados.filter(p => p.champion === champion);
   }
 
-  // ===== FILTRO POR ULTIMA CALIFICACION =====
+  // ===== FILTRO POR FECHA EXACTA =====
 
-  if (fechaInicio || fechaFin) {
+  if (fechaFiltro) {
 
     const histSnap = await db.collection("historial").get();
 
@@ -1842,24 +1836,11 @@ async function filtrarAdmin() {
 
       if (!fechaProyecto) return false;
 
-      if (fechaInicio) {
-        const inicio = new Date(fechaInicio);
+      // convertir ambas fechas a yyyy-mm-dd
+      const fechaProyectoTexto =
+        fechaProyecto.toISOString().split("T")[0];
 
-        if (fechaProyecto < inicio) {
-          return false;
-        }
-      }
-
-      if (fechaFin) {
-        const fin = new Date(fechaFin);
-        fin.setHours(23,59,59,999);
-
-        if (fechaProyecto > fin) {
-          return false;
-        }
-      }
-
-      return true;
+      return fechaProyectoTexto === fechaFiltro;
     });
   }
 
