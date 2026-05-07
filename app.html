@@ -965,7 +965,10 @@ function renderChampionsUser() {
   const container = document.getElementById("filtroChampion");
 
   container.innerHTML = `
-    <button class="filtro-btn active" onclick="setFiltroUser('champion','',event)">Todos</button>
+    <button class="filtro-btn active"
+      onclick="setFiltroUser('champion','',this)">
+      Todos
+    </button>
   `;
 
   const set = new Set();
@@ -975,10 +978,17 @@ function renderChampionsUser() {
   });
 
   [...set].forEach(ch => {
+
     const btn = document.createElement("button");
+
     btn.className = "filtro-btn";
     btn.textContent = ch;
-    btn.onclick = (e) => setFiltroUser("champion", ch, e);
+
+    // 🔥 AQUÍ EL CAMBIO
+    btn.onclick = function () {
+      setFiltroUser("champion", ch, this);
+    };
+
     container.appendChild(btn);
   });
 }
@@ -1155,6 +1165,10 @@ function promedioEvaluacion(ev) {
   
 /* ===== GUARDAR ===== */
 async function guardar() {
+  
+  if (!proyecto || !proyectoId) {
+  return alert("Selecciona un proyecto");
+}
   proyecto.evaluacion.comentarios = {
   kpi: document.getElementById("comentarioKPI").value,
   gantt: document.getElementById("comentarioGANTT").value,
@@ -1962,18 +1976,29 @@ function renderGaugeAdmin(id, valor) {
 
 
 function cargarChampionsPorSeccion(seccion) {
+
   const container = document.getElementById("filtroChampion");
 
   container.innerHTML = `
-    <button class="filtro-btn active" onclick="setFiltroUser('champion','',this)">Todos</button>
+    <button class="filtro-btn active"
+      onclick="setFiltroUser('champion','',this)">
+      Todos
+    </button>
   `;
 
   if (championsPorSeccion[seccion]) {
+
     championsPorSeccion[seccion].forEach(ch => {
+
       const btn = document.createElement("button");
+
       btn.className = "filtro-btn";
       btn.textContent = ch;
-      btn.onclick = () => setFiltroUser("champion", ch, btn);
+
+      btn.onclick = function () {
+        setFiltroUser("champion", ch, this);
+      };
+
       container.appendChild(btn);
     });
   }
