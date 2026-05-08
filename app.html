@@ -897,7 +897,7 @@ async function cargarProyectos() {
 
   // ✅ obtener datos UNA sola vez
   const snap = await db.collection("proyectos").get();
-
+  const fragment = document.createDocumentFragment();
   snap.forEach(doc => {
 
     const p = { id: doc.id, ...doc.data() };
@@ -960,11 +960,11 @@ async function cargarProyectos() {
       console.log("Seleccionado:", p);
     };
 
-    tbody.appendChild(tr);
+    fragment.appendChild(tr);
   });
 
   proyectosCache = proyectosArray;
-
+  tbody.appendChild(fragment);
   actualizarGraficas(proyectosCache);
   renderChampionsUser();
 }
@@ -1566,7 +1566,8 @@ function validarDatos(row) {
 
 /* ===== PLANTILLA ===== */
   
-function descargarPlantilla() {
+async function descargarPlantilla() {
+  await loadXLSX();
 
   const plantilla = [
     {
@@ -1782,35 +1783,69 @@ async function cargarHistorial(proyectoId) {
   });
 }
 function renderTablaAdmin(lista) {
+
   const tbody = document.querySelector("#tablaProyectos tbody");
+
   tbody.innerHTML = "";
 
+  // ✅ crear UNA sola vez
+  const fragment = document.createDocumentFragment();
+
   lista.forEach(p => {
+
     const tr = document.createElement("tr");
 
     tr.innerHTML = `
       <td>
-      <div style="cursor:pointer; font-size:14px; font-weight:bold;"
-           onclick="toggleEstado('${p.id}', '${p.estado}')">
-        ${p.estado === "activo" ? "🟢 Activo" : "🟡 En espera"}
-      </div>
-    </td>
+        <div style="cursor:pointer; font-size:14px; font-weight:bold;"
+             onclick="toggleEstado('${p.id}', '${p.estado}')">
+
+          ${p.estado === "activo"
+            ? "🟢 Activo"
+            : "🟡 En espera"}
+
+        </div>
+      </td>
+
       <td>${p.nombre || "-"}</td>
       <td>${p.champion || "-"}</td>
       <td>${p.sponsor || "-"}</td>
       <td>${p.owner || "-"}</td>
 
-      <td><div class="semaforo" style="background:${color("kpi", p.evaluacion.kpi)}"></div></td>
-      <td><div class="semaforo" style="background:${color("gantt", p.evaluacion.gantt)}"></div></td>
-      <td><div class="semaforo" style="background:${color("pdca", p.evaluacion.pdca)}"></div></td>
+      <td>
+        <div class="semaforo"
+             style="background:${color("kpi", p.evaluacion.kpi)}">
+        </div>
+      </td>
 
       <td>
-        <button onclick="event.stopPropagation(); eliminarProyecto('${p.id}')">🗑</button>
+        <div class="semaforo"
+             style="background:${color("gantt", p.evaluacion.gantt)}">
+        </div>
+      </td>
+
+      <td>
+        <div class="semaforo"
+             style="background:${color("pdca", p.evaluacion.pdca)}">
+        </div>
+      </td>
+
+      <td>
+        <button onclick="
+          event.stopPropagation();
+          eliminarProyecto('${p.id}')
+        ">
+          🗑
+        </button>
       </td>
     `;
 
-    tbody.appendChild(tr);
+    // ✅ agregar al fragment
+    fragment.appendChild(tr);
   });
+
+  // ✅ agregar TODO junto al DOM
+  tbody.appendChild(fragment);
 }
   
 async function filtrarAdmin() {
