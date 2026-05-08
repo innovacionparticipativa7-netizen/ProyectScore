@@ -884,82 +884,88 @@ function calcularGeneral(ev) {
 }
   
 /* ===== CARGAR PROYECTO ===== */
-function cargarProyectos() {
+async function cargarProyectos() {
 
-
-
-  
   const tbody = document.querySelector("#tablaProyectos tbody");
 
-  db.collection("proyectos").onSnapshot(snap => {
-    tbody.innerHTML = "";
-     
-    proyectosCache = [];
-    const proyectosArray = [];
+  tbody.innerHTML = "";
 
-snap.forEach(doc => {
-  const p = { id: doc.id, ...doc.data() };
-  const id = doc.id;
+  proyectosCache = [];
+  const proyectosArray = [];
 
-      // asegurar estructura
-      if (!p.evaluacion) {
-        p.evaluacion = { kpi: "", gantt: "", pdca: [] };
-      }
+  // ✅ obtener datos UNA sola vez
+  const snap = await db.collection("proyectos").get();
 
-      proyectosArray.push(p);
-      proyectosCache.push(p);
+  snap.forEach(doc => {
 
-      const tr = document.createElement("tr");
+    const p = { id: doc.id, ...doc.data() };
 
-      tr.innerHTML = `
-        <td>${p.nombre || "-"}</td>
-        <td>${p.champion || "-"}</td>
-        <td>${p.sponsor || "-"}</td>
-        <td>${p.owner || "-"}</td>
-
-        <td>
-            <div style="cursor:pointer; font-size:18px;" 
-                 onclick="toggleEstado('${doc.id}', '${p.estado}')">
-                  ${p.estado === "activo" ? "🟢 Activo" : "🟡 En espera"}
-            </div>
-        </td>
-        
-        <td>
-          <div class="semaforo" style="background:${color("kpi", p.evaluacion.kpi)}"></div>
-        </td>
-
-        <td>
-          <div class="semaforo" style="background:${color("gantt", p.evaluacion.gantt)}"></div>
-        </td>
-
-        <td>
-          <div class="semaforo" style="background:${color("pdca", p.evaluacion.pdca)}"></div>
-        </td>
-
-        <td>
-          <button onclick="event.stopPropagation(); eliminarProyecto('${doc.id}')">🗑</button>
-        </td>
-      `;
-
-      // seleccionar proyecto al hacer click
-      tr.onclick = () => {
-        proyectoId = doc.id;
-        proyecto = p;
-        console.log("Seleccionado:", p);
+    if (!p.evaluacion) {
+      p.evaluacion = {
+        kpi: "",
+        gantt: "",
+        pdca: []
       };
-  
-    });
+    }
 
-    // 🔥 ACTUALIZA GRÁFICAS
-    proyectosCache = proyectosArray;
+    proyectosArray.push(p);
+    proyectosCache.push(p);
 
-    renderTablaAdmin(proyectosCache);
-    actualizarGraficas(proyectosCache);
-    renderChampionsUser();
+    const tr = document.createElement("tr");
 
+    tr.innerHTML = `
+      <td>${p.nombre || "-"}</td>
+      <td>${p.champion || "-"}</td>
+      <td>${p.sponsor || "-"}</td>
+      <td>${p.owner || "-"}</td>
+
+      <td>
+        <div style="cursor:pointer; font-size:18px;"
+             onclick="toggleEstado('${doc.id}', '${p.estado}')">
+          ${p.estado === "activo" ? "🟢 Activo" : "🟡 En espera"}
+        </div>
+      </td>
+
+      <td>
+        <div class="semaforo"
+             style="background:${color("kpi", p.evaluacion.kpi)}">
+        </div>
+      </td>
+
+      <td>
+        <div class="semaforo"
+             style="background:${color("gantt", p.evaluacion.gantt)}">
+        </div>
+      </td>
+
+      <td>
+        <div class="semaforo"
+             style="background:${color("pdca", p.evaluacion.pdca)}">
+        </div>
+      </td>
+
+      <td>
+        <button onclick="event.stopPropagation();
+                eliminarProyecto('${doc.id}')">
+          🗑
+        </button>
+      </td>
+    `;
+
+    tr.onclick = () => {
+      proyectoId = doc.id;
+      proyecto = p;
+      console.log("Seleccionado:", p);
+    };
+
+    tbody.appendChild(tr);
   });
-}
 
+  proyectosCache = proyectosArray;
+
+  actualizarGraficas(proyectosCache);
+  renderChampionsUser();
+}
 
 function renderChampionsUser() {
   const container = document.getElementById("filtroChampion");
