@@ -1614,7 +1614,7 @@ async function initApp() {
 
   await cargarHistorialCache();
 
-  cargarProyectos();
+  await cargarProyectos();
 
   if (ROL === "admin") {
     cargarSelectHistorial();
@@ -1651,22 +1651,48 @@ async function eliminarProyecto(id) {
   }
 }
 async function cargarSelectHistorial() {
-  const snap = await db.collection("proyectos")
-  .limit(100)
-  .get();
+
   const select = document.getElementById("selectHistorialProyecto");
 
   select.innerHTML = "";
 
-  snap.forEach(doc => {
-    const op = document.createElement("option");
-    op.value = doc.id;
-    op.textContent = doc.data().nombre;
-    select.appendChild(op);
-  });
+  try {
 
-  if (select.value) {
-    cargarHistorial(select.value);
+    const snap = await db.collection("proyectos")
+      .limit(100)
+      .get();
+
+    let primerProyecto = null;
+
+    snap.forEach(doc => {
+
+      const data = doc.data();
+
+      const op = document.createElement("option");
+
+      op.value = doc.id;
+      op.textContent = data.nombre || "Sin nombre";
+
+      select.appendChild(op);
+
+      // guardar primero
+      if (!primerProyecto) {
+        primerProyecto = doc.id;
+      }
+    });
+
+    // 🔥 CARGAR INMEDIATAMENTE
+    if (primerProyecto) {
+
+      select.value = primerProyecto;
+
+      // NO esperar interacción
+      await cargarHistorial(primerProyecto);
+    }
+
+  } catch (err) {
+
+    console.error("Error cargando historial:", err);
   }
 }
 
@@ -1709,51 +1735,103 @@ activos.forEach(p => {
 }
 
 let chartHistorial;
+let historialMemoria = {};
 
 async function cargarHistorial(proyectoId) {
 
-  const snap = await db.collection("historial")
-  .where("proyectoId", "==", proyectoId)
-  .orderBy("fecha", "desc")
-  .limit(20)
-  .get();
+  try {
 
-  const semanas = [];
-  const general = [];
+    // 🔥 CACHE LOCAL
+    if (!historialMemoria[proyectoId]) {
 
-  snap.forEach(doc => {
-    const d = doc.data();
-    semanas.push("Sem " + d.semana);
-    general.push(d.general || 0);
-  });
+      const snap = await db.collection("historial")
+        .where("proyectoId", "==", proyectoId)
+        .orderBy("fecha", "asc")
+        .limit(20)
+        .get();
 
-  const ctx = document.getElementById("grafHistorial").getContext("2d");
+      historialMemoria[proyectoId] = [];
 
-  if (chartHistorial) chartHistorial.destroy();
+      snap.forEach(doc => {
+        historialMemoria[proyectoId].push(doc.data());
+      });
+    }
 
-  chartHistorial = new Chart(ctx, {
-    type: "line",
-    data: {
-      labels: semanas,
-      datasets: [{
-        label: "Progreso",
-        data: general,
-        tension: 0.3
-      }]
-    },
-    options: {
-      plugins: {
-        legend: { display: true }
+    const historial = historialMemoria[proyectoId];
+
+    const semanas = [];
+    const general = [];
+
+    historial.forEach(d => {
+
+      semanas.push("Sem " + d.semana);
+
+      general.push(d.general || 0);
+    });
+
+    const canvas = document.getElementById("grafHistorial");
+
+    if (!canvas) return;
+
+    const ctx = canvas.getContext("2d");
+
+    // 🔥 SOLO ACTUALIZAR
+    if (chartHistorial) {
+
+      chartHistorial.data.labels = semanas;
+
+      chartHistorial.data.datasets[0].data = general;
+
+      chartHistorial.update();
+
+      return;
+    }
+
+    // 🔥 CREAR UNA SOLA VEZ
+    chartHistorial = new Chart(ctx, {
+
+      type: "line",
+
+      data: {
+        labels: semanas,
+
+        datasets: [{
+          label: "Progreso",
+          data: general,
+          tension: 0.3
+        }]
       },
-      scales: {
-        y: {
-          min: 0,
-          max: 100
+
+      options: {
+
+        responsive: true,
+
+        animation: false,
+
+        responsiveAnimationDuration: 0,
+
+        plugins: {
+          legend: {
+            display: true
+          }
+        },
+
+        scales: {
+          y: {
+            min: 0,
+            max: 100
+          }
         }
       }
-    }
-  });
+    });
+
+  } catch (err) {
+
+    console.error("Error historial:", err);
+  }
 }
+
+  
 function renderTablaAdmin(lista) {
 
   const tbody = document.querySelector("#tablaProyectos tbody");
