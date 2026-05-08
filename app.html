@@ -667,6 +667,7 @@ let ROL = (localStorage.getItem("rol") || "").toLowerCase().trim();
 let UID = localStorage.getItem("uid");
 let proyectoId = null;
 let proyecto = null;
+let historialCache = [];
 let proyectosCache = [];
 let gaugeChart;
 
@@ -1593,14 +1594,19 @@ function toggleCrear() {
 }
 
 async function initApp() {
+
   aplicarRol();
+
+  await cargarHistorialCache();
+
   cargarProyectos();
 
   if (ROL === "admin") {
-    cargarSelectHistorial(); // 
+    cargarSelectHistorial();
   }
 
   if (ROL !== "admin") {
+
     await cargarSelect();
 
     if (selectProyectoUser.value) {
@@ -1608,7 +1614,21 @@ async function initApp() {
     }
   }
 }
+async function cargarHistorialCache() {
 
+  const snap = await db.collection("historial")
+    .orderBy("fecha", "desc")
+    .limit(300)
+    .get();
+
+  historialCache = [];
+
+  snap.forEach(doc => {
+    historialCache.push(doc.data());
+  });
+
+  console.log("Historial cache cargado");
+}
   
 async function eliminarProyecto(id) {
   if (confirm("¿Eliminar proyecto?")) {
@@ -1811,21 +1831,14 @@ async function filtrarAdmin() {
   // ===== FILTRO POR FECHA EXACTA =====
 
   if (fechaFiltro) {
-
-    const histSnap = await db.collection("historial")
-  .orderBy("fecha", "desc")
-  .limit(100)
-  .get();
     const ultimaFecha = {};
-
-    histSnap.forEach(doc => {
-
-      const h = doc.data();
-
+    
+    historialCache.forEach(h => {
+    
       if (!h.proyectoId || !h.fecha) return;
-
+    
       const fecha = h.fecha.toDate();
-
+    
       if (
         !ultimaFecha[h.proyectoId] ||
         fecha > ultimaFecha[h.proyectoId]
@@ -1833,7 +1846,6 @@ async function filtrarAdmin() {
         ultimaFecha[h.proyectoId] = fecha;
       }
     });
-
     filtrados = filtrados.filter(p => {
 
       const fechaProyecto = ultimaFecha[p.id];
@@ -2027,6 +2039,7 @@ function renderGaugeAdmin(id, valor) {
 }
 
 
+  
 function cargarChampionsPorSeccion(seccion) {
 
   const container = document.getElementById("filtroChampion");
