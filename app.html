@@ -916,43 +916,46 @@ async function cargarProyectos() {
     const tr = document.createElement("tr");
 
     tr.innerHTML = `
-      <td>${p.nombre || "-"}</td>
-      <td>${p.champion || "-"}</td>
-      <td>${p.sponsor || "-"}</td>
-      <td>${p.owner || "-"}</td>
 
-      <td>
-        <div style="cursor:pointer; font-size:18px;"
-             onclick="toggleEstado('${doc.id}', '${p.estado}')">
-          ${p.estado === "activo" ? "🟢 Activo" : "🟡 En espera"}
-        </div>
-      </td>
+  <td>
+    <div style="cursor:pointer; font-size:18px;"
+         onclick="toggleEstado('${doc.id}', '${p.estado}')">
+      ${p.estado === "activo"
+        ? "🟢 Activo"
+        : "🟡 En espera"}
+    </div>
+  </td>
 
-      <td>
-        <div class="semaforo"
-             style="background:${color("kpi", p.evaluacion.kpi)}">
-        </div>
-      </td>
+  <td>${p.nombre || "-"}</td>
+  <td>${p.champion || "-"}</td>
+  <td>${p.sponsor || "-"}</td>
+  <td>${p.owner || "-"}</td>
 
-      <td>
-        <div class="semaforo"
-             style="background:${color("gantt", p.evaluacion.gantt)}">
-        </div>
-      </td>
+  <td>
+    <div class="semaforo"
+         style="background:${color("kpi", p.evaluacion.kpi)}">
+    </div>
+  </td>
 
-      <td>
-        <div class="semaforo"
-             style="background:${color("pdca", p.evaluacion.pdca)}">
-        </div>
-      </td>
+  <td>
+    <div class="semaforo"
+         style="background:${color("gantt", p.evaluacion.gantt)}">
+    </div>
+  </td>
 
-      <td>
-        <button onclick="event.stopPropagation();
-                eliminarProyecto('${doc.id}')">
-          🗑
-        </button>
-      </td>
-    `;
+  <td>
+    <div class="semaforo"
+         style="background:${color("pdca", p.evaluacion.pdca)}">
+    </div>
+  </td>
+
+  <td>
+    <button onclick="event.stopPropagation();
+            eliminarProyecto('${doc.id}')">
+      🗑
+    </button>
+  </td>
+`;
 
     tr.onclick = () => {
       proyectoId = doc.id;
@@ -1252,9 +1255,17 @@ async function exportarExcel() {
     const h = doc.data();
     const id = h.proyectoId;
 
-    if (!lastHist[id] || lastHist[id].fecha.seconds < h.fecha.seconds) {
+    const fechaActual = h.fecha?.toDate
+      ? h.fecha.toDate()
+      : new Date(h.fecha);
+    
+    const fechaAnterior = lastHist[id]?.fecha?.toDate
+      ? lastHist[id].fecha.toDate()
+      : new Date(0);
+    
+    if (!lastHist[id] || fechaActual > fechaAnterior) {
       lastHist[id] = h;
-    }
+}
   });
 
   const data = [];
@@ -1266,8 +1277,8 @@ async function exportarExcel() {
 
     const h = lastHist[doc.id] || {};
 
-    const fechaObj = h.fecha
-      ? new Date(h.fecha.seconds * 1000)
+    const fechaObj = h.fecha?.toDate
+      ? h.fecha.toDate()
       : null;
 
     data.push({
