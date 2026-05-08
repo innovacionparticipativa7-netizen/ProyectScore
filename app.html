@@ -2020,7 +2020,11 @@ function renderGaugeAdmin(id, valor) {
   }
 
   // ===== SI NO EXISTE -> CREAR =====
-  const ctx = document.getElementById(id).getContext("2d");
+  const canvas = document.getElementById(id);
+
+  if (!canvas) return;
+  
+  const ctx = canvas.getContext("2d");
 
   adminGauges[id] = new Chart(ctx, {
 
