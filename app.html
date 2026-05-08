@@ -797,7 +797,11 @@ function setFiltroAdmin(tipo, valor, el) {
   filtrosAdmin[tipo] = valor;
 
   document.querySelectorAll(`#adminFiltro${capitalize(tipo)} option`)
-    .forEach(btn => btn.classList?.remove("active"));
+  .forEach(btn => {
+    if (btn.classList) {
+      btn.classList.remove("active");
+    }
+  });
 
  if (el && el.classList) {
   el.classList.add("active");
