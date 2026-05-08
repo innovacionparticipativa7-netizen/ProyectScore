@@ -2,526 +2,378 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>Proyectos</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Panel de Proyectos</title>
 
-<!-- FIREBASE COMPAT -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 
-  
 <style>
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
+/* ===== RESET & TOKENS ===== */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #f0f2f5;
+  --surface: #ffffff;
+  --surface2: #f8f9fb;
+  --border: #e2e6ea;
+  --text: #1a1f2e;
+  --text-muted: #6b7280;
+  --primary: #1f2937;
+  --accent: #10b981;
+  --accent2: #3b82f6;
+  --danger: #ef4444;
+  --warn: #f59e0b;
+  --radius: 14px;
+  --shadow: 0 2px 12px rgba(0,0,0,0.07);
+  --shadow-lg: 0 8px 30px rgba(0,0,0,0.10);
 }
 
 body {
-  font-family: 'Segoe UI', Arial, sans-serif;
-  background: linear-gradient(135deg, #eef2f7, #e3e9f0);
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.5;
 }
 
-/* ===== HEADER ===== */
+#loading-overlay {
+  position: fixed; inset: 0;
+  background: rgba(255,255,255,0.92);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  z-index: 9999;
+  gap: 16px;
+}
+.spinner {
+  width: 42px; height: 42px;
+  border: 4px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.75s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+#loading-msg { color: var(--text-muted); font-size: 13px; }
+
 .header {
-  background: #1f2937;
-  color: white;
-  padding: 15px 20px;
+  background: var(--primary);
+  color: #fff;
+  padding: 14px 20px;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  position: sticky; top: 0; z-index: 100;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+.header h2 { font-size: 16px; font-weight: 600; letter-spacing: 0.3px; }
+.header-right { display: flex; align-items: center; gap: 10px; }
+#badge-rol {
+  background: rgba(255,255,255,0.15);
+  padding: 3px 10px; border-radius: 20px; font-size: 12px;
 }
 
-/* ===== LAYOUT GENERAL ===== */
-.container {
-  padding: 20px;
-}
+.container { padding: 16px; max-width: 1400px; margin: auto; }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }
+.grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
 
-/* ===== GRID RESPONSIVE ===== */
-.grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 20px;
-}
-
-/* ===== CARDS ===== */
 .card {
-  background: white;
-  border-radius: 16px;
-  padding: 15px;
-  box-shadow: 0 8px 20px rgba(0,0,0,0.08);
-  transition: 0.2s;
+  background: var(--surface);
+  border-radius: var(--radius);
+  padding: 16px;
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border);
 }
+.card h3 { font-size: 14px; font-weight: 600; margin-bottom: 12px; color: var(--text); }
 
-.card:hover {
-  transform: translateY(-3px);
-}
+button { border: none; border-radius: 10px; cursor: pointer; font-family: inherit; font-weight: 600; transition: opacity 0.15s, transform 0.1s; }
+button:active { transform: scale(0.97); }
+button:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn { width: 100%; padding: 11px; background: linear-gradient(135deg, var(--accent), #059669); color: #fff; font-size: 14px; }
+.btn:hover:not(:disabled) { opacity: 0.9; }
+.btn-sm { padding: 7px 14px; font-size: 12px; }
+.btn-secondary { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+.btn-danger { background: var(--danger); color: #fff; }
+.btn-blue { background: var(--accent2); color: #fff; }
 
-/* ===== INPUTS ===== */
-input, select {
-  width: 100%;
-  padding: 10px;
-  border-radius: 10px;
-  border: 1px solid #ddd;
-  margin-top: 8px;
-  margin-bottom: 10px;
-}
-
-/* ===== BOTONES ===== */
-button {
-  border: none;
-  border-radius: 10px;
-  padding: 10px;
-  cursor: pointer;
-  font-weight: bold;
-}
-
-.btn {
-  width: 100%;
-  background: linear-gradient(135deg, #4caf50, #2e7d32);
-  color: white;
-}
-
-/* ===== LISTA ===== */
-#listaProyectos li {
-  background: #f4f6f8;
-  padding: 10px;
-  border-radius: 10px;
-  margin-bottom: 5px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-#listaProyectos li.activo {
-  background: #c8f7c5;
-}
-
-/* ===== USER ===== */
-#vista-user {
-  min-height: 100vh;
-}
-
-.user-wrapper {
-  max-width: 600px;
-  margin: auto;
-}
-
-/* ===== SEMAFOROS ===== */
-.resumen-semaforos {
-  display: flex;
-  justify-content: space-between;
-  margin: 15px 0;
-}
-
-.luz {
-  width: 35px;
-  height: 35px;
-  border-radius: 50%;
-  background: gray;
-  margin: 5px auto;
-}
-
-/* ===== CHECKS ===== */
-.check-opciones label {
-  display: block;
-  background: #f4f6f8;
-  padding: 10px;
-  border-radius: 10px;
-  margin-bottom: 6px;
-  cursor: pointer;
-}
-
-.check-opciones label:hover {
-  background: #e0e7ff;
-}
-
-/* ===== MOBILE ===== */
-@media (max-width: 600px) {
-  .header {
-    flex-direction: column;
-    gap: 10px;
-  }
-}
-  table th, table td {
-  padding: 10px;
-  text-align: center;
-  border-bottom: 1px solid #ddd;
-}
-
-table tr:hover {
-  background: #f4f6f8;
-}
-
-/* semaforos */
-.semaforo {
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  margin: auto;
-}
-  canvas {
-  max-height: 250px;
-}
-/* ===== COMENTARIOS ===== */
-.comentario-box {
-  margin-top: 10px;
-  position: relative;
-}
-
-.comentario-box textarea {
-  width: 100%;
-  min-height: 70px;
-  resize: none;
-  padding: 12px;
-  border-radius: 12px;
-  border: 1px solid #ddd;
-  background: #f9fafb;
-  transition: 0.2s;
-  font-family: inherit;
-}
-
-.comentario-box textarea:focus {
+input, select, textarea {
+  width: 100%; padding: 10px 12px;
+  border-radius: 10px; border: 1px solid var(--border);
+  background: var(--surface2); color: var(--text);
+  font-family: inherit; font-size: 14px;
+  transition: border-color 0.15s, box-shadow 0.15s;
   outline: none;
-  border-color: #4caf50;
+}
+input:focus, select:focus, textarea:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(16,185,129,0.15);
   background: #fff;
-  box-shadow: 0 0 0 2px rgba(76,175,80,0.2);
 }
+label.field-label { display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 4px; margin-top: 10px; }
+textarea { min-height: 70px; resize: vertical; }
 
-.comentario-label {
-  font-size: 12px;
-  color: #6b7280;
-  margin-bottom: 4px;
-  display: block;
-}
-
-.filtro-group {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-bottom: 10px;
-}
-
+.filtro-group { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
 .filtro-btn {
-  padding: 8px 12px;
-  border-radius: 20px;
-  border: 1px solid #d1d5db;
-  background: #fff;
-  cursor: pointer;
-  font-size: 13px;
-  transition: 0.2s;
+  padding: 6px 13px; border-radius: 20px;
+  border: 1px solid var(--border); background: var(--surface2);
+  font-size: 12px; font-weight: 500; color: var(--text-muted);
 }
+.filtro-btn.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+.filtro-btn:hover:not(.active) { background: #e5e7eb; }
 
-.filtro-btn:hover {
-  background: #f3f4f6;
+.table-wrap { overflow-x: auto; border-radius: var(--radius); border: 1px solid var(--border); }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+thead tr { background: var(--primary); color: #fff; }
+th, td { padding: 10px 12px; text-align: left; }
+th { font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: 0.4px; }
+tbody tr { border-bottom: 1px solid var(--border); }
+tbody tr:last-child { border-bottom: none; }
+tbody tr:hover { background: var(--surface2); }
+td { vertical-align: middle; }
+
+.semaforo { width: 18px; height: 18px; border-radius: 50%; display: inline-block; }
+.luz { width: 32px; height: 32px; border-radius: 50%; margin: 6px auto; box-shadow: 0 2px 6px rgba(0,0,0,0.2); }
+
+.gauge-wrap { text-align: center; }
+.gauge-wrap canvas { max-height: 200px; }
+.gauge-pct { font-size: 32px; font-weight: 700; margin-top: 6px; }
+
+.resumen-semaforos { display: flex; gap: 10px; justify-content: space-around; }
+.sem-item { flex: 1; background: var(--surface2); border-radius: 12px; padding: 12px; text-align: center; font-size: 12px; font-weight: 600; color: var(--text-muted); }
+.sem-item .pct { font-size: 15px; font-weight: 700; color: var(--text); margin-top: 4px; }
+
+.check-opciones label {
+  display: flex; align-items: center; gap: 10px;
+  background: var(--surface2); padding: 11px 13px;
+  border-radius: 10px; margin-bottom: 6px; cursor: pointer;
+  border: 1px solid transparent;
+  transition: background 0.12s, border-color 0.12s;
 }
-
-.filtro-btn.active {
-  background: #1f2937;
-  color: white;
-  border-color: #1f2937;
-}
-  
-/* ===== MOBILE USER EXPERIENCE ===== */
-@media (max-width: 600px) {
-
-  #vista-user {
-    padding-bottom: 30px;
-  }
-
-  .user-wrapper {
-    max-width: 100%;
-    padding: 10px;
-  }
-
-  /* HEADER tipo app */
-  .header {
-    position: sticky;
-    top: 0;
-    z-index: 100;
-    padding: 12px;
-    font-size: 14px;
-  }
-
-  /* CARDS más compactas */
-  .card {
-    padding: 12px;
-    border-radius: 12px;
-  }
-
-  /* filtros tipo scroll horizontal (MUY IMPORTANTE) */
-  .filtro-group {
-    display: flex;
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    gap: 6px;
-    padding-bottom: 6px;
-    -webkit-overflow-scrolling: touch;
-  }
-
-  .filtro-btn {
-    flex: 0 0 auto;
-    font-size: 12px;
-    padding: 6px 10px;
-    white-space: nowrap;
-  }
-
-  /* select más grande para dedo */
-  select {
-    font-size: 16px;
-    padding: 12px;
-  }
-
-  /* radios más fáciles de tocar */
-  .check-opciones label {
-    padding: 14px;
-    font-size: 14px;
-  }
-
-  /* textarea mejor UX móvil */
-  textarea {
-    font-size: 15px;
-    min-height: 90px;
-  }
-
-  /* semáforos más grandes */
-  .luz {
-    width: 28px;
-    height: 28px;
-  }
-
-  /* gauge más visible */
-  #gaugeGeneral {
-    max-height: 180px !important;
-  }
-
-  /* botón guardar fijo abajo */
-  .btn {
-    font-size: 16px;
-    padding: 14px;
-  }
-}
+.check-opciones label:hover { background: #e0e7ff; border-color: #c7d2fe; }
+.check-opciones input[type=radio]:checked + span,
+.check-opciones input[type=checkbox]:checked + span { color: var(--accent); font-weight: 600; }
+.check-section-title { font-weight: 600; font-size: 13px; margin: 14px 0 6px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
 
 .save-bar {
-  position: sticky;
-  bottom: 0;
-  background: white;
-  padding: 10px;
-  box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+  position: sticky; bottom: 0; left: 0; right: 0;
+  background: var(--surface); padding: 12px 16px;
+  box-shadow: 0 -2px 12px rgba(0,0,0,0.08);
+  border-top: 1px solid var(--border);
 }
 
-
-body {
-  -webkit-tap-highlight-color: transparent;
-  touch-action: manipulation;
+.estado-badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 3px 10px; border-radius: 20px; font-size: 12px; font-weight: 600;
+  cursor: pointer; user-select: none;
 }
+.estado-activo { background: #d1fae5; color: #065f46; }
+.estado-espera { background: #fef3c7; color: #92400e; }
 
-.resumen-semaforos {
-  display: flex;
-  justify-content: space-around;
-  text-align: center;
-  gap: 10px;
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 12px; }
+@media (max-width: 500px) { .form-grid { grid-template-columns: 1fr; } }
+
+#notif {
+  position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%);
+  background: var(--primary); color: #fff; padding: 10px 22px;
+  border-radius: 30px; font-size: 13px; font-weight: 600;
+  box-shadow: var(--shadow-lg); z-index: 9998;
+  opacity: 0; pointer-events: none; transition: opacity 0.25s;
 }
+#notif.show { opacity: 1; }
 
-.resumen-semaforos > div {
-  flex: 1;
-  background: #f9fafb;
-  padding: 12px;
-  border-radius: 12px;
+canvas { max-height: 240px; }
+#grafGENERAL { max-height: 300px; }
+
+@media (max-width: 600px) {
+  .container { padding: 10px; }
+  .filtro-group { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 4px; -webkit-overflow-scrolling: touch; }
+  .filtro-btn { flex: 0 0 auto; white-space: nowrap; }
+  .header { padding: 12px; }
+  .header h2 { font-size: 14px; }
+  th, td { padding: 8px 10px; font-size: 12px; }
 }
-
-
-#gaugeGeneral {
-  width: 100% !important;
-  max-width: 400px;
-}
-
-
-#grafGENERAL {
-  max-height: 320px;
-}
-
-  
-  
 </style>
-
-  
 </head>
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <body>
 
-  
+<div id="loading-overlay">
+  <div class="spinner"></div>
+  <div id="loading-msg">Iniciando...</div>
+</div>
 
-<!-- ===== ADMIN ===== -->
-<div id="vista-admin">
+<div id="notif"></div>
+
+<!-- ===================== ADMIN ===================== -->
+<div id="vista-admin" style="display:none">
 
   <div class="header">
-    <h2>Admin</h2>
-    <div>
-      <span id="rol"></span>
-      <button onclick="logout()">Salir</button>
+    <h2>⚙️ Panel Admin</h2>
+    <div class="header-right">
+      <span id="badge-rol"></span>
+      <button class="btn-sm btn-secondary" onclick="logout()">Salir</button>
     </div>
-  </div>
-
-  <div class="container grid">
-
-    <!-- PROYECTOS -->
-    <div class="card">
-      <h3>Proyectos</h3>
-
-      <button class="btn" onclick="toggleCrear()">+ Nuevo</button>
-
-      <div id="formCrear" style="display:none;">
-        <input id="nombreProyecto" placeholder="Nombre">
-
-        <select id="tierProyecto">
-          <option value="">Tier</option>
-          <option>Tier 1</option> 
-          <option>Tier 2</option> 
-          <option>Tier 3</option> 
-          <option>Tier 4</option> 
-          <option>Tier 5</option> 
-          <option>Tier 6</option>
-        </select>
-
-        <select id="seccionProyecto" onchange="cargarChampionsProyecto()">
-          <option value="">Selecciona Sección</option> 
-          <option>Buy to Make</option> 
-          <option>DTC</option> 
-          <option>Material Optimization</option> 
-          <option>OH Cost Control</option> 
-          <option>Resourcing</option>
-        </select>
-
-        <select id="championProyecto"></select>
-
-        <input id="sponsorProyecto" placeholder="Sponsor">
-        <input id="ownerProyecto" placeholder="Owner">
-
-        <button class="btn" onclick="crearProyecto()">Crear</button>
-        <input type="file" id="inputExcel" accept=".xlsx,.xls" style="margin-top:10px;">
-        <button class="btn" onclick="cargarExcel()">Subir Excel</button>
-        
-        <button class="btn" onclick="descargarPlantilla()" style="margin-top:10px;">
-          Descargar Plantilla
-        </button>
-      </div>
-
-      <hr>
-      <!-- GRAFICAS -->
-      <!-- ===== GRAFICAS ADMIN ===== -->
-<div>
-
-  <!-- GENERAL ARRIBA -->
-  <div class="card" style="margin-bottom:15px;">
-    <h3>Promedio General</h3>
-    <canvas id="grafGENERAL"></canvas>
-  </div>
-
-  <!-- KPI / GANTT / PDCA ABAJO -->
-  <div class="grid">
-
-    <div class="card">
-      <h3>Promedio KPI</h3>
-      <canvas id="grafKPI"></canvas>
-    </div>
-
-    <div class="card">
-      <h3>Promedio GANTT</h3>
-      <canvas id="grafGANTT"></canvas>
-    </div>
-
-    <div class="card">
-      <h3>Promedio PDCA</h3>
-      <canvas id="grafPDCA"></canvas>
-    </div>
-
-  </div>
-
-</div>
-
-      <div class="card" style="margin-top:10px;">
-  <h3>Filtros Admin</h3>
-
-  <select id="adminFiltroTier" onchange="filtrarAdmin()">
-    <option value="">Todos los Tier</option>
-    <option>Tier 1</option>
-    <option>Tier 2</option>
-    <option>Tier 3</option>
-    <option>Tier 4</option>
-    <option>Tier 5</option>
-    <option>Tier 6</option>
-  </select>
-
-  <select id="adminFiltroSeccion" onchange="filtrarAdmin()">
-    <option value="">Todas las Secciones</option>
-    <option>Buy to Make</option>
-    <option>DTC</option>
-    <option>Material Optimization</option>
-    <option>OH Cost Control</option>
-    <option>Resourcing</option>
-  </select>
-
-  <select id="adminFiltroChampion" onchange="filtrarAdmin()">
-    <option value="">Todos los Champions</option>
-  </select>
-
-<label>Fecha de calificación</label>
-<input type="date" id="adminFecha" onchange="filtrarAdmin()">
-
-        
-</div>
-      <!-- TABLA DE PROYECTOS -->
-      <div style="overflow-x:auto;">
-        <table id="tablaProyectos" style="width:100%; border-collapse: collapse;">
-          <thead>
-            <tr style="background:#1f2937; color:white;">
-              <th>Estado</th>
-              <th>Proyecto</th>
-              <th>Champion</th>
-              <th>Sponsor</th>
-              <th>Owner</th>
-              <th>KPI</th>
-              <th>GANTT</th>
-              <th>PDCA</th>
-              <th>Acciones</th>
-            </tr>
-          </thead>
-          <tbody></tbody>
-        </table>
-      </div>
-
-      <button class="btn" onclick="exportarExcel()">Exportar</button>
-    </div>
-
-  </div>
-  <div class="card">
-  <h3>Progreso semanal</h3>
-
-  <select id="selectHistorialProyecto"></select>
-
-  <canvas id="grafHistorial"></canvas>
-</div>
-
-  
-</div>
-
-<!-- ===== USER ===== -->
-<div id="vista-user" style="display:none;">
-
-  <div class="header">
-    <h2>Usuario</h2>
-    <button onclick="logout()">Salir</button>
   </div>
 
   <div class="container">
-    <div class="user-wrapper">
 
-      <!-- FILTROS -->
-      <div class="card">
-        <h3>Filtros</h3> 
+    <div class="card" style="margin-bottom:16px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <h3 style="margin:0">Gestión de Proyectos</h3>
+        <div style="display:flex;gap:8px">
+          <button class="btn-sm btn-secondary" onclick="toggleForm()">＋ Nuevo</button>
+          <button class="btn-sm btn-blue" onclick="exportarExcel()">📥 Exportar Excel</button>
+        </div>
+      </div>
+
+      <div id="formNuevo" style="display:none;margin-top:12px;border-top:1px solid var(--border);padding-top:12px">
+        <div class="form-grid">
+          <div>
+            <label class="field-label">Nombre del proyecto</label>
+            <input id="nombreProyecto" placeholder="Nombre">
+          </div>
+          <div>
+            <label class="field-label">Tier</label>
+            <select id="tierProyecto">
+              <option value="">Selecciona Tier</option>
+              <option>Tier 1</option><option>Tier 2</option><option>Tier 3</option>
+              <option>Tier 4</option><option>Tier 5</option><option>Tier 6</option>
+            </select>
+          </div>
+          <div>
+            <label class="field-label">Sección</label>
+            <select id="seccionProyecto" onchange="onSeccionChange()">
+              <option value="">Selecciona Sección</option>
+              <option>Buy to Make</option><option>DTC</option>
+              <option>Material Optimization</option><option>OH Cost Control</option>
+              <option>Resourcing</option>
+            </select>
+          </div>
+          <div>
+            <label class="field-label">Champion</label>
+            <select id="championProyecto"><option value="">Primero elige sección</option></select>
+          </div>
+          <div>
+            <label class="field-label">Sponsor</label>
+            <input id="sponsorProyecto" placeholder="Sponsor">
+          </div>
+          <div>
+            <label class="field-label">Owner</label>
+            <input id="ownerProyecto" placeholder="Owner">
+          </div>
+        </div>
+        <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn" onclick="crearProyecto()" style="flex:1;min-width:120px">Crear Proyecto</button>
+          <div style="flex:1;min-width:200px">
+            <label class="field-label">Carga masiva (.xlsx)</label>
+            <div style="display:flex;gap:6px">
+              <input type="file" id="inputExcel" accept=".xlsx,.xls" style="flex:1">
+              <button class="btn-sm btn-secondary" onclick="cargarExcel()">Subir</button>
+              <button class="btn-sm btn-secondary" onclick="descargarPlantilla()">Plantilla</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid-3" style="margin-bottom:16px">
+      <div class="card gauge-wrap">
+        <h3>General</h3>
+        <canvas id="grafGENERAL"></canvas>
+        <div id="pct-admin-general" class="gauge-pct">–</div>
+      </div>
+      <div class="card gauge-wrap">
+        <h3>KPI</h3>
+        <canvas id="grafKPI"></canvas>
+        <div id="pct-admin-kpi" class="gauge-pct">–</div>
+      </div>
+      <div class="card gauge-wrap">
+        <h3>GANTT</h3>
+        <canvas id="grafGANTT"></canvas>
+        <div id="pct-admin-gantt" class="gauge-pct">–</div>
+      </div>
+      <div class="card gauge-wrap">
+        <h3>PDCA</h3>
+        <canvas id="grafPDCA"></canvas>
+        <div id="pct-admin-pdca" class="gauge-pct">–</div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-bottom:16px">
+      <h3>Filtros</h3>
+      <div class="form-grid">
+        <div>
+          <label class="field-label">Tier</label>
+          <select id="adminFiltroTier" onchange="renderTabla()">
+            <option value="">Todos los Tier</option>
+            <option>Tier 1</option><option>Tier 2</option><option>Tier 3</option>
+            <option>Tier 4</option><option>Tier 5</option><option>Tier 6</option>
+          </select>
+        </div>
+        <div>
+          <label class="field-label">Sección</label>
+          <select id="adminFiltroSeccion" onchange="onAdminSeccionChange()">
+            <option value="">Todas las Secciones</option>
+            <option>Buy to Make</option><option>DTC</option>
+            <option>Material Optimization</option><option>OH Cost Control</option>
+            <option>Resourcing</option>
+          </select>
+        </div>
+        <div>
+          <label class="field-label">Champion</label>
+          <select id="adminFiltroChampion" onchange="renderTabla()">
+            <option value="">Todos los Champions</option>
+          </select>
+        </div>
+        <div>
+          <label class="field-label">Fecha de calificación</label>
+          <input type="date" id="adminFecha" onchange="renderTabla()">
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-bottom:16px">
+      <h3>Proyectos (<span id="count-proyectos">0</span>)</h3>
+      <div class="table-wrap">
+        <table id="tablaProyectos">
+          <thead>
+            <tr>
+              <th>Estado</th><th>Proyecto</th><th>Champion</th>
+              <th>Sponsor</th><th>Owner</th>
+              <th>KPI</th><th>GANTT</th><th>PDCA</th><th></th>
+            </tr>
+          </thead>
+          <tbody id="tablaBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Progreso Semanal</h3>
+      <label class="field-label">Proyecto</label>
+      <select id="selectHistorial" onchange="renderHistorial(this.value)"></select>
+      <div style="margin-top:12px"><canvas id="grafHistorial"></canvas></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ===================== USER ===================== -->
+<div id="vista-user" style="display:none">
+
+  <div class="header">
+    <h2>📋 Evaluación de Proyectos</h2>
+    <div class="header-right">
+      <button class="btn-sm btn-secondary" onclick="logout()">Salir</button>
+    </div>
+  </div>
+
+  <div class="container">
+    <div style="max-width:640px;margin:auto">
+
+      <div class="card" style="margin-bottom:12px">
+        <h3>Filtrar proyectos</h3>
         <div class="filtro-group" id="filtroTier">
           <button class="filtro-btn active" onclick="setFiltroUser('tier','',this)">Todos</button>
           <button class="filtro-btn" onclick="setFiltroUser('tier','Tier 1',this)">Tier 1</button>
@@ -531,1668 +383,715 @@ body {
           <button class="filtro-btn" onclick="setFiltroUser('tier','Tier 5',this)">Tier 5</button>
           <button class="filtro-btn" onclick="setFiltroUser('tier','Tier 6',this)">Tier 6</button>
         </div>
-
         <div class="filtro-group" id="filtroSeccion">
-  <button class="filtro-btn active" onclick="setFiltroUser('seccion','',this)">Todas</button>
-
-  <button class="filtro-btn" onclick="setFiltroUser('seccion','Buy to Make',this); cargarChampionsPorSeccion('Buy to Make')">
-    Buy to Make
-  </button>
-
-  <button class="filtro-btn" onclick="setFiltroUser('seccion','DTC',this); cargarChampionsPorSeccion('DTC')">
-    DTC
-  </button>
-
-  <button class="filtro-btn" onclick="setFiltroUser('seccion','Material Optimization',this); cargarChampionsPorSeccion('Material Optimization')">
-    Material Optimization
-  </button>
-
-  <button class="filtro-btn" onclick="setFiltroUser('seccion','OH Cost Control',this); cargarChampionsPorSeccion('OH Cost Control')">
-    OH Cost Control
-  </button>
-
-  <button class="filtro-btn" onclick="setFiltroUser('seccion','Resourcing',this); cargarChampionsPorSeccion('Resourcing')">
-    Resourcing
-  </button>
-</div>
-       
+          <button class="filtro-btn active" onclick="setFiltroUser('seccion','',this);poblarChampionFiltros('')">Todas</button>
+          <button class="filtro-btn" onclick="setFiltroUser('seccion','Buy to Make',this);poblarChampionFiltros('Buy to Make')">Buy to Make</button>
+          <button class="filtro-btn" onclick="setFiltroUser('seccion','DTC',this);poblarChampionFiltros('DTC')">DTC</button>
+          <button class="filtro-btn" onclick="setFiltroUser('seccion','Material Optimization',this);poblarChampionFiltros('Material Optimization')">Mat. Opt.</button>
+          <button class="filtro-btn" onclick="setFiltroUser('seccion','OH Cost Control',this);poblarChampionFiltros('OH Cost Control')">OH Cost</button>
+          <button class="filtro-btn" onclick="setFiltroUser('seccion','Resourcing',this);poblarChampionFiltros('Resourcing')">Resourcing</button>
+        </div>
         <div class="filtro-group" id="filtroChampion">
-        <button class="filtro-btn active" onclick="setFiltroUser('champion','',this)">Todos</button>
+          <button class="filtro-btn active" onclick="setFiltroUser('champion','',this)">Todos</button>
         </div>
-
-        
-</div>
-      <!-- INFO -->
-      <div class="card">
-        <p><b>Proyecto:</b> <span id="userNombreProyecto"></span></p>
-        <p><b>Champion:</b> <span id="infoChampion"></span></p>
-        <p><b>Sponsor:</b> <span id="infoSponsor"></span></p>
-        <p><b>Owner:</b> <span id="infoOwner"></span></p>
       </div>
 
-      <!-- SEMAFOROS -->
-<!-- ===== GENERAL ARRIBA GRANDE ===== --> 
-        <div class="card" style="text-align:center; padding:25px;"> 
-          <h3 style="font-size:20px;">Calificación General</h3> 
-          <canvas id="gaugeGeneral" style="max-height:280px; margin:auto;">
-            
-          </canvas> 
-          <div style="font-size:34px; font-weight:bold; margin-top:10px;" 
-            id="porc-general"> 0% 
-          </div> 
-        </div> 
-        <!-- ===== KPI / GANTT / PDCA ABAJO ===== --> 
-        <div class="card"> 
-          <div class="resumen-semaforos" style="margin-top:10px;"> 
-            <div> KPI <div id="sem-kpi" class="luz"></div> 
-              <div id="porc-kpi">0%</div> </div> 
-            <div> GANTT <div id="sem-plan" class="luz"></div> 
-              <div id="porc-gantt">0%</div> 
-            </div>
-            <div> PDCA <div id="sem-pdca" class="luz">
-              
-            </div>
-              <div id="porc-pdca">0%</div>
-            </div> 
-          </div> 
-</div>
-
-      <!-- SELECT -->
-      <div class="card">
-        <select id="selectProyectoUser"></select>
+      <div class="card" style="margin-bottom:12px">
+        <label class="field-label">Proyecto activo</label>
+        <select id="selectProyectoUser" onchange="seleccionarProyecto(this.value)"></select>
+        <div id="infoProyecto" style="margin-top:10px;display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:13px">
+          <div><b>Champion:</b> <span id="infoChampion">-</span></div>
+          <div><b>Sponsor:</b> <span id="infoSponsor">-</span></div>
+          <div><b>Owner:</b> <span id="infoOwner">-</span></div>
+          <div><b>Sección:</b> <span id="infoSeccion">-</span></div>
+        </div>
       </div>
 
-      <!-- EVALUACION -->
-      <div class="card">
-        <p>KPI</p> <div class="check-opciones"> 
-          <label><input type="radio" name="kpi" value="en_tiempo" onclick="setValor('kpi','en_tiempo')"> KPI current vs target comply </label>
-          <label><input type="radio" name="kpi" value="cumple" onclick="setValor('kpi','cumple')"> KPI current vs target at 80% - 75% </label> 
-          <label><input type="radio" name="kpi" value="mitigado" onclick="setValor('kpi','mitigado')"> KPI current vs target at 70% - 50% </label> 
-          <label><input type="radio" name="kpi" value="retraso_kpi" onclick="setValor('kpi','retraso_kpi')"> KPI current vs target lees than 49% </label>
-          <label><input type="radio" name="kpi" value="na" onclick="setValor('kpi','na')"> No presento </label> 
-          <div class="comentario-box">
-          <label class="comentario-label">Comentario KPI</label>
-          <textarea id="comentarioKPI" placeholder="Agrega detalle o justificación..."></textarea>
-        </div>
-        </div>
-        <p>GANTT</p> <div class="check-opciones">
-          <label><input type="radio" name="gantt" value="valor" onclick="setValor('gantt','valor')"> Gantt without delay action</label>
-          <label><input type="radio" name="gantt" value="retraso_gantt" onclick="setValor('gantt','retraso_gantt')"> Gantt with 2 delayed actions </label> 
-          <label><input type="radio" name="gantt" value="r2" onclick="setValor('gantt','r2')"> Gantt with more than 3 delayed actions</label>
-          <label><input type="radio" name="gantt" value="r3" onclick="setValor('gantt','r3')"> Gantt with more than 4 delayed actions </label>
-          <label><input type="radio" name="gantt" value="na" onclick="setValor('gantt','na')"> No presento </label>
-          <div class="comentario-box">
-          <label class="comentario-label">Comentario GANTT</label>
-          <textarea id="comentarioGANTT" placeholder="Describe avances o retrasos..."></textarea>
-        </div>
-         </div>
-        <p>PDCA</p> <div class="check-opciones"> 
-          <label><input type="checkbox" value="6pack" onchange="togglePDCA(this)"> Is 6pack available</label>
-          <label><input type="checkbox" value="kpi" onchange="togglePDCA(this)"> Is the KPI presented and updated</label>
-          <label><input type="checkbox" value="gantt" onchange="togglePDCA(this)"> Is the GANTT presented and updated </label> 
-          <label><input type="checkbox" value="psr" onchange="togglePDCA(this)"> Is the PSR presented and updated </label>
-          <label><input type="checkbox" value="iplayers" onchange="togglePDCA(this)"> Have an improve IP </label> 
-          <div class="comentario-box">
-          <label class="comentario-label">Comentario PDCA</label>
-          <textarea id="comentarioPDCA" placeholder="Notas sobre implementación..."></textarea>
-        </div>
-        </div>
+      <div class="card gauge-wrap" style="margin-bottom:12px;padding:20px">
+        <h3 style="font-size:16px">Calificación General</h3>
+        <canvas id="gaugeGeneral" style="max-height:220px"></canvas>
+        <div id="porc-general" class="gauge-pct">0%</div>
+      </div>
 
-        <div class="save-bar">
-          <button class="btn" onclick="guardar()">Guardar evaluación</button>
+      <div class="card" style="margin-bottom:12px">
+        <div class="resumen-semaforos">
+          <div class="sem-item">
+            KPI
+            <div id="sem-kpi" class="luz" style="background:#808080"></div>
+            <div id="porc-kpi" class="pct">0%</div>
+          </div>
+          <div class="sem-item">
+            GANTT
+            <div id="sem-plan" class="luz" style="background:#808080"></div>
+            <div id="porc-gantt" class="pct">0%</div>
+          </div>
+          <div class="sem-item">
+            PDCA
+            <div id="sem-pdca" class="luz" style="background:#808080"></div>
+            <div id="porc-pdca" class="pct">0%</div>
+          </div>
         </div>
+      </div>
+
+      <div class="card" style="margin-bottom:70px">
+
+        <p class="check-section-title">KPI</p>
+        <div class="check-opciones">
+          <label><input type="radio" name="kpi" value="en_tiempo" onchange="setValor('kpi','en_tiempo')">
+            <span>KPI current vs target comply (100%)</span></label>
+          <label><input type="radio" name="kpi" value="cumple" onchange="setValor('kpi','cumple')">
+            <span>KPI current vs target 80% – 75%</span></label>
+          <label><input type="radio" name="kpi" value="mitigado" onchange="setValor('kpi','mitigado')">
+            <span>KPI current vs target 70% – 50%</span></label>
+          <label><input type="radio" name="kpi" value="retraso_kpi" onchange="setValor('kpi','retraso_kpi')">
+            <span>KPI current vs target menos del 49%</span></label>
+          <label><input type="radio" name="kpi" value="na" onchange="setValor('kpi','na')">
+            <span>No presentó</span></label>
+        </div>
+        <label class="field-label">Comentario KPI</label>
+        <textarea id="comentarioKPI" placeholder="Detalle o justificación..."></textarea>
+
+        <p class="check-section-title">GANTT</p>
+        <div class="check-opciones">
+          <label><input type="radio" name="gantt" value="valor" onchange="setValor('gantt','valor')">
+            <span>GANTT sin retrasos (100%)</span></label>
+          <label><input type="radio" name="gantt" value="retraso_gantt" onchange="setValor('gantt','retraso_gantt')">
+            <span>GANTT con 2 acciones retrasadas</span></label>
+          <label><input type="radio" name="gantt" value="r2" onchange="setValor('gantt','r2')">
+            <span>GANTT con más de 3 acciones retrasadas</span></label>
+          <label><input type="radio" name="gantt" value="r3" onchange="setValor('gantt','r3')">
+            <span>GANTT con más de 4 acciones retrasadas</span></label>
+          <label><input type="radio" name="gantt" value="na" onchange="setValor('gantt','na')">
+            <span>No presentó</span></label>
+        </div>
+        <label class="field-label">Comentario GANTT</label>
+        <textarea id="comentarioGANTT" placeholder="Avances o retrasos..."></textarea>
+
+        <p class="check-section-title">PDCA</p>
+        <div class="check-opciones">
+          <label><input type="checkbox" value="6pack" onchange="togglePDCA(this)">
+            <span>6-pack disponible</span></label>
+          <label><input type="checkbox" value="kpi" onchange="togglePDCA(this)">
+            <span>KPI presentado y actualizado</span></label>
+          <label><input type="checkbox" value="gantt" onchange="togglePDCA(this)">
+            <span>GANTT presentado y actualizado</span></label>
+          <label><input type="checkbox" value="psr" onchange="togglePDCA(this)">
+            <span>PSR presentado y actualizado</span></label>
+          <label><input type="checkbox" value="iplayers" onchange="togglePDCA(this)">
+            <span>Tiene IP mejorado (+25%)</span></label>
+        </div>
+        <label class="field-label">Comentario PDCA</label>
+        <textarea id="comentarioPDCA" placeholder="Notas de implementación..."></textarea>
+
       </div>
 
     </div>
   </div>
+
+  <div class="save-bar">
+    <button class="btn" id="btnGuardar" onclick="guardar()">💾 Guardar Evaluación</button>
+  </div>
 </div>
-  
+
 <script>
-window.onerror = function (msg, url, line) {
-  alert("Error: " + msg + " en línea " + line);
-};
-/* ===== FIREBASE ===== */
 firebase.initializeApp({
   apiKey: "AIzaSyAoVH8wQ2ofolAaJYdFnu1COcwI-xvaNnM",
   authDomain: "panel-proyectos-f119f.firebaseapp.com",
   projectId: "panel-proyectos-f119f"
 });
-
-const vistaAdmin = document.getElementById("vista-admin");
-const vistaUser = document.getElementById("vista-user");
 const db = firebase.firestore();
-const selectProyectoUser = document.getElementById("selectProyectoUser");
-/* ===== VARIABLES ===== */
-let ROL = (localStorage.getItem("rol") || "").toLowerCase().trim();
-let UID = localStorage.getItem("uid");
-let proyectoId = null;
-let proyecto = null;
-let historialCache = [];
-let proyectosCache = [];
-let gaugeChart;
 
-/* ===== LOGIN ===== */
-if (!UID || !ROL) {
-  localStorage.clear();
-  window.location.href = "login.html";
-}
-
-console.log("ROL:", ROL);
-  
-function aplicarRol() {
-  if (ROL === "admin") {
-    vistaAdmin.style.display = "block";
-    vistaUser.style.display = "none";
-  } else {
-    vistaAdmin.style.display = "none";
-    vistaUser.style.display = "block";
-  }
-}
-/* ===== CREAR ===== */
-async function crearProyecto() {
-  const nombre = document.getElementById("nombreProyecto").value.trim();
-  const tier = document.getElementById("tierProyecto").value;
-  const seccion = document.getElementById("seccionProyecto").value;
-  const champion = document.getElementById("championProyecto").value;
-
-  const sponsor = document.getElementById("sponsorProyecto").value;
-const owner = document.getElementById("ownerProyecto").value;
-
-if (!nombre || !tier || !seccion || !champion || !sponsor || !owner) {
-  return alert("Completa todos los campos");
-}
-
-await db.collection("proyectos").add({
-  nombre,
-  tier,
-  seccion,
-  champion,
-  sponsor,
-  owner,
-  createdAt: new Date(),
-  estado: "activo", // 🔥 NUEVO
-  evaluacion: {
-  kpi: "",
-  gantt: "",
-  pdca: [],
-  comentarios: {
-    kpi: "",
-    gantt: "",
-    pdca: ""
-  }
-}
-});
-  // limpiar campos
-  nombreProyecto.value = "";
-  tierProyecto.value = "";
-  seccionProyecto.value = "";
-  championProyecto.innerHTML = '<option value="">Selecciona Champion</option>';
-
-  cargarProyectos();
-  cargarSelect();
-
-  alert("Proyecto creado ✅");
-}
-
-
-
-/* ===== SELECT USER ===== */
-async function cargarSelect() {
-  try {
-    const snap = await db.collection("proyectos")
-  .limit(100)
-  .get();
-
-    selectProyectoUser.innerHTML = "";
-
-    if (snap.empty) {
-      console.warn("No hay proyectos en Firestore");
-
-      document.getElementById("userNombreProyecto").innerText = "No hay proyectos";
-      document.getElementById("infoChampion").innerText = "-";
-      document.getElementById("infoSponsor").innerText = "-";
-      document.getElementById("infoOwner").innerText = "-";
-
-      return;
-    }
-
-    let primerId = null;
-
-    snap.forEach(doc => {
-      const data = doc.data();
-
-      const op = document.createElement("option");
-      op.value = doc.id;
-      op.textContent = data.nombre || "Sin nombre";
-
-      selectProyectoUser.appendChild(op);
-
-      if (!primerId) primerId = doc.id;
-    });
-
-    // 🔥 FORZAR CARGA DEL PRIMERO
-    if (primerId) {
-      selectProyectoUser.value = primerId;
-
-      console.log("Cargando primer proyecto:", primerId);
-
-      await cargarProyecto(primerId);
-      
-    }
-
-  } catch (error) {
-    console.error("Error en cargarSelect:", error);
-    alert("Error cargando proyectos");
-  }
-}
-
-
-let filtrosAdmin = {
-  tier: "",
-  seccion: "",
-  champion: ""
+const STATE = {
+  rol: (localStorage.getItem("rol") || "").toLowerCase().trim(),
+  uid: localStorage.getItem("uid"),
+  proyectos: [],
+  historial: [],
+  proyectoActual: null,
+  proyectoActualId: null,
+  filtrosUser: { tier: "", seccion: "", champion: "" },
+  gaugeUser: null,
+  gaugesAdmin: {},
+  chartHistorial: null
 };
 
-function setFiltroAdmin(tipo, valor, el) {
-  filtrosAdmin[tipo] = valor;
-
-  document.querySelectorAll(`#adminFiltro${capitalize(tipo)} option`)
-  .forEach(btn => {
-    if (btn.classList) {
-      btn.classList.remove("active");
-    }
-  });
-
- if (el && el.classList) {
-  el.classList.add("active");
- }
-
-
-  filtrarAdmin();
-}
-let filtrosUser = {
-  tier: "",
-  seccion: "",
-  champion: ""
-};
-function setFiltroUser(tipo, valor, el) {
-  filtrosUser[tipo] = valor;
-
-  const container = document.getElementById(`filtro${capitalize(tipo)}`);
-
-  if (container) {
-    container.querySelectorAll(".filtro-btn")
-      .forEach(btn => btn.classList.remove("active"));
-  }
-
- if (el && el.classList) {
-  el.classList.add("active");
- }
-
-  aplicarFiltros();
-}
-
-
-
-
-  
-function capitalize(str) {
-  return str.charAt(0).toUpperCase() + str.slice(1);
-}
-
-
-function calcularKPI(valor) {
-  const map = {
-    en_tiempo: 100,
-    cumple: 75,
-    mitigado: 50,
-    retraso_kpi: 0,
-    na: 0
-  };
-  return map[valor] ?? 0;
-}
-
-function calcularGANTT(valor) {
-  const map = {
-    valor: 100,
-    retraso_gantt: 75,
-    r2: 50,
-    r3: 0,
-    na: 0
-  };
-  return map[valor] ?? 0;
-}
-
-function calcularPDCA(ev) {
-  if (!Array.isArray(ev?.pdca)) return 0;
-
-  // checks normales (sin IP)
-  const checks = ev.pdca.filter(x => x !== "iplayers").length;
-
-  // cada check vale 25%
-  let total = checks * 25;
-
-  // bonus IP = +25%
-  if (ev.pdca.includes("iplayers")) {
-    total += 25;
-  }
-
-  // nunca pasar de 100
-  return Math.min(total, 100);
-}
-
-function calcularGeneral(ev) {
-  const kpi = calcularKPI(ev.kpi);
-  const gantt = calcularGANTT(ev.gantt);
-  const pdca = calcularPDCA(ev);
-
-  return (kpi + gantt + pdca) / 3;
-}
-  
-/* ===== CARGAR PROYECTO ===== */
-async function cargarProyectos() {
-
-  const tbody = document.querySelector("#tablaProyectos tbody");
-
-  tbody.innerHTML = "";
-
-  proyectosCache = [];
-  const proyectosArray = [];
-
-  // ✅ obtener datos UNA sola vez
-  const snap = await db.collection("proyectos").get();
-  const fragment = document.createDocumentFragment();
-  snap.forEach(doc => {
-
-    const p = { id: doc.id, ...doc.data() };
-
-    if (!p.evaluacion) {
-      p.evaluacion = {
-        kpi: "",
-        gantt: "",
-        pdca: []
-      };
-    }
-
-    proyectosArray.push(p);
-    proyectosCache.push(p);
-
-    const tr = document.createElement("tr");
-
-    tr.innerHTML = `
-
-  <td>
-    <div style="cursor:pointer; font-size:18px;"
-         onclick="toggleEstado('${doc.id}', '${p.estado}')">
-      ${p.estado === "activo"
-        ? "🟢 Activo"
-        : "🟡 En espera"}
-    </div>
-  </td>
-
-  <td>${p.nombre || "-"}</td>
-  <td>${p.champion || "-"}</td>
-  <td>${p.sponsor || "-"}</td>
-  <td>${p.owner || "-"}</td>
-
-  <td>
-    <div class="semaforo"
-         style="background:${color("kpi", p.evaluacion.kpi)}">
-    </div>
-  </td>
-
-  <td>
-    <div class="semaforo"
-         style="background:${color("gantt", p.evaluacion.gantt)}">
-    </div>
-  </td>
-
-  <td>
-    <div class="semaforo"
-         style="background:${color("pdca", p.evaluacion.pdca)}">
-    </div>
-  </td>
-
-  <td>
-    <button onclick="event.stopPropagation();
-            eliminarProyecto('${doc.id}')">
-      🗑
-    </button>
-  </td>
-`;
-
-    tr.onclick = () => {
-      proyectoId = doc.id;
-      proyecto = p;
-      console.log("Seleccionado:", p);
-    };
-
-    fragment.appendChild(tr);
-  });
-
-  proyectosCache = proyectosArray;
-  tbody.appendChild(fragment);
-  actualizarGraficas(proyectosCache);
-  renderChampionsUser();
-}
-
-function renderChampionsUser() {
-  const container = document.getElementById("filtroChampion");
-
-  container.innerHTML = `
-    <button class="filtro-btn active"
-      onclick="setFiltroUser('champion','',this)">
-      Todos
-    </button>
-  `;
-
-  const set = new Set();
-
-  proyectosCache.forEach(p => {
-    if (p.champion) set.add(p.champion);
-  });
-
-  [...set].forEach(ch => {
-
-    const btn = document.createElement("button");
-
-    btn.className = "filtro-btn";
-    btn.textContent = ch;
-
-    // 🔥 AQUÍ EL CAMBIO
-    btn.onclick = function () {
-      setFiltroUser("champion", ch, this);
-    };
-
-    container.appendChild(btn);
-  });
-}
-
-
-
-
-
-
-
-
-
-
-
-  
-/* ===== MARCAR RADIOS ===== */
-function marcarRadios() {
-  if (!proyecto || !proyecto.evaluacion) return;
-
-  // KPI y GANTT
-  ["kpi", "gantt"].forEach(tipo => {
-    const valor = proyecto.evaluacion[tipo];
-    const radios = document.querySelectorAll(`input[name="${tipo}"]`);
-
-    radios.forEach(r => {
-      r.checked = r.value === valor;
-    });
-  });
-
-  // PDCA (checkboxes)
-  const checks = document.querySelectorAll('input[type="checkbox"]');
-
-  checks.forEach(c => {
-    c.checked = proyecto.evaluacion.pdca?.includes(c.value);
-  });
-}
-  
-async function cargarProyecto(id) {
-  if (!id) return;
-
-  try {
-    proyectoId = id;
-    const snap = await db.collection("proyectos").doc(id).get();
-
-    if (!snap.exists) return;
-
-    proyecto = snap.data();
-
-if (!proyecto.evaluacion) {
-  proyecto.evaluacion = {
-    kpi: "",
-    gantt: "",
-    pdca: []
-  };
-  const general = calcularGeneral(proyecto.evaluacion);
-
-document.getElementById("porc-general").innerText =
-  general.toFixed(0) + "%";
-}
-
-    document.getElementById("userNombreProyecto").innerText = proyecto.nombre || "-";
-    document.getElementById("infoChampion").innerText = proyecto.champion || "-";
-    document.getElementById("infoSponsor").innerText = proyecto.sponsor || "-";
-    document.getElementById("infoOwner").innerText = proyecto.owner || "-";
-          
-    
-    if (!proyecto.evaluacion.comentarios) {
-        proyecto.evaluacion.comentarios = {
-          kpi: "",
-          gantt: "",
-          pdca: ""
-        };
-      }
-      
-      document.getElementById("comentarioKPI").value =
-        proyecto.evaluacion.comentarios.kpi || "";
-      
-      document.getElementById("comentarioGANTT").value =
-        proyecto.evaluacion.comentarios.gantt || "";
-      
-      document.getElementById("comentarioPDCA").value =
-        proyecto.evaluacion.comentarios.pdca || "";
-    
-
-    renderSemaforos();
-    marcarRadios();
-
-  } catch (error) {
-    console.error("Error cargarProyecto:", error);
-  }
-}
-  
-  
-/* ===== SET VALOR ===== */
-function setValor(tipo, valor) {
-  if (!proyecto) return;
-  proyecto.evaluacion[tipo] = valor;
-  renderSemaforos();
-}
-
-function color(tipo, v) {
-  if (!v || (Array.isArray(v) && v.length === 0)) {
-    return "#808080";
-  }
-
-  // ===== KPI =====
-  if (tipo === "kpi") {
-    if (["en_tiempo"].includes(v)) return "#008000";
-    if (["cumple"].includes(v)) return "#90EE90";
-    if (["mitigado"].includes(v)) return "#FFD700";
-    if (["retraso_kpi"].includes(v)) return "#FF8C00";
-  }
-
-  // ===== GANTT =====
-  if (tipo === "gantt") {
-    if (["valor"].includes(v)) return "#008000";
-    if (["retraso_gantt"].includes(v)) return "#FFD700";
-    if (["r2"].includes(v)) return "#FF8C00";
-    if (["r3"].includes(v)) return "#FF0000";
-  }
-
-  // ===== PDCA =====
-if (tipo === "pdca") {
-  const porcentaje = calcularPDCA({ pdca: v });
-
-  if (porcentaje >= 100) return "#008000";
-  if (porcentaje >= 75) return "#90EE90";
-  if (porcentaje >= 50) return "#FFD700";
-  if (porcentaje >= 25) return "#FF8C00";
-  return "#FF0000";
-}
-
-  return "#808080";
-}
-/* ===== SEMAFORO VISUAL ===== */
-function renderSemaforos() {
-  if (!proyecto || !proyecto.evaluacion) {
-    console.warn("Sin proyecto cargado");
-    return;
-  }
-
-  document.getElementById("sem-kpi").style.background =
-    color("kpi", proyecto.evaluacion.kpi);
-
-  document.getElementById("sem-plan").style.background =
-    color("gantt", proyecto.evaluacion.gantt);
-
-  document.getElementById("sem-pdca").style.background =
-    color("pdca", proyecto.evaluacion.pdca);
-
-  document.getElementById("porc-kpi").innerText =
-    obtenerPorcentaje("kpi", proyecto.evaluacion.kpi) + "%";
-
-  document.getElementById("porc-gantt").innerText =
-    obtenerPorcentaje("gantt", proyecto.evaluacion.gantt) + "%";
-
-  document.getElementById("porc-pdca").innerText =
-    obtenerPorcentaje("pdca", proyecto.evaluacion.pdca) + "%";
-  const general = calcularGeneral(proyecto.evaluacion);
-  document.getElementById("porc-general").innerText =
-  general.toFixed(0) + "%";
-
-
-  renderGauge(general); // 👈 AGREGA ESTA LÍNEA
-
-  
-}
-
-function promedioEvaluacion(ev) {
-  return calcularGeneral(ev);
-}
-
-
-  
-/* ===== GUARDAR ===== */
-async function guardar() {
-  
-  if (!proyecto || !proyectoId) {
-  return alert("Selecciona un proyecto");
-}
-  proyecto.evaluacion.comentarios = {
-  kpi: document.getElementById("comentarioKPI").value,
-  gantt: document.getElementById("comentarioGANTT").value,
-  pdca: document.getElementById("comentarioPDCA").value
-};
-  const before = await db.collection("proyectos").doc(proyectoId).get();
-  const oldData = before.data();
-  const user = firebase.auth().currentUser || {};
-
-  const nombre = user ? user.displayName || user.email : "Desconocido";
-  await db.collection("proyectos").doc(proyectoId).update({
-  evaluacion: proyecto.evaluacion,
-  fechaCalificacion: new Date()
-});
-
-await db.collection("historial").add({
-  proyectoId,
-  proyectoNombre: proyecto.nombre,
-
-  // 🔥 NUEVOS CAMPOS
-  champion: proyecto.champion || "-",
-  seccion: proyecto.seccion || "-",
-  tier: proyecto.tier || "-",
-
-  usuario: UID,
-  usuarioNombre: nombre,
-  fecha: new Date(),
-  semana: obtenerSemana(new Date()),
-
-  kpi: obtenerPorcentaje("kpi", proyecto.evaluacion.kpi),
-  gantt: obtenerPorcentaje("gantt", proyecto.evaluacion.gantt),
-  pdca: obtenerPorcentaje("pdca", proyecto.evaluacion.pdca),
-  general: calcularGeneral(proyecto.evaluacion),
-  comentariosKPI: document.getElementById("comentarioKPI").value || "",
-  comentariosGANTT: document.getElementById("comentarioGANTT").value || "",
-  comentariosPDCA: document.getElementById("comentarioPDCA").value || ""
-});
-
-  
-
-  alert("Guardado ✅");
-}
-
-/* ===== EXCEL ===== */
-async function exportarExcel() {
-
-  // 👇 AQUÍ VA EL PASO 1
-  const projSnap = await db.collection("proyectos").get();
-
-  // 👇 AQUÍ VA EL PASO 1 (también)
-  const histSnap = await db.collection("historial")
-  .orderBy("fecha", "desc")
-  .limit(500)
-  .get();
-
-  const usersSnap = await db.collection("users")
-  .limit(50)
-  .get();
-
-  const mapaUsuarios = {};
-  
-  usersSnap.forEach(doc => {
-    const u = doc.data();
-
-  // ajusta el campo según tu estructura real
-  mapaUsuarios[doc.id] = u.usuario || u.nombre || "-";
-});
-
-  // 👇 AQUÍ VA EL PASO 2
-  const lastHist = {};
-
-  histSnap.forEach(doc => {
-    const h = doc.data();
-    const id = h.proyectoId;
-
-    const fechaActual = h.fecha?.toDate
-      ? h.fecha.toDate()
-      : new Date(h.fecha);
-    
-    const fechaAnterior = lastHist[id]?.fecha?.toDate
-      ? lastHist[id].fecha.toDate()
-      : new Date(0);
-    
-    if (!lastHist[id] || fechaActual > fechaAnterior) {
-      lastHist[id] = h;
-}
-  });
-
-  const data = [];
-
-  // 👇 AQUÍ SIGUE TU EXPORT
-  projSnap.forEach(doc => {
-    const p = doc.data();
-    const ev = p.evaluacion || {};
-
-    const h = lastHist[doc.id] || {};
-
-    const fechaObj = h.fecha?.toDate
-      ? h.fecha.toDate()
-      : null;
-
-    data.push({
-      Proyecto: p.nombre || "-",
-      Champion: p.champion || "-",
-      Seccion: p.seccion || "-",
-      Tier: p.tier || "-",
-
-      Fecha: fechaObj ? fechaObj.toLocaleDateString() : "-",
-      Hora: fechaObj ? fechaObj.toLocaleTimeString() : "-",
-
-      KPI: obtenerPorcentaje("kpi", ev.kpi),
-      GANTT: obtenerPorcentaje("gantt", ev.gantt),
-      PDCA: obtenerPorcentaje("pdca", ev.pdca),
-
-      General: calcularGeneral(ev).toFixed(2),
-
-      Usuario: mapaUsuarios[h.usuario] || "-",
-
-      Comentario_KPI:p.evaluacion?.comentarios?.kpi || h.comentariosKPI || "",
-      Comentario_GANTT: p.evaluacion?.comentarios?.gantt ||h.comentariosGANTT || "",
-      Comentario_PDCA: p.evaluacion?.comentarios?.pdca ||h.comentariosPDCA || ""
-    });
-  });
-
-  const ws = XLSX.utils.json_to_sheet(data);
-  const wb = XLSX.utils.book_new();
-
-  XLSX.utils.book_append_sheet(wb, ws, "Estado_Final");
-
-  XLSX.writeFile(wb, "Estado_Final_Proyectos.xlsx");
-}
-
-/* ===== LOGOUT ===== */
-function logout() {
-  localStorage.clear();
-  window.location.href = "index.html";
-}
-/* ===== EVENTOS ===== */
-document.addEventListener("change", (e) => {
-  if (e.target && e.target.id === "selectProyectoUser") {
-    cargarProyecto(e.target.value);
-  }
-});
-
-
-document.getElementById("selectHistorialProyecto")
-  .addEventListener("change", (e) => {
-    cargarHistorial(e.target.value);
-});
-
-
-
-
-  
-/* ===== TOGGLE ===== */
-function togglePDCA(checkbox) {
-  if (!proyecto) return;
-
-  if (!Array.isArray(proyecto.evaluacion.pdca)) {
-    proyecto.evaluacion.pdca = [];
-  }
-
-  if (checkbox.checked) {
-    proyecto.evaluacion.pdca.push(checkbox.value);
-  } else {
-    proyecto.evaluacion.pdca =
-      proyecto.evaluacion.pdca.filter(v => v !== checkbox.value);
-  }
-
-  renderSemaforos();
-}
-
-
-  /* ===== PORCENTAJES ===== */
-  function obtenerPorcentaje(tipo, v) {
-
-  if (tipo === "kpi") return calcularKPI(v);
-  if (tipo === "gantt") return calcularGANTT(v);
-
-  if (tipo === "pdca") {
-    return calcularPDCA({ pdca: v });
-  }
-
-  return 0;
-}
-
-/* ===== RELACION SECCION → CHAMPIONS  ===== */
-const championsPorSeccion = {
+const CHAMPIONS = {
   "Buy to Make": ["Antonio Aguilar"],
   "DTC": ["Jaime Castro"],
   "Material Optimization": ["Fabian Perez", "Jorge Millan"],
   "Resourcing": ["Gerardo Loredo"],
   "OH Cost Control": ["Carlos Perez"]
 };
-  
-/* ===== FUNCION DE FILTRADO  ===== */
-function aplicarFiltros() {
-  let filtrados = [...proyectosCache];
 
-  if (filtrosUser.tier) {
-    filtrados = filtrados.filter(p => p.tier === filtrosUser.tier);
-  }
-
-  if (filtrosUser.seccion) {
-    filtrados = filtrados.filter(p => p.seccion === filtrosUser.seccion);
-  }
-
-  if (filtrosUser.champion) {
-    filtrados = filtrados.filter(p => p.champion === filtrosUser.champion);
-  }
-
-  // limpiar select
-  selectProyectoUser.innerHTML = "";
-
-  filtrados.forEach(p => {
-    const op = document.createElement("option");
-    op.value = p.id;
-    op.textContent = p.nombre;
-    selectProyectoUser.appendChild(op);
-  });
-
-  // si no hay resultados
-  if (filtrados.length === 0) {
-    const op = document.createElement("option");
-    op.textContent = "Sin resultados";
-    op.value = "";
-    selectProyectoUser.appendChild(op);
-
-    document.getElementById("userNombreProyecto").innerText = "Sin resultados";
-    document.getElementById("infoChampion").innerText = "-";
-    document.getElementById("infoSponsor").innerText = "-";
-    document.getElementById("infoOwner").innerText = "-";
-
-    return;
-  }
-
-  // cargar primero automáticamente
-  const primer = filtrados[0];
-  selectProyectoUser.value = primer.id;
-  cargarProyecto(primer.id);
+if (!STATE.uid || !STATE.rol) {
+  localStorage.clear();
+  window.location.href = "login.html";
 }
-/* ===== CARGA DE CHAMPIONS AUTOMATICO  ===== */
-  
-function cargarChampionsProyecto() {
-  const seccion = document.getElementById("seccionProyecto").value;
-  const select = document.getElementById("championProyecto");
 
-  select.innerHTML = '<option value="">Selecciona Champion</option>';
+function calcKPI(v)   { return ({en_tiempo:100,cumple:75,mitigado:50,retraso_kpi:0,na:0}[v] ?? 0); }
+function calcGANTT(v) { return ({valor:100,retraso_gantt:75,r2:50,r3:0,na:0}[v] ?? 0); }
+function calcPDCA(ev) {
+  if (!Array.isArray(ev?.pdca)) return 0;
+  const normal = ev.pdca.filter(x => x !== "iplayers").length;
+  return Math.min(normal * 25 + (ev.pdca.includes("iplayers") ? 25 : 0), 100);
+}
+function calcGeneral(ev) {
+  return (calcKPI(ev.kpi) + calcGANTT(ev.gantt) + calcPDCA(ev)) / 3;
+}
 
-  if (championsPorSeccion[seccion]) {
-    championsPorSeccion[seccion].forEach(ch => {
-      const op = document.createElement("option");
-      op.value = ch;
-      op.textContent = ch;
-      select.appendChild(op);
+function colorSemaforo(tipo, v) {
+  if (!v || (Array.isArray(v) && v.length === 0)) return "#9ca3af";
+  if (tipo === "kpi") {
+    if (v === "en_tiempo") return "#16a34a";
+    if (v === "cumple")    return "#86efac";
+    if (v === "mitigado")  return "#fbbf24";
+    if (v === "retraso_kpi") return "#f97316";
+    return "#9ca3af";
+  }
+  if (tipo === "gantt") {
+    if (v === "valor")         return "#16a34a";
+    if (v === "retraso_gantt") return "#fbbf24";
+    if (v === "r2")            return "#f97316";
+    if (v === "r3")            return "#ef4444";
+    return "#9ca3af";
+  }
+  if (tipo === "pdca") {
+    const p = calcPDCA({ pdca: v });
+    if (p >= 100) return "#16a34a";
+    if (p >= 75)  return "#86efac";
+    if (p >= 50)  return "#fbbf24";
+    if (p >= 25)  return "#f97316";
+    return "#ef4444";
+  }
+  return "#9ca3af";
+}
+
+function gaugeColor(v) {
+  if (v >= 75) return "#10b981";
+  if (v >= 50) return "#f59e0b";
+  return "#ef4444";
+}
+
+function getSemana(fecha) {
+  const d = new Date(fecha);
+  const ini = new Date(d.getFullYear(), 0, 1);
+  return Math.ceil(((d - ini) / 86400000 + ini.getDay() + 1) / 7);
+}
+
+function fechaISO(ts) {
+  if (!ts) return null;
+  const d = ts.toDate ? ts.toDate() : new Date(ts);
+  return d.toISOString().slice(0, 10);
+}
+
+function notif(msg, error = false) {
+  const el = document.getElementById("notif");
+  el.textContent = msg;
+  el.style.background = error ? "#ef4444" : "#1f2937";
+  el.classList.add("show");
+  setTimeout(() => el.classList.remove("show"), 2500);
+}
+
+function setLoading(show, msg = "Cargando...") {
+  const el = document.getElementById("loading-overlay");
+  document.getElementById("loading-msg").textContent = msg;
+  el.style.display = show ? "flex" : "none";
+}
+
+async function init() {
+  setLoading(true, "Cargando proyectos...");
+  try {
+    const [snapP, snapH] = await Promise.all([
+      db.collection("proyectos").limit(200).get(),
+      db.collection("historial").orderBy("fecha","desc").limit(500).get()
+    ]);
+
+    STATE.proyectos = snapP.docs.map(d => ({
+      id: d.id, ...d.data(),
+      evaluacion: d.data().evaluacion || { kpi:"", gantt:"", pdca:[] }
+    }));
+
+    STATE.historial = snapH.docs.map(d => ({ id: d.id, ...d.data() }));
+
+    if (STATE.rol === "admin") {
+      document.getElementById("vista-admin").style.display = "block";
+      document.getElementById("badge-rol").textContent = "Admin";
+      renderTabla();
+      poblarSelectHistorial();
+    } else {
+      document.getElementById("vista-user").style.display = "block";
+      poblarSelectUser();
+    }
+  } catch (err) {
+    console.error(err);
+    notif("Error al cargar datos: " + err.message, true);
+  } finally {
+    setLoading(false);
+  }
+}
+
+function toggleForm() {
+  const f = document.getElementById("formNuevo");
+  f.style.display = f.style.display === "none" ? "block" : "none";
+}
+
+async function crearProyecto() {
+  const nombre   = document.getElementById("nombreProyecto").value.trim();
+  const tier     = document.getElementById("tierProyecto").value;
+  const seccion  = document.getElementById("seccionProyecto").value;
+  const champion = document.getElementById("championProyecto").value;
+  const sponsor  = document.getElementById("sponsorProyecto").value.trim();
+  const owner    = document.getElementById("ownerProyecto").value.trim();
+  if (!nombre || !tier || !seccion || !champion || !sponsor || !owner)
+    return notif("Completa todos los campos", true);
+  setLoading(true, "Creando proyecto...");
+  try {
+    const ref = await db.collection("proyectos").add({
+      nombre, tier, seccion, champion, sponsor, owner,
+      estado: "activo", createdAt: new Date(),
+      evaluacion: { kpi:"", gantt:"", pdca:[], comentarios:{kpi:"",gantt:"",pdca:""} }
+    });
+    STATE.proyectos.push({
+      id: ref.id, nombre, tier, seccion, champion, sponsor, owner,
+      estado:"activo", evaluacion:{ kpi:"", gantt:"", pdca:[] }
+    });
+    ["nombreProyecto","sponsorProyecto","ownerProyecto"].forEach(id => document.getElementById(id).value = "");
+    ["tierProyecto","seccionProyecto"].forEach(id => document.getElementById(id).value = "");
+    document.getElementById("championProyecto").innerHTML = '<option value="">Primero elige sección</option>';
+    renderTabla();
+    poblarSelectHistorial();
+    notif("Proyecto creado ✅");
+  } catch(err) { notif("Error: " + err.message, true); }
+  finally { setLoading(false); }
+}
+
+function onSeccionChange() {
+  const sec = document.getElementById("seccionProyecto").value;
+  const sel = document.getElementById("championProyecto");
+  sel.innerHTML = '<option value="">Selecciona Champion</option>';
+  (CHAMPIONS[sec] || []).forEach(ch => {
+    const o = document.createElement("option");
+    o.value = o.textContent = ch;
+    sel.appendChild(o);
+  });
+}
+
+function getProyectosFiltrados() {
+  const tier     = document.getElementById("adminFiltroTier").value;
+  const seccion  = document.getElementById("adminFiltroSeccion").value;
+  const champion = document.getElementById("adminFiltroChampion").value;
+  const fecha    = document.getElementById("adminFecha").value;
+  let lista = [...STATE.proyectos];
+  if (tier)     lista = lista.filter(p => p.tier === tier);
+  if (seccion)  lista = lista.filter(p => p.seccion === seccion);
+  if (champion) lista = lista.filter(p => p.champion === champion);
+  if (fecha) {
+    const ultimaFecha = {};
+    STATE.historial.forEach(h => {
+      if (!h.proyectoId || !h.fecha) return;
+      const f = fechaISO(h.fecha);
+      if (!ultimaFecha[h.proyectoId] || f > ultimaFecha[h.proyectoId])
+        ultimaFecha[h.proyectoId] = f;
+    });
+    lista = lista.filter(p => ultimaFecha[p.id] === fecha);
+  }
+  return lista;
+}
+
+function renderTabla() {
+  const lista = getProyectosFiltrados();
+  document.getElementById("count-proyectos").textContent = lista.length;
+  const tbody = document.getElementById("tablaBody");
+  const frag = document.createDocumentFragment();
+  tbody.innerHTML = "";
+  lista.forEach(p => {
+    const ev = p.evaluacion || {};
+    const tr = document.createElement("tr");
+    const esActivo = p.estado !== "espera";
+    tr.innerHTML = `
+      <td><span class="estado-badge ${esActivo ? 'estado-activo' : 'estado-espera'}" onclick="toggleEstado('${p.id}')">
+        ${esActivo ? "🟢 Activo" : "🟡 Espera"}</span></td>
+      <td><b>${p.nombre || "–"}</b><br><small style="color:var(--text-muted)">${p.tier || ""} · ${p.seccion || ""}</small></td>
+      <td>${p.champion || "–"}</td>
+      <td>${p.sponsor || "–"}</td>
+      <td>${p.owner || "–"}</td>
+      <td><div class="semaforo" style="background:${colorSemaforo('kpi',ev.kpi)}" title="${calcKPI(ev.kpi)}%"></div></td>
+      <td><div class="semaforo" style="background:${colorSemaforo('gantt',ev.gantt)}" title="${calcGANTT(ev.gantt)}%"></div></td>
+      <td><div class="semaforo" style="background:${colorSemaforo('pdca',ev.pdca)}" title="${calcPDCA(ev)}%"></div></td>
+      <td><button class="btn-sm btn-danger" onclick="eliminarProyecto('${p.id}')">🗑</button></td>`;
+    frag.appendChild(tr);
+  });
+  tbody.appendChild(frag);
+  actualizarGraficasAdmin(lista);
+}
+
+function onAdminSeccionChange() {
+  const sec = document.getElementById("adminFiltroSeccion").value;
+  const sel = document.getElementById("adminFiltroChampion");
+  sel.innerHTML = '<option value="">Todos los Champions</option>';
+  (CHAMPIONS[sec] || []).forEach(ch => {
+    const o = document.createElement("option");
+    o.value = o.textContent = ch;
+    sel.appendChild(o);
+  });
+  renderTabla();
+}
+
+async function toggleEstado(id) {
+  const p = STATE.proyectos.find(x => x.id === id);
+  if (!p) return;
+  const nuevo = p.estado === "activo" ? "espera" : "activo";
+  try {
+    await db.collection("proyectos").doc(id).update({ estado: nuevo });
+    p.estado = nuevo;
+    renderTabla();
+  } catch(err) { notif("Error: " + err.message, true); }
+}
+
+async function eliminarProyecto(id) {
+  if (!confirm("¿Eliminar este proyecto? Esta acción es irreversible.")) return;
+  try {
+    await db.collection("proyectos").doc(id).delete();
+    STATE.proyectos = STATE.proyectos.filter(p => p.id !== id);
+    renderTabla();
+    poblarSelectHistorial();
+    notif("Proyecto eliminado");
+  } catch(err) { notif("Error: " + err.message, true); }
+}
+
+function actualizarGraficasAdmin(lista) {
+  const activos = lista.filter(p => p.estado !== "espera");
+  const n = activos.length || 1;
+  let sumKPI=0, sumGANTT=0, sumPDCA=0, sumG=0;
+  activos.forEach(p => {
+    const ev = p.evaluacion || {};
+    sumKPI   += calcKPI(ev.kpi);
+    sumGANTT += calcGANTT(ev.gantt);
+    sumPDCA  += calcPDCA(ev);
+    sumG     += calcGeneral(ev);
+  });
+  renderGaugeAdmin("grafGENERAL", sumG/n,    "pct-admin-general");
+  renderGaugeAdmin("grafKPI",     sumKPI/n,  "pct-admin-kpi");
+  renderGaugeAdmin("grafGANTT",   sumGANTT/n,"pct-admin-gantt");
+  renderGaugeAdmin("grafPDCA",    sumPDCA/n, "pct-admin-pdca");
+}
+
+function renderGaugeAdmin(canvasId, valor, pctId) {
+  const v = Math.round(valor * 10) / 10;
+  const col = gaugeColor(v);
+  if (STATE.gaugesAdmin[canvasId]) {
+    const c = STATE.gaugesAdmin[canvasId];
+    c.data.datasets[0].data = [v, 100 - v];
+    c.data.datasets[0].backgroundColor[0] = col;
+    c.update("none");
+  } else {
+    const canvas = document.getElementById(canvasId);
+    if (!canvas) return;
+    STATE.gaugesAdmin[canvasId] = new Chart(canvas.getContext("2d"), {
+      type: "doughnut",
+      data: { datasets: [{ data: [v, 100-v], backgroundColor:[col,"#e5e7eb"], borderWidth:0, cutout:"75%" }] },
+      options: { animation:false, responsive:true, rotation:-90, circumference:180,
+        plugins:{ legend:{display:false}, tooltip:{enabled:false} } }
     });
   }
+  if (pctId) document.getElementById(pctId).textContent = v.toFixed(1) + "%";
 }
 
-/* ===== SUBIR EXCEL ===== */
-  
+function poblarSelectHistorial() {
+  const sel = document.getElementById("selectHistorial");
+  sel.innerHTML = "";
+  STATE.proyectos.forEach(p => {
+    const o = document.createElement("option");
+    o.value = p.id; o.textContent = p.nombre;
+    sel.appendChild(o);
+  });
+  if (STATE.proyectos.length) renderHistorial(STATE.proyectos[0].id);
+}
+
+function renderHistorial(proyectoId) {
+  if (!proyectoId) return;
+  const hist = STATE.historial
+    .filter(h => h.proyectoId === proyectoId)
+    .sort((a,b) => {
+      const fa = a.fecha?.toDate ? a.fecha.toDate() : new Date(a.fecha||0);
+      const fb = b.fecha?.toDate ? b.fecha.toDate() : new Date(b.fecha||0);
+      return fa - fb;
+    }).slice(0, 20);
+  const labels = hist.map(h => "Sem " + h.semana);
+  const data   = hist.map(h => h.general || 0);
+  const canvas = document.getElementById("grafHistorial");
+  if (!canvas) return;
+  if (STATE.chartHistorial) {
+    STATE.chartHistorial.data.labels = labels;
+    STATE.chartHistorial.data.datasets[0].data = data;
+    STATE.chartHistorial.update("none");
+    return;
+  }
+  STATE.chartHistorial = new Chart(canvas.getContext("2d"), {
+    type: "line",
+    data: { labels, datasets: [{ label:"General %", data, tension:0.35,
+      borderColor:"#10b981", backgroundColor:"rgba(16,185,129,0.08)", fill:true, pointRadius:4 }] },
+    options: { animation:false, responsive:true,
+      scales:{ y:{min:0,max:100} }, plugins:{ legend:{display:true} } }
+  });
+}
+
+function exportarExcel() {
+  if (!STATE.proyectos.length) return notif("Sin proyectos para exportar", true);
+  const ultimoHist = {};
+  STATE.historial.forEach(h => {
+    const id = h.proyectoId;
+    if (!id) return;
+    const fa = h.fecha?.toDate ? h.fecha.toDate() : new Date(h.fecha||0);
+    const fb = ultimoHist[id]?.fecha?.toDate ? ultimoHist[id].fecha.toDate() : new Date(0);
+    if (fa > fb) ultimoHist[id] = h;
+  });
+  const rows = STATE.proyectos.map(p => {
+    const ev = p.evaluacion || {};
+    const h  = ultimoHist[p.id] || {};
+    const fechaObj = h.fecha ? (h.fecha.toDate ? h.fecha.toDate() : new Date(h.fecha)) : null;
+    return {
+      Proyecto: p.nombre||"–", Champion: p.champion||"–", Seccion: p.seccion||"–",
+      Tier: p.tier||"–", Estado: p.estado||"activo",
+      Fecha: fechaObj ? fechaObj.toLocaleDateString() : "–",
+      Hora:  fechaObj ? fechaObj.toLocaleTimeString()  : "–",
+      KPI_pct: calcKPI(ev.kpi), GANTT_pct: calcGANTT(ev.gantt),
+      PDCA_pct: calcPDCA(ev), General_pct: +calcGeneral(ev).toFixed(2),
+      Comentario_KPI:   ev.comentarios?.kpi   || h.comentariosKPI   || "",
+      Comentario_GANTT: ev.comentarios?.gantt  || h.comentariosGANTT || "",
+      Comentario_PDCA:  ev.comentarios?.pdca   || h.comentariosPDCA  || ""
+    };
+  });
+  const histRows = STATE.historial.map(h => ({
+    Proyecto: h.proyectoNombre||h.proyectoId, Champion: h.champion||"–",
+    Seccion: h.seccion||"–", Tier: h.tier||"–", Semana: h.semana,
+    Fecha: h.fecha ? (h.fecha.toDate ? h.fecha.toDate().toLocaleDateString() : "–") : "–",
+    KPI: h.kpi, GANTT: h.gantt, PDCA: h.pdca,
+    General: h.general?.toFixed ? +h.general.toFixed(2) : h.general,
+    Usuario: h.usuarioNombre||h.usuario||"–"
+  }));
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows),     "Estado_Final");
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(histRows), "Historial");
+  XLSX.writeFile(wb, `Proyectos_${new Date().toISOString().slice(0,10)}.xlsx`);
+  notif("Excel exportado ✅");
+}
+
+function poblarSelectUser() { renderSelectUser(); }
+
+function setFiltroUser(tipo, valor, el) {
+  STATE.filtrosUser[tipo] = valor;
+  const container = document.getElementById(`filtro${tipo.charAt(0).toUpperCase()+tipo.slice(1)}`);
+  if (container) container.querySelectorAll(".filtro-btn").forEach(b => b.classList.remove("active"));
+  if (el) el.classList.add("active");
+  renderSelectUser();
+}
+
+function poblarChampionFiltros(seccion) {
+  const cont = document.getElementById("filtroChampion");
+  cont.innerHTML = `<button class="filtro-btn active" onclick="setFiltroUser('champion','',this)">Todos</button>`;
+  const champions = seccion ? (CHAMPIONS[seccion]||[]) : [...new Set(STATE.proyectos.map(p=>p.champion).filter(Boolean))];
+  champions.forEach(ch => {
+    const btn = document.createElement("button");
+    btn.className = "filtro-btn";
+    btn.textContent = ch;
+    btn.onclick = function(){ setFiltroUser("champion", ch, this); };
+    cont.appendChild(btn);
+  });
+}
+
+function renderSelectUser() {
+  const { tier, seccion, champion } = STATE.filtrosUser;
+  let lista = STATE.proyectos.filter(p => p.estado !== "espera");
+  if (tier)     lista = lista.filter(p => p.tier === tier);
+  if (seccion)  lista = lista.filter(p => p.seccion === seccion);
+  if (champion) lista = lista.filter(p => p.champion === champion);
+  const sel = document.getElementById("selectProyectoUser");
+  sel.innerHTML = "";
+  if (!lista.length) {
+    sel.innerHTML = '<option value="">Sin proyectos</option>';
+    ["infoChampion","infoSponsor","infoOwner","infoSeccion"].forEach(id => document.getElementById(id).textContent="–");
+    return;
+  }
+  lista.forEach(p => {
+    const o = document.createElement("option");
+    o.value = p.id; o.textContent = p.nombre;
+    sel.appendChild(o);
+  });
+  seleccionarProyecto(lista[0].id);
+}
+
+function seleccionarProyecto(id) {
+  const p = STATE.proyectos.find(x => x.id === id);
+  if (!p) return;
+  STATE.proyectoActualId = id;
+  STATE.proyectoActual   = JSON.parse(JSON.stringify(p));
+  document.getElementById("infoChampion").textContent = p.champion||"–";
+  document.getElementById("infoSponsor").textContent  = p.sponsor ||"–";
+  document.getElementById("infoOwner").textContent    = p.owner   ||"–";
+  document.getElementById("infoSeccion").textContent  = p.seccion ||"–";
+  const com = p.evaluacion?.comentarios || {};
+  document.getElementById("comentarioKPI").value   = com.kpi   ||"";
+  document.getElementById("comentarioGANTT").value = com.gantt ||"";
+  document.getElementById("comentarioPDCA").value  = com.pdca  ||"";
+  marcarRadios(p.evaluacion);
+  renderSemaforos();
+}
+
+function marcarRadios(ev) {
+  if (!ev) return;
+  ["kpi","gantt"].forEach(tipo => {
+    document.querySelectorAll(`input[name="${tipo}"]`).forEach(r => { r.checked = r.value === ev[tipo]; });
+  });
+  document.querySelectorAll('.check-opciones input[type="checkbox"]').forEach(c => {
+    c.checked = Array.isArray(ev.pdca) && ev.pdca.includes(c.value);
+  });
+}
+
+function setValor(tipo, valor) {
+  if (!STATE.proyectoActual) return;
+  STATE.proyectoActual.evaluacion[tipo] = valor;
+  renderSemaforos();
+}
+
+function togglePDCA(checkbox) {
+  if (!STATE.proyectoActual) return;
+  const ev = STATE.proyectoActual.evaluacion;
+  if (!Array.isArray(ev.pdca)) ev.pdca = [];
+  if (checkbox.checked) {
+    if (!ev.pdca.includes(checkbox.value)) ev.pdca.push(checkbox.value);
+  } else {
+    ev.pdca = ev.pdca.filter(v => v !== checkbox.value);
+  }
+  renderSemaforos();
+}
+
+function renderSemaforos() {
+  const p = STATE.proyectoActual;
+  if (!p) return;
+  const ev = p.evaluacion;
+  document.getElementById("sem-kpi").style.background  = colorSemaforo("kpi",  ev.kpi);
+  document.getElementById("sem-plan").style.background = colorSemaforo("gantt",ev.gantt);
+  document.getElementById("sem-pdca").style.background = colorSemaforo("pdca", ev.pdca);
+  document.getElementById("porc-kpi").textContent   = calcKPI(ev.kpi) + "%";
+  document.getElementById("porc-gantt").textContent = calcGANTT(ev.gantt) + "%";
+  document.getElementById("porc-pdca").textContent  = calcPDCA(ev) + "%";
+  document.getElementById("porc-general").textContent = Math.round(calcGeneral(ev)) + "%";
+  renderGaugeUser(calcGeneral(ev));
+}
+
+function renderGaugeUser(valor) {
+  const v = Math.round(valor * 10) / 10;
+  const col = gaugeColor(v);
+  const canvas = document.getElementById("gaugeGeneral");
+  if (!canvas) return;
+  if (STATE.gaugeUser) {
+    STATE.gaugeUser.data.datasets[0].data = [v, 100-v];
+    STATE.gaugeUser.data.datasets[0].backgroundColor[0] = col;
+    STATE.gaugeUser.update("none");
+    return;
+  }
+  STATE.gaugeUser = new Chart(canvas.getContext("2d"), {
+    type: "doughnut",
+    data: { datasets: [{ data:[v,100-v], backgroundColor:[col,"#e5e7eb"], borderWidth:0, cutout:"78%" }] },
+    options: { animation:false, responsive:true, rotation:-90, circumference:180,
+      plugins:{ legend:{display:false}, tooltip:{enabled:false} } }
+  });
+}
+
+async function guardar() {
+  if (!STATE.proyectoActualId || !STATE.proyectoActual)
+    return notif("Selecciona un proyecto", true);
+  const btn = document.getElementById("btnGuardar");
+  btn.disabled = true; btn.textContent = "Guardando...";
+  const ev = STATE.proyectoActual.evaluacion;
+  ev.comentarios = {
+    kpi:   document.getElementById("comentarioKPI").value,
+    gantt: document.getElementById("comentarioGANTT").value,
+    pdca:  document.getElementById("comentarioPDCA").value
+  };
+  try {
+    const now = new Date();
+    await db.collection("proyectos").doc(STATE.proyectoActualId).update({ evaluacion: ev, fechaCalificacion: now });
+    const histEntry = {
+      proyectoId: STATE.proyectoActualId, proyectoNombre: STATE.proyectoActual.nombre,
+      champion: STATE.proyectoActual.champion||"–", seccion: STATE.proyectoActual.seccion||"–",
+      tier: STATE.proyectoActual.tier||"–", usuario: STATE.uid,
+      usuarioNombre: firebase.auth().currentUser?.displayName||firebase.auth().currentUser?.email||"–",
+      fecha: now, semana: getSemana(now),
+      kpi: calcKPI(ev.kpi), gantt: calcGANTT(ev.gantt), pdca: calcPDCA(ev), general: calcGeneral(ev),
+      comentariosKPI: ev.comentarios.kpi, comentariosGANTT: ev.comentarios.gantt, comentariosPDCA: ev.comentarios.pdca
+    };
+    await db.collection("historial").add(histEntry);
+    const idx = STATE.proyectos.findIndex(p => p.id === STATE.proyectoActualId);
+    if (idx !== -1) STATE.proyectos[idx].evaluacion = JSON.parse(JSON.stringify(ev));
+    STATE.historial.unshift(histEntry);
+    notif("Evaluación guardada ✅");
+  } catch(err) {
+    console.error(err);
+    notif("Error al guardar: " + err.message, true);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "💾 Guardar Evaluación";
+  }
+}
+
 async function cargarExcel() {
   const file = document.getElementById("inputExcel").files[0];
-
-  if (!file) {
-    return alert("Selecciona un archivo");
-  }
-
+  if (!file) return notif("Selecciona un archivo", true);
   const reader = new FileReader();
-
-  reader.onload = async (e) => {
-    const data = new Uint8Array(e.target.result);
-    const workbook = XLSX.read(data, { type: "array" });
-
-    const hoja = workbook.Sheets[workbook.SheetNames[0]];
-    const json = XLSX.utils.sheet_to_json(hoja);
-
+  reader.onload = async e => {
+    const wb   = XLSX.read(new Uint8Array(e.target.result), { type:"array" });
+    const json = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
     await guardarMasivo(json);
   };
-
   reader.readAsArrayBuffer(file);
 }
 
-  /* ===== ObtenerSemana ===== */
-  
-  function obtenerSemana(fecha) {
-  const d = new Date(fecha);
-  const inicio = new Date(d.getFullYear(), 0, 1);
-  const dias = Math.floor((d - inicio) / (24 * 60 * 60 * 1000));
-  return Math.ceil((dias + inicio.getDay() + 1) / 7);
-}
-
-
-
-
-
-  
-  /* ===== CARGA MASIVA ===== */
-
-async function guardarMasivo(data) {
-
-  let errores = [];
-  let exitos = 0;
-
-  for (let i = 0; i < data.length; i++) {
-    const row = data[i];
-
-    const nombre = row.nombre;
-    const tier = row.tier;
-    const seccion = row.seccion;
-    const champion = row.champion;
-    const sponsor = row.sponsor;
-    const owner = row.owner;
-    
-    if (!nombre || !tier || !seccion || !champion || !sponsor || !owner) {
-      errores.push(`Fila ${i+2} incompleta`);
-      continue;
-    }
-
-    // VALIDAR VALORES CORRECTOS
-    if (!validarDatos(row)) {
-      errores.push(`Fila ${i+2} datos inválidos`);
-      continue;
-    }
-
+async function guardarMasivo(rows) {
+  const TIERS = ["Tier 1","Tier 2","Tier 3","Tier 4","Tier 5","Tier 6"];
+  const SECS  = Object.keys(CHAMPIONS);
+  let ok = 0, err = 0;
+  setLoading(true, "Cargando proyectos...");
+  for (const row of rows) {
+    const { nombre, tier, seccion, champion, sponsor, owner } = row;
+    if (!nombre||!tier||!seccion||!champion||!sponsor||!owner||!TIERS.includes(tier)||!SECS.includes(seccion)) { err++; continue; }
     try {
-     await db.collection("proyectos").add({
-      nombre,
-      tier,
-      seccion,
-      champion,
-      sponsor,
-      owner,
-      evaluacion: {
-        kpi: "",
-        gantt: "",
-        pdca: []
-      }
-    });
-
-      exitos++;
-
-    } catch (err) {
-      errores.push(`Fila ${i+2} error al guardar`);
-    }
+      const ref = await db.collection("proyectos").add({
+        nombre, tier, seccion, champion, sponsor, owner,
+        estado:"activo", createdAt: new Date(),
+        evaluacion:{ kpi:"", gantt:"", pdca:[], comentarios:{kpi:"",gantt:"",pdca:""} }
+      });
+      STATE.proyectos.push({ id:ref.id, nombre, tier, seccion, champion, sponsor, owner,
+        estado:"activo", evaluacion:{kpi:"",gantt:"",pdca:[]} });
+      ok++;
+    } catch { err++; }
   }
-
-  cargarProyectos();
-  cargarSelect();
-
-  alert(`Carga completada ✅
-✔ ${exitos} proyectos cargados
-❌ ${errores.length} errores`);
-
-  console.log("Errores:", errores);
-}
-  
-function validarDatos(row) {
-  const tiers = ["Tier 1","Tier 2","Tier 3","Tier 4","Tier 5","Tier 6"];
-  const secciones = [
-    "Buy to Make",
-    "DTC",
-    "Material Optimization",
-    "OH Cost Control",
-    "Resourcing"
-  ];
-
-  if (!tiers.includes(row.tier)) return false;
-  if (!secciones.includes(row.seccion)) return false;
-
-  return true;
+  setLoading(false);
+  renderTabla();
+  poblarSelectHistorial();
+  notif(`${ok} proyectos cargados · ${err} errores`);
 }
 
-
-/* ===== PLANTILLA ===== */
-  
-async function descargarPlantilla() {
-  
-
-  const plantilla = [
-    {
-      nombre: "Proyecto ejemplo",
-      tier: "Tier 1",
-      seccion: "Buy to Make",
-      champion: "Antonio Aguilar",
-      sponsor: "Nombre Sponsor",
-      owner: "Nombre Owner"
-    }
-  ];
-
+function descargarPlantilla() {
+  const plantilla = [{ nombre:"Proyecto ejemplo", tier:"Tier 1", seccion:"Buy to Make",
+    champion:"Antonio Aguilar", sponsor:"Nombre Sponsor", owner:"Nombre Owner" }];
   const catalogo = [
-    { tier: "Tier 1", seccion: "Buy to Make", champion: "Antonio Aguilar" },
-    { tier: "Tier 2", seccion: "DTC", champion: "Jaime Castro" },
-    { tier: "Tier 3", seccion: "Material Optimization", champion: "Fabian Perez" },
-    { tier: "Tier 3", seccion: "Material Optimization", champion: "Jorge Millan" },
-    { tier: "Tier 4", seccion: "Resourcing", champion: "Gerardo Loredo" },
-    { tier: "Tier 5", seccion: "OH Cost Control", champion: "Carlos Perez" }
+    {tier:"Tier 1",seccion:"Buy to Make",          champion:"Antonio Aguilar"},
+    {tier:"Tier 2",seccion:"DTC",                  champion:"Jaime Castro"},
+    {tier:"Tier 3",seccion:"Material Optimization",champion:"Fabian Perez"},
+    {tier:"Tier 3",seccion:"Material Optimization",champion:"Jorge Millan"},
+    {tier:"Tier 4",seccion:"Resourcing",            champion:"Gerardo Loredo"},
+    {tier:"Tier 5",seccion:"OH Cost Control",       champion:"Carlos Perez"}
   ];
-
   const wb = XLSX.utils.book_new();
-
-  const ws1 = XLSX.utils.json_to_sheet(plantilla);
-  const ws2 = XLSX.utils.json_to_sheet(catalogo);
-
-  XLSX.utils.book_append_sheet(wb, ws1, "Plantilla");
-  XLSX.utils.book_append_sheet(wb, ws2, "Catalogo");
-
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(plantilla), "Plantilla");
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(catalogo),  "Catalogo");
   XLSX.writeFile(wb, "Plantilla_Proyectos.xlsx");
 }
 
+function logout() { localStorage.clear(); window.location.href = "index.html"; }
 
-function toggleCrear() {
-  const form = document.getElementById("formCrear");
-
-  if (form.style.display === "none") {
-    form.style.display = "block";
-    form.style.opacity = "0";
-    setTimeout(() => form.style.opacity = "1", 50);
-  } else {
-    form.style.opacity = "0";
-    setTimeout(() => form.style.display = "none", 200);
-  }
-}
-
-async function initApp() {
-
-  aplicarRol();
-
-  await cargarHistorialCache();
-
-  await cargarProyectos();
-
-  if (ROL === "admin") {
-    cargarSelectHistorial();
-  }
-
-  if (ROL !== "admin") {
-
-    await cargarSelect();
-
-    if (selectProyectoUser.value) {
-      await cargarProyecto(selectProyectoUser.value);
-    }
-  }
-}
-async function cargarHistorialCache() {
-
-  const snap = await db.collection("historial")
-    .orderBy("fecha", "desc")
-    .limit(300)
-    .get();
-
-  historialCache = [];
-
-  snap.forEach(doc => {
-    historialCache.push(doc.data());
-  });
-
-  console.log("Historial cache cargado");
-}
-  
-async function eliminarProyecto(id) {
-  if (confirm("¿Eliminar proyecto?")) {
-    await db.collection("proyectos").doc(id).delete();
-  }
-}
-async function cargarSelectHistorial() {
-
-  const select = document.getElementById("selectHistorialProyecto");
-
-  select.innerHTML = "";
-
-  try {
-
-    const snap = await db.collection("proyectos")
-      .limit(100)
-      .get();
-
-    let primerProyecto = null;
-
-    snap.forEach(doc => {
-
-      const data = doc.data();
-
-      const op = document.createElement("option");
-
-      op.value = doc.id;
-      op.textContent = data.nombre || "Sin nombre";
-
-      select.appendChild(op);
-
-      // guardar primero
-      if (!primerProyecto) {
-        primerProyecto = doc.id;
-      }
-    });
-
-    // 🔥 CARGAR INMEDIATAMENTE
-    if (primerProyecto) {
-
-      select.value = primerProyecto;
-
-      // NO esperar interacción
-      await cargarHistorial(primerProyecto);
-    }
-
-  } catch (err) {
-
-    console.error("Error cargando historial:", err);
-  }
-}
-
-
-  
-function actualizarGraficas(proyectos) {
-
-  const activos = proyectos.filter(p => p.estado !== "espera");
-
-  let totalKPI = 0;
-  let totalGANTT = 0;
-  let totalPDCA = 0;
-  let totalGeneral = 0;
-activos.forEach(p => {
-
-  const ev = p.evaluacion || {};
-
-  const kpi = calcularKPI(ev.kpi);
-  const gantt = calcularGANTT(ev.gantt);
-  const pdca = calcularPDCA(ev);
-  const general = calcularGeneral(ev);
-
-  totalKPI += kpi;
-  totalGANTT += gantt;
-  totalPDCA += pdca;
-  totalGeneral += general;
-});
-
-  const n = activos.length || 1;
-
-  const promKPI = totalKPI / n;
-  const promGANTT = totalGANTT / n;
-  const promPDCA = totalPDCA / n;
-  const promGENERAL = totalGeneral / n;
-
-  renderGaugeAdmin("grafKPI", promKPI);
-  renderGaugeAdmin("grafGANTT", promGANTT);
-  renderGaugeAdmin("grafPDCA", promPDCA);
-  renderGaugeAdmin("grafGENERAL", promGENERAL);
-}
-
-let chartHistorial;
-let historialMemoria = {};
-
-async function cargarHistorial(proyectoId) {
-
-  try {
-
-    // 🔥 CACHE LOCAL
-    if (!historialMemoria[proyectoId]) {
-
-      const snap = await db.collection("historial")
-        .where("proyectoId", "==", proyectoId)
-        .orderBy("fecha", "asc")
-        .limit(20)
-        .get();
-
-      historialMemoria[proyectoId] = [];
-
-      snap.forEach(doc => {
-        historialMemoria[proyectoId].push(doc.data());
-      });
-    }
-
-    const historial = historialMemoria[proyectoId];
-
-    const semanas = [];
-    const general = [];
-
-    historial.forEach(d => {
-
-      semanas.push("Sem " + d.semana);
-
-      general.push(d.general || 0);
-    });
-
-    const canvas = document.getElementById("grafHistorial");
-
-    if (!canvas) return;
-
-    const ctx = canvas.getContext("2d");
-
-    // 🔥 SOLO ACTUALIZAR
-    if (chartHistorial) {
-
-      chartHistorial.data.labels = semanas;
-
-      chartHistorial.data.datasets[0].data = general;
-
-      chartHistorial.update();
-
-      return;
-    }
-
-    // 🔥 CREAR UNA SOLA VEZ
-    chartHistorial = new Chart(ctx, {
-
-      type: "line",
-
-      data: {
-        labels: semanas,
-
-        datasets: [{
-          label: "Progreso",
-          data: general,
-          tension: 0.3
-        }]
-      },
-
-      options: {
-
-        responsive: true,
-
-        animation: false,
-
-        responsiveAnimationDuration: 0,
-
-        plugins: {
-          legend: {
-            display: true
-          }
-        },
-
-        scales: {
-          y: {
-            min: 0,
-            max: 100
-          }
-        }
-      }
-    });
-
-  } catch (err) {
-
-    console.error("Error historial:", err);
-  }
-}
-
-  
-function renderTablaAdmin(lista) {
-
-  const tbody = document.querySelector("#tablaProyectos tbody");
-
-  tbody.innerHTML = "";
-
-  // ✅ crear UNA sola vez
-  const fragment = document.createDocumentFragment();
-
-  lista.forEach(p => {
-
-    const tr = document.createElement("tr");
-
-    tr.innerHTML = `
-      <td>
-        <div style="cursor:pointer; font-size:14px; font-weight:bold;"
-             onclick="toggleEstado('${p.id}', '${p.estado}')">
-
-          ${p.estado === "activo"
-            ? "🟢 Activo"
-            : "🟡 En espera"}
-
-        </div>
-      </td>
-
-      <td>${p.nombre || "-"}</td>
-      <td>${p.champion || "-"}</td>
-      <td>${p.sponsor || "-"}</td>
-      <td>${p.owner || "-"}</td>
-
-      <td>
-        <div class="semaforo"
-             style="background:${color("kpi", p.evaluacion.kpi)}">
-        </div>
-      </td>
-
-      <td>
-        <div class="semaforo"
-             style="background:${color("gantt", p.evaluacion.gantt)}">
-        </div>
-      </td>
-
-      <td>
-        <div class="semaforo"
-             style="background:${color("pdca", p.evaluacion.pdca)}">
-        </div>
-      </td>
-
-      <td>
-        <button onclick="
-          event.stopPropagation();
-          eliminarProyecto('${p.id}')
-        ">
-          🗑
-        </button>
-      </td>
-    `;
-
-    // ✅ agregar al fragment
-    fragment.appendChild(tr);
-  });
-
-  // ✅ agregar TODO junto al DOM
-  tbody.appendChild(fragment);
-}
-  
-async function filtrarAdmin() {
-
-  const tier = document.getElementById("adminFiltroTier").value;
-  const seccion = document.getElementById("adminFiltroSeccion").value;
-  const champion = document.getElementById("adminFiltroChampion").value;
-  const fechaFiltro = document.getElementById("adminFecha").value;
-
-  let filtrados = [...proyectosCache];
-
-  // ===== FILTROS NORMALES =====
-
-  if (tier) {
-    filtrados = filtrados.filter(p => p.tier === tier);
-  }
-
-  if (seccion) {
-    filtrados = filtrados.filter(p => p.seccion === seccion);
-  }
-
-  if (champion) {
-    filtrados = filtrados.filter(p => p.champion === champion);
-  }
-
-  // ===== FILTRO POR FECHA EXACTA =====
-
-  if (fechaFiltro) {
-    const ultimaFecha = {};
-    
-    historialCache.forEach(h => {
-    
-      if (!h.proyectoId || !h.fecha) return;
-    
-      const fecha = h.fecha.toDate();
-    
-      if (
-        !ultimaFecha[h.proyectoId] ||
-        fecha > ultimaFecha[h.proyectoId]
-      ) {
-        ultimaFecha[h.proyectoId] = fecha;
-      }
-    });
-    filtrados = filtrados.filter(p => {
-
-      const fechaProyecto = ultimaFecha[p.id];
-
-      if (!fechaProyecto) return false;
-
-      // convertir ambas fechas a yyyy-mm-dd
-      const yyyy = fechaProyecto.getFullYear();
-const mm = String(fechaProyecto.getMonth() + 1).padStart(2, "0");
-const dd = String(fechaProyecto.getDate()).padStart(2, "0");
-
-const fechaProyectoTexto = `${yyyy}-${mm}-${dd}`;
-
-return fechaProyectoTexto === fechaFiltro;
-    });
-  }
-
-  renderTablaAdmin(filtrados);
-  actualizarGraficas(filtrados);
-}
-document.getElementById("adminFiltroSeccion").addEventListener("change", () => {
-  const seccion = document.getElementById("adminFiltroSeccion").value;
-  const select = document.getElementById("adminFiltroChampion");
-
-  select.innerHTML = '<option value="">Todos los Champions</option>';
-
-  if (championsPorSeccion[seccion]) {
-    championsPorSeccion[seccion].forEach(ch => {
-      const op = document.createElement("option");
-      op.value = ch;
-      op.textContent = ch;
-      select.appendChild(op);
-    });
-  }
-
-  filtrarAdmin();
-});
-
-  async function cambiarEstado(id, estado) {
-  await db.collection("proyectos").doc(id).update({
-    estado
-  });
-
-  // actualiza cache local si existe
-  const p = proyectosCache.find(x => x.id === id);
-  if (p) p.estado = estado;
-
-  filtrarAdmin();
-}
-
-  async function toggleEstado(id, estadoActual) {
-  const nuevoEstado = estadoActual === "activo" ? "espera" : "activo";
-
-  await db.collection("proyectos").doc(id).update({
-    estado: nuevoEstado
-  });
-    const proyecto = proyectosCache.find(p => p.id === id);
-
-    if (proyecto) {
-      proyecto.estado = nuevoEstado;
-    }
-    filtrarAdmin();
-    
-}
-
-
-
-function renderGauge(valor) {
-
-  // ===== SI YA EXISTE =====
-  if (gaugeChart) {
-
-    gaugeChart.data.datasets[0].data = [
-      valor,
-      100 - valor
-    ];
-
-    gaugeChart.data.datasets[0].backgroundColor = [
-      valor >= 75 ? "#2ecc71" :
-      valor >= 50 ? "#f1c40f" :
-      "#e74c3c",
-      "#e5e7eb"
-    ];
-
-    gaugeChart.update();
-
-    return;
-  }
-
-  // ===== CREAR SOLO UNA VEZ =====
-  const canvas = document.getElementById("gaugeGeneral");
-
-if (!canvas) return;
-
-const ctx = canvas.getContext("2d");
-
-  gaugeChart = new Chart(ctx, {
-
-    type: "doughnut",
-
-    data: {
-      datasets: [{
-        data: [valor, 100 - valor],
-
-        backgroundColor: [
-          valor >= 75 ? "#2ecc71" :
-          valor >= 50 ? "#f1c40f" :
-          "#e74c3c",
-          "#e5e7eb"
-        ],
-
-        borderWidth: 0,
-        cutout: "75%"
-      }]
-    },
-
-    options: {
-
-      animation: false, // 🔥 mejora brutal
-
-      responsive: true,
-      rotation: -90,
-      circumference: 180,
-
-      plugins: {
-        legend: { display: false },
-        tooltip: { enabled: false }
-      }
-    }
-  });
-}
-let adminGauges = {};
-
-function renderGaugeAdmin(id, valor) {
-
-  // ===== SI YA EXISTE -> SOLO ACTUALIZA =====
-  if (adminGauges[id]) {
-
-    adminGauges[id].data.datasets[0].data = [
-      valor,
-      100 - valor
-    ];
-
-    adminGauges[id].data.datasets[0].backgroundColor = [
-      valor >= 75 ? "#2ecc71" :
-      valor >= 50 ? "#f1c40f" :
-      "#e74c3c",
-      "#e5e7eb"
-    ];
-
-    adminGauges[id].options.plugins.title.text =
-      valor.toFixed(1) + "%";
-
-    adminGauges[id].update();
-
-    return;
-  }
-
-  // ===== SI NO EXISTE -> CREAR =====
-  const canvas = document.getElementById(id);
-
-  if (!canvas) return;
-  
-  const ctx = canvas.getContext("2d");
-
-  adminGauges[id] = new Chart(ctx, {
-
-    type: "doughnut",
-
-    data: {
-      datasets: [{
-        data: [valor, 100 - valor],
-
-        backgroundColor: [
-          valor >= 75 ? "#2ecc71" :
-          valor >= 50 ? "#f1c40f" :
-          "#e74c3c",
-          "#e5e7eb"
-        ],
-
-        borderWidth: 0,
-        cutout: "75%"
-      }]
-    },
-
-    options: {
-      animation: false, // 🔥 mejora rendimiento
-
-      rotation: -90,
-      circumference: 180,
-
-      plugins: {
-        legend: { display: false },
-        tooltip: { enabled: false },
-
-        title: {
-          display: true,
-          text: valor.toFixed(1) + "%"
-        }
-      }
-    }
-  });
-}
-
-
-  
-function cargarChampionsPorSeccion(seccion) {
-
-  const container = document.getElementById("filtroChampion");
-
-  container.innerHTML = `
-    <button class="filtro-btn active"
-      onclick="setFiltroUser('champion','',this)">
-      Todos
-    </button>
-  `;
-
-  if (championsPorSeccion[seccion]) {
-
-    championsPorSeccion[seccion].forEach(ch => {
-
-      const btn = document.createElement("button");
-
-      btn.className = "filtro-btn";
-      btn.textContent = ch;
-
-      btn.onclick = function () {
-        setFiltroUser("champion", ch, this);
-      };
-
-      container.appendChild(btn);
-    });
-  }
-}
-
-
-  initApp();
-
-
-firebase.auth().onAuthStateChanged(user => {
-
-  // si hay sesión firebase
-  if (user) return;
-
-  // si existe localStorage continúa
-  if (UID && ROL) return;
-
-  // si no hay nada -> login
-  window.location.href = "login.html";
-});
-
-
-
+init();
 </script>
-
 </body>
 </html>
