@@ -739,7 +739,9 @@ await db.collection("proyectos").add({
 /* ===== SELECT USER ===== */
 async function cargarSelect() {
   try {
-    const snap = await db.collection("proyectos").get();
+    const snap = await db.collection("proyectos")
+  .limit(100)
+  .get();
 
     selectProyectoUser.innerHTML = "";
 
@@ -1225,9 +1227,14 @@ async function exportarExcel() {
   const projSnap = await db.collection("proyectos").get();
 
   // 👇 AQUÍ VA EL PASO 1 (también)
-  const histSnap = await db.collection("historial").get();
+  const histSnap = await db.collection("historial")
+  .orderBy("fecha", "desc")
+  .limit(500)
+  .get();
 
-  const usersSnap = await db.collection("users").get();
+  const usersSnap = await db.collection("users")
+  .limit(50)
+  .get();
 
   const mapaUsuarios = {};
   
@@ -1630,7 +1637,9 @@ async function eliminarProyecto(id) {
   }
 }
 async function cargarSelectHistorial() {
-  const snap = await db.collection("proyectos").get();
+  const snap = await db.collection("proyectos")
+  .limit(100)
+  .get();
   const select = document.getElementById("selectHistorialProyecto");
 
   select.innerHTML = "";
@@ -1731,9 +1740,10 @@ let chartHistorial;
 async function cargarHistorial(proyectoId) {
 
   const snap = await db.collection("historial")
-    .where("proyectoId", "==", proyectoId)
-    .orderBy("fecha")
-    .get();
+  .where("proyectoId", "==", proyectoId)
+  .orderBy("fecha", "desc")
+  .limit(20)
+  .get();
 
   const semanas = [];
   const general = [];
@@ -1830,8 +1840,10 @@ async function filtrarAdmin() {
 
   if (fechaFiltro) {
 
-    const histSnap = await db.collection("historial").get();
-
+    const histSnap = await db.collection("historial")
+  .orderBy("fecha", "desc")
+  .limit(100)
+  .get();
     const ultimaFecha = {};
 
     histSnap.forEach(doc => {
