@@ -1912,29 +1912,60 @@ document.getElementById("adminFiltroSeccion").addEventListener("change", () => {
 
 
 function renderGauge(valor) {
-  const ctx = document.getElementById("gaugeGeneral").getContext("2d");
 
-  if (gaugeChart) gaugeChart.destroy();
+  // ===== SI YA EXISTE =====
+  if (gaugeChart) {
+
+    gaugeChart.data.datasets[0].data = [
+      valor,
+      100 - valor
+    ];
+
+    gaugeChart.data.datasets[0].backgroundColor = [
+      valor >= 75 ? "#2ecc71" :
+      valor >= 50 ? "#f1c40f" :
+      "#e74c3c",
+      "#e5e7eb"
+    ];
+
+    gaugeChart.update();
+
+    return;
+  }
+
+  // ===== CREAR SOLO UNA VEZ =====
+  const ctx =
+    document.getElementById("gaugeGeneral")
+    .getContext("2d");
 
   gaugeChart = new Chart(ctx, {
+
     type: "doughnut",
+
     data: {
       datasets: [{
         data: [valor, 100 - valor],
+
         backgroundColor: [
           valor >= 75 ? "#2ecc71" :
           valor >= 50 ? "#f1c40f" :
           "#e74c3c",
           "#e5e7eb"
         ],
+
         borderWidth: 0,
         cutout: "75%"
       }]
     },
+
     options: {
+
+      animation: false, // 🔥 mejora brutal
+
       responsive: true,
       rotation: -90,
       circumference: 180,
+
       plugins: {
         legend: { display: false },
         tooltip: { enabled: false }
@@ -1942,35 +1973,66 @@ function renderGauge(valor) {
     }
   });
 }
-
 let adminGauges = {};
 
 function renderGaugeAdmin(id, valor) {
+
+  // ===== SI YA EXISTE -> SOLO ACTUALIZA =====
+  if (adminGauges[id]) {
+
+    adminGauges[id].data.datasets[0].data = [
+      valor,
+      100 - valor
+    ];
+
+    adminGauges[id].data.datasets[0].backgroundColor = [
+      valor >= 75 ? "#2ecc71" :
+      valor >= 50 ? "#f1c40f" :
+      "#e74c3c",
+      "#e5e7eb"
+    ];
+
+    adminGauges[id].options.plugins.title.text =
+      valor.toFixed(1) + "%";
+
+    adminGauges[id].update();
+
+    return;
+  }
+
+  // ===== SI NO EXISTE -> CREAR =====
   const ctx = document.getElementById(id).getContext("2d");
 
-  if (adminGauges[id]) adminGauges[id].destroy();
-
   adminGauges[id] = new Chart(ctx, {
+
     type: "doughnut",
+
     data: {
       datasets: [{
         data: [valor, 100 - valor],
+
         backgroundColor: [
           valor >= 75 ? "#2ecc71" :
           valor >= 50 ? "#f1c40f" :
           "#e74c3c",
           "#e5e7eb"
         ],
+
         borderWidth: 0,
         cutout: "75%"
       }]
     },
+
     options: {
+      animation: false, // 🔥 mejora rendimiento
+
       rotation: -90,
       circumference: 180,
+
       plugins: {
         legend: { display: false },
         tooltip: { enabled: false },
+
         title: {
           display: true,
           text: valor.toFixed(1) + "%"
