@@ -1363,27 +1363,6 @@ const championsPorSeccion = {
   "Resourcing": ["Gerardo Loredo"],
   "OH Cost Control": ["Carlos Perez"]
 };
-
-
-  /* ===== ACTUALIZAR CHAMPIONS DINAMICAMENTE  ===== */
-
-function cargarChampionsPorSeccion(seccion) {
-  const container = document.getElementById("filtroChampion");
-
-  container.innerHTML = `
-    <button class="filtro-btn active" onclick="setFiltroUser('champion','',this)">Todos</button>
-  `;
-
-  if (championsPorSeccion[seccion]) {
-    championsPorSeccion[seccion].forEach(ch => {
-      const btn = document.createElement("button");
-      btn.className = "filtro-btn";
-      btn.textContent = ch;
-      btn.onclick = (e) => setFiltroUser("champion", ch, btn);
-      container.appendChild(btn);
-    });
-  }
-}
   
 /* ===== FUNCION DE FILTRADO  ===== */
 function aplicarFiltros() {
