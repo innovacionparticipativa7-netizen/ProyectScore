@@ -1913,7 +1913,13 @@ document.getElementById("adminFiltroSeccion").addEventListener("change", () => {
   await db.collection("proyectos").doc(id).update({
     estado: nuevoEstado
   });
+    const proyecto = proyectosCache.find(p => p.id === id);
+
+    if (proyecto) {
+      proyecto.estado = nuevoEstado;
+    }
     filtrarAdmin();
+    
 }
 
 
