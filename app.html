@@ -561,7 +561,7 @@ body {
         </div>
 
         
-
+</div>
       <!-- INFO -->
       <div class="card">
         <p><b>Proyecto:</b> <span id="userNombreProyecto"></span></p>
@@ -2090,6 +2090,13 @@ function cargarChampionsPorSeccion(seccion) {
 
 
   initApp();
+
+
+  firebase.auth().onAuthStateChanged(user => {
+  if (!user) {
+    window.location.href = "login.html";
+  }
+});
 
 
 
