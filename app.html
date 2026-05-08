@@ -1557,7 +1557,7 @@ function validarDatos(row) {
 /* ===== PLANTILLA ===== */
   
 async function descargarPlantilla() {
-  await loadXLSX();
+  
 
   const plantilla = [
     {
@@ -1941,9 +1941,11 @@ function renderGauge(valor) {
   }
 
   // ===== CREAR SOLO UNA VEZ =====
-  const ctx =
-    document.getElementById("gaugeGeneral")
-    .getContext("2d");
+  const canvas = document.getElementById("gaugeGeneral");
+
+if (!canvas) return;
+
+const ctx = canvas.getContext("2d");
 
   gaugeChart = new Chart(ctx, {
 
