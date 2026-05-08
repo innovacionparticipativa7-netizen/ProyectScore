@@ -333,6 +333,13 @@ canvas { max-height: 240px; }
       </div>
     </div>
 
+    <div class="card">
+          <h3>Progreso Semanal</h3>
+          <label class="field-label">Proyecto</label>
+          <select id="selectHistorial" onchange="renderHistorial(this.value)"></select>
+          <div style="margin-top:12px"><canvas id="grafHistorial"></canvas></div>
+        </div>
+
     <div class="card" style="margin-bottom:16px">
       <h3>Proyectos (<span id="count-proyectos">0</span>)</h3>
       <div class="table-wrap">
@@ -349,12 +356,6 @@ canvas { max-height: 240px; }
       </div>
     </div>
 
-    <div class="card">
-      <h3>Progreso Semanal</h3>
-      <label class="field-label">Proyecto</label>
-      <select id="selectHistorial" onchange="renderHistorial(this.value)"></select>
-      <div style="margin-top:12px"><canvas id="grafHistorial"></canvas></div>
-    </div>
 
   </div>
 </div>
