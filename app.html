@@ -2092,10 +2092,16 @@ function cargarChampionsPorSeccion(seccion) {
   initApp();
 
 
-  firebase.auth().onAuthStateChanged(user => {
-  if (!user) {
-    window.location.href = "login.html";
-  }
+firebase.auth().onAuthStateChanged(user => {
+
+  // si hay sesión firebase
+  if (user) return;
+
+  // si existe localStorage continúa
+  if (UID && ROL) return;
+
+  // si no hay nada -> login
+  window.location.href = "login.html";
 });
 
 
