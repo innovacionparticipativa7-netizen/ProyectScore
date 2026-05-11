@@ -850,7 +850,7 @@ function exportarExcel() {
 
     rows.push({
       Semana:           meta.semana,
-      Fecha:            fechaRec,
+      Fecha:             `${String(fechaRec.getMonth()+1).padStart(2,'0')}/${String(fechaRec.getDate()).padStart(2,'0')}/${fechaRec.getFullYear()}`,
       Hora:             fechaRec.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'}),
       Proyecto:         meta.proyectoNombre || "–",
       Champion:         meta.champion       || "–",
@@ -906,7 +906,7 @@ function exportarHistorialCompleto() {
   const rows = STATE.historial.map(h => {
     const fo = h.fecha?.toDate ? h.fecha.toDate() : new Date(h.fecha || 0);
     return {
-      Fecha:            fo,
+      Fecha:             `${String(fo.getMonth()+1).padStart(2,'0')}/${String(fo.getDate()).padStart(2,'0')}/${fo.getFullYear()}`,
       Hora:             fo.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'}),
       Semana:           h.semana,
       Proyecto:         h.proyectoNombre || "–",
