@@ -850,7 +850,7 @@ function exportarExcel() {
 
     rows.push({
       Semana:           meta.semana,
-      Fecha:            fechaRec,                        // <-- Date nativo
+      Fecha:            fechaRec,
       Hora:             fechaRec.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'}),
       Proyecto:         meta.proyectoNombre || "–",
       Champion:         meta.champion       || "–",
@@ -874,11 +874,11 @@ function exportarExcel() {
   for (let R = 1; R <= range.e.r; R++) {
     const celda = ws[XLSX.utils.encode_cell({ r: R, c: 1 })]; // columna B = Fecha
     if (celda && celda.t === 'd') {
-      celda.z = 'dd/mm/yyyy';   // formato de fecha sin hora
+      celda.z = 'dd/mm/yyyy';
+      celda.v = Math.floor(celda.v); // ← elimina la hora (decimales del serial)
     }
   }
 
-  // Anchos de columna para que se vea bien
   ws['!cols'] = [
     { wch: 8  },  // Semana
     { wch: 14 },  // Fecha
@@ -906,7 +906,7 @@ function exportarHistorialCompleto() {
   const rows = STATE.historial.map(h => {
     const fo = h.fecha?.toDate ? h.fecha.toDate() : new Date(h.fecha || 0);
     return {
-      Fecha:            fo,                              // <-- Date nativo
+      Fecha:            fo,
       Hora:             fo.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'}),
       Semana:           h.semana,
       Proyecto:         h.proyectoNombre || "–",
@@ -924,7 +924,7 @@ function exportarHistorialCompleto() {
     };
   });
 
-  rows.sort((a, b) => b.Fecha - a.Fecha);   // ahora son Date, se comparan directo
+  rows.sort((a, b) => b.Fecha - a.Fecha);
 
   const ws = XLSX.utils.json_to_sheet(rows, { cellDates: true });
 
@@ -934,10 +934,10 @@ function exportarHistorialCompleto() {
     const celda = ws[XLSX.utils.encode_cell({ r: R, c: 0 })]; // columna A = Fecha
     if (celda && celda.t === 'd') {
       celda.z = 'dd/mm/yyyy';
+      celda.v = Math.floor(celda.v); // ← elimina la hora (decimales del serial)
     }
   }
 
-  // Anchos de columna
   ws['!cols'] = [
     { wch: 14 },  // Fecha
     { wch: 10 },  // Hora
