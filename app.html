@@ -12,7 +12,6 @@
 <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 
 <style>
-/* ===== RESET & TOKENS ===== */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
@@ -26,100 +25,50 @@
   --accent: #10b981;
   --accent2: #3b82f6;
   --danger: #ef4444;
-  --warn: #f59e0b;
   --radius: 14px;
   --shadow: 0 2px 12px rgba(0,0,0,0.07);
   --shadow-lg: 0 8px 30px rgba(0,0,0,0.10);
 }
 
-body {
-  font-family: 'Segoe UI', system-ui, sans-serif;
-  background: var(--bg);
-  color: var(--text);
-  font-size: 14px;
-  line-height: 1.5;
-}
+body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); font-size: 14px; line-height: 1.5; }
 
 #loading-overlay {
-  position: fixed; inset: 0;
-  background: rgba(255,255,255,0.92);
-  display: flex; flex-direction: column;
-  align-items: center; justify-content: center;
-  z-index: 9999;
-  gap: 16px;
+  position: fixed; inset: 0; background: rgba(255,255,255,0.93);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  z-index: 9999; gap: 14px;
 }
-.spinner {
-  width: 42px; height: 42px;
-  border: 4px solid var(--border);
-  border-top-color: var(--accent);
-  border-radius: 50%;
-  animation: spin 0.75s linear infinite;
-}
+.spinner { width: 40px; height: 40px; border: 4px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin .75s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 #loading-msg { color: var(--text-muted); font-size: 13px; }
 
-.header {
-  background: var(--primary);
-  color: #fff;
-  padding: 14px 20px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  position: sticky; top: 0; z-index: 100;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-}
-.header h2 { font-size: 16px; font-weight: 600; letter-spacing: 0.3px; }
+.header { background: var(--primary); color: #fff; padding: 14px 20px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
+.header h2 { font-size: 16px; font-weight: 600; }
 .header-right { display: flex; align-items: center; gap: 10px; }
-#badge-rol {
-  background: rgba(255,255,255,0.15);
-  padding: 3px 10px; border-radius: 20px; font-size: 12px;
-}
+#badge-rol { background: rgba(255,255,255,0.15); padding: 3px 10px; border-radius: 20px; font-size: 12px; }
 
 .container { padding: 16px; max-width: 1400px; margin: auto; }
-.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }
-.grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
+.grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
 
-.card {
-  background: var(--surface);
-  border-radius: var(--radius);
-  padding: 16px;
-  box-shadow: var(--shadow);
-  border: 1px solid var(--border);
-}
-.card h3 { font-size: 14px; font-weight: 600; margin-bottom: 12px; color: var(--text); }
+.card { background: var(--surface); border-radius: var(--radius); padding: 16px; box-shadow: var(--shadow); border: 1px solid var(--border); }
+.card h3 { font-size: 14px; font-weight: 600; margin-bottom: 12px; }
 
-button { border: none; border-radius: 10px; cursor: pointer; font-family: inherit; font-weight: 600; transition: opacity 0.15s, transform 0.1s; }
-button:active { transform: scale(0.97); }
-button:disabled { opacity: 0.5; cursor: not-allowed; }
+button { border: none; border-radius: 10px; cursor: pointer; font-family: inherit; font-weight: 600; transition: opacity .15s, transform .1s; }
+button:active { transform: scale(.97); }
+button:disabled { opacity: .5; cursor: not-allowed; }
 .btn { width: 100%; padding: 11px; background: linear-gradient(135deg, var(--accent), #059669); color: #fff; font-size: 14px; }
-.btn:hover:not(:disabled) { opacity: 0.9; }
+.btn:hover:not(:disabled) { opacity: .9; }
 .btn-sm { padding: 7px 14px; font-size: 12px; }
 .btn-secondary { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
 .btn-danger { background: var(--danger); color: #fff; }
 .btn-blue { background: var(--accent2); color: #fff; }
 
-input, select, textarea {
-  width: 100%; padding: 10px 12px;
-  border-radius: 10px; border: 1px solid var(--border);
-  background: var(--surface2); color: var(--text);
-  font-family: inherit; font-size: 14px;
-  transition: border-color 0.15s, box-shadow 0.15s;
-  outline: none;
-}
-input:focus, select:focus, textarea:focus {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgba(16,185,129,0.15);
-  background: #fff;
-}
+input, select, textarea { width: 100%; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--border); background: var(--surface2); color: var(--text); font-family: inherit; font-size: 14px; transition: border-color .15s, box-shadow .15s; outline: none; }
+input:focus, select:focus, textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(16,185,129,.15); background: #fff; }
 label.field-label { display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 4px; margin-top: 10px; }
 textarea { min-height: 70px; resize: vertical; }
 
 .filtro-group { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
-.filtro-btn {
-  padding: 6px 13px; border-radius: 20px;
-  border: 1px solid var(--border); background: var(--surface2);
-  font-size: 12px; font-weight: 500; color: var(--text-muted);
-}
+.filtro-btn { padding: 6px 13px; border-radius: 20px; border: 1px solid var(--border); background: var(--surface2); font-size: 12px; font-weight: 500; color: var(--text-muted); }
 .filtro-btn.active { background: var(--primary); color: #fff; border-color: var(--primary); }
 .filtro-btn:hover:not(.active) { background: #e5e7eb; }
 
@@ -127,18 +76,19 @@ textarea { min-height: 70px; resize: vertical; }
 table { width: 100%; border-collapse: collapse; font-size: 13px; }
 thead tr { background: var(--primary); color: #fff; }
 th, td { padding: 10px 12px; text-align: left; }
-th { font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: 0.4px; }
+th { font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: .4px; }
 tbody tr { border-bottom: 1px solid var(--border); }
 tbody tr:last-child { border-bottom: none; }
 tbody tr:hover { background: var(--surface2); }
 td { vertical-align: middle; }
 
 .semaforo { width: 18px; height: 18px; border-radius: 50%; display: inline-block; }
-.luz { width: 32px; height: 32px; border-radius: 50%; margin: 6px auto; box-shadow: 0 2px 6px rgba(0,0,0,0.2); }
+.luz { width: 32px; height: 32px; border-radius: 50%; margin: 6px auto; box-shadow: 0 2px 6px rgba(0,0,0,.2); }
 
 .gauge-wrap { text-align: center; }
-.gauge-wrap canvas { max-height: 200px; }
-.gauge-pct { font-size: 32px; font-weight: 700; margin-top: 6px; }
+.gauge-wrap canvas { max-height: 180px; }
+.gauge-pct { font-size: 28px; font-weight: 700; margin-top: 4px; }
+#pct-admin-general { font-size: 36px; }
 
 .resumen-semaforos { display: flex; gap: 10px; justify-content: space-around; }
 .sem-item { flex: 1; background: var(--surface2); border-radius: 12px; padding: 12px; text-align: center; font-size: 12px; font-weight: 600; color: var(--text-muted); }
@@ -149,49 +99,42 @@ td { vertical-align: middle; }
   background: var(--surface2); padding: 11px 13px;
   border-radius: 10px; margin-bottom: 6px; cursor: pointer;
   border: 1px solid transparent;
-  transition: background 0.12s, border-color 0.12s;
+  transition: background .12s, border-color .12s;
+  text-align: left;
 }
 .check-opciones label:hover { background: #e0e7ff; border-color: #c7d2fe; }
+.check-opciones input { width: auto; flex-shrink: 0; }
+.check-opciones span { text-align: left; line-height: 1.4; }
 .check-opciones input[type=radio]:checked + span,
 .check-opciones input[type=checkbox]:checked + span { color: var(--accent); font-weight: 600; }
-.check-section-title { font-weight: 600; font-size: 13px; margin: 14px 0 6px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+.check-section-title { font-weight: 600; font-size: 13px; margin: 14px 0 6px; color: var(--text-muted); text-transform: uppercase; letter-spacing: .5px; text-align: left; }
 
-.save-bar {
-  position: sticky; bottom: 0; left: 0; right: 0;
-  background: var(--surface); padding: 12px 16px;
-  box-shadow: 0 -2px 12px rgba(0,0,0,0.08);
-  border-top: 1px solid var(--border);
-}
+.save-bar { position: sticky; bottom: 0; left: 0; right: 0; background: var(--surface); padding: 12px 16px; box-shadow: 0 -2px 12px rgba(0,0,0,.08); border-top: 1px solid var(--border); }
 
-.estado-badge {
-  display: inline-flex; align-items: center; gap: 5px;
-  padding: 3px 10px; border-radius: 20px; font-size: 12px; font-weight: 600;
-  cursor: pointer; user-select: none;
-}
+.estado-badge { display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; cursor: pointer; user-select: none; }
 .estado-activo { background: #d1fae5; color: #065f46; }
 .estado-espera { background: #fef3c7; color: #92400e; }
 
 .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 12px; }
 @media (max-width: 500px) { .form-grid { grid-template-columns: 1fr; } }
 
-#notif {
-  position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%);
-  background: var(--primary); color: #fff; padding: 10px 22px;
-  border-radius: 30px; font-size: 13px; font-weight: 600;
-  box-shadow: var(--shadow-lg); z-index: 9998;
-  opacity: 0; pointer-events: none; transition: opacity 0.25s;
-}
+#notif { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); background: var(--primary); color: #fff; padding: 10px 22px; border-radius: 30px; font-size: 13px; font-weight: 600; box-shadow: var(--shadow-lg); z-index: 9998; opacity: 0; pointer-events: none; transition: opacity .25s; white-space: nowrap; }
 #notif.show { opacity: 1; }
 
 canvas { max-height: 240px; }
-#grafGENERAL { max-height: 300px; }
+
+.hist-tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
+.hist-tab { padding: 5px 12px; border-radius: 20px; border: 1px solid var(--border); background: var(--surface2); font-size: 12px; cursor: pointer; font-weight: 500; color: var(--text-muted); }
+.hist-tab.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+
+.hist-table-wrap { overflow-x: auto; max-height: 340px; overflow-y: auto; border-radius: 10px; border: 1px solid var(--border); margin-top: 10px; }
+.hist-table-wrap table { font-size: 12px; }
 
 @media (max-width: 600px) {
   .container { padding: 10px; }
   .filtro-group { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 4px; -webkit-overflow-scrolling: touch; }
   .filtro-btn { flex: 0 0 auto; white-space: nowrap; }
-  .header { padding: 12px; }
-  .header h2 { font-size: 14px; }
+  .grid-3 { grid-template-columns: 1fr; }
   th, td { padding: 8px 10px; font-size: 12px; }
 }
 </style>
@@ -200,12 +143,11 @@ canvas { max-height: 240px; }
 
 <div id="loading-overlay">
   <div class="spinner"></div>
-  <div id="loading-msg">Iniciando...</div>
+  <div id="loading-msg">Cargando datos...</div>
 </div>
-
 <div id="notif"></div>
 
-<!-- ===================== ADMIN ===================== -->
+<!-- ==================== ADMIN ==================== -->
 <div id="vista-admin" style="display:none">
 
   <div class="header">
@@ -221,47 +163,35 @@ canvas { max-height: 240px; }
     <div class="card" style="margin-bottom:16px">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
         <h3 style="margin:0">Gestión de Proyectos</h3>
-        <div style="display:flex;gap:8px">
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
           <button class="btn-sm btn-secondary" onclick="toggleForm()">＋ Nuevo</button>
-          <button class="btn-sm btn-blue" onclick="exportarExcel()">📥 Exportar Excel</button>
+          <button class="btn-sm btn-blue" onclick="exportarExcel()">📥 Exportar Consolidado</button>
+          <button class="btn-sm btn-secondary" onclick="exportarHistorialCompleto()">📋 Exportar Historial</button>
         </div>
       </div>
 
       <div id="formNuevo" style="display:none;margin-top:12px;border-top:1px solid var(--border);padding-top:12px">
         <div class="form-grid">
-          <div>
-            <label class="field-label">Nombre del proyecto</label>
-            <input id="nombreProyecto" placeholder="Nombre">
-          </div>
-          <div>
-            <label class="field-label">Tier</label>
+          <div><label class="field-label">Nombre</label><input id="nombreProyecto" placeholder="Nombre del proyecto"></div>
+          <div><label class="field-label">Tier</label>
             <select id="tierProyecto">
               <option value="">Selecciona Tier</option>
               <option>Tier 1</option><option>Tier 2</option><option>Tier 3</option>
               <option>Tier 4</option><option>Tier 5</option><option>Tier 6</option>
             </select>
           </div>
-          <div>
-            <label class="field-label">Sección</label>
+          <div><label class="field-label">Sección</label>
             <select id="seccionProyecto" onchange="onSeccionChange()">
               <option value="">Selecciona Sección</option>
               <option>Buy to Make</option><option>DTC</option>
-              <option>Material Optimization</option><option>OH Cost Control</option>
-              <option>Resourcing</option>
+              <option>Material Optimization</option><option>OH Cost Control</option><option>Resourcing</option>
             </select>
           </div>
-          <div>
-            <label class="field-label">Champion</label>
+          <div><label class="field-label">Champion</label>
             <select id="championProyecto"><option value="">Primero elige sección</option></select>
           </div>
-          <div>
-            <label class="field-label">Sponsor</label>
-            <input id="sponsorProyecto" placeholder="Sponsor">
-          </div>
-          <div>
-            <label class="field-label">Owner</label>
-            <input id="ownerProyecto" placeholder="Owner">
-          </div>
+          <div><label class="field-label">Sponsor</label><input id="sponsorProyecto" placeholder="Sponsor"></div>
+          <div><label class="field-label">Owner</label><input id="ownerProyecto" placeholder="Owner"></div>
         </div>
         <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
           <button class="btn" onclick="crearProyecto()" style="flex:1;min-width:120px">Crear Proyecto</button>
@@ -277,12 +207,13 @@ canvas { max-height: 240px; }
       </div>
     </div>
 
+    <!-- MEJORA 1: General arriba solo, KPI+GANTT+PDCA abajo en 3 columnas -->
+    <div class="card gauge-wrap" style="margin-bottom:12px">
+      <h3>Calificación General (Promedio)</h3>
+      <canvas id="grafGENERAL" style="max-height:220px"></canvas>
+      <div id="pct-admin-general" class="gauge-pct">–</div>
+    </div>
     <div class="grid-3" style="margin-bottom:16px">
-      <div class="card gauge-wrap">
-        <h3>General</h3>
-        <canvas id="grafGENERAL"></canvas>
-        <div id="pct-admin-general" class="gauge-pct">–</div>
-      </div>
       <div class="card gauge-wrap">
         <h3>KPI</h3>
         <canvas id="grafKPI"></canvas>
@@ -300,50 +231,48 @@ canvas { max-height: 240px; }
       </div>
     </div>
 
+    <!-- FILTROS -->
     <div class="card" style="margin-bottom:16px">
       <h3>Filtros</h3>
       <div class="form-grid">
-        <div>
-          <label class="field-label">Tier</label>
+        <div><label class="field-label">Tier</label>
           <select id="adminFiltroTier" onchange="renderTabla()">
             <option value="">Todos los Tier</option>
             <option>Tier 1</option><option>Tier 2</option><option>Tier 3</option>
             <option>Tier 4</option><option>Tier 5</option><option>Tier 6</option>
           </select>
         </div>
-        <div>
-          <label class="field-label">Sección</label>
+        <div><label class="field-label">Sección</label>
           <select id="adminFiltroSeccion" onchange="onAdminSeccionChange()">
             <option value="">Todas las Secciones</option>
             <option>Buy to Make</option><option>DTC</option>
-            <option>Material Optimization</option><option>OH Cost Control</option>
-            <option>Resourcing</option>
+            <option>Material Optimization</option><option>OH Cost Control</option><option>Resourcing</option>
           </select>
         </div>
-        <div>
-          <label class="field-label">Champion</label>
+        <div><label class="field-label">Champion</label>
           <select id="adminFiltroChampion" onchange="renderTabla()">
             <option value="">Todos los Champions</option>
           </select>
         </div>
-        <div>
-          <label class="field-label">Fecha de calificación</label>
+        <div><label class="field-label">Fecha de calificación</label>
           <input type="date" id="adminFecha" onchange="renderTabla()">
         </div>
       </div>
     </div>
 
-    <div class="card">
-          <h3>Progreso Semanal</h3>
-          <label class="field-label">Proyecto</label>
-          <select id="selectHistorial" onchange="renderHistorial(this.value)"></select>
-          <div style="margin-top:12px"><canvas id="grafHistorial"></canvas></div>
-        </div>
+    <!-- MEJORA 2: Historial justo debajo de filtros, reactivo -->
+    <div class="card" style="margin-bottom:16px">
+      <h3>📈 Progreso Semanal por Proyecto</h3>
+      <p style="font-size:12px;color:var(--text-muted);margin-bottom:10px">Los proyectos respetan los filtros activos. Selecciona uno para ver su avance.</p>
+      <div class="hist-tabs" id="histTabs"></div>
+      <canvas id="grafHistorial" style="max-height:260px"></canvas>
+    </div>
 
+    <!-- TABLA -->
     <div class="card" style="margin-bottom:16px">
       <h3>Proyectos (<span id="count-proyectos">0</span>)</h3>
       <div class="table-wrap">
-        <table id="tablaProyectos">
+        <table>
           <thead>
             <tr>
               <th>Estado</th><th>Proyecto</th><th>Champion</th>
@@ -356,11 +285,41 @@ canvas { max-height: 240px; }
       </div>
     </div>
 
+    <!-- MEJORA 4: Historial completo de todos los usuarios -->
+    <div class="card" style="margin-bottom:16px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+        <h3 style="margin:0">📋 Historial de Evaluaciones (Todos los usuarios)</h3>
+        <button class="btn-sm btn-blue" onclick="exportarHistorialCompleto()">📥 Exportar</button>
+      </div>
+      <div class="form-grid" style="margin-bottom:10px">
+        <div><label class="field-label">Filtrar proyecto</label>
+          <select id="histFiltroProyecto" onchange="renderTablaHistorial()">
+            <option value="">Todos los proyectos</option>
+          </select>
+        </div>
+        <div><label class="field-label">Filtrar usuario</label>
+          <select id="histFiltroUsuario" onchange="renderTablaHistorial()">
+            <option value="">Todos los usuarios</option>
+          </select>
+        </div>
+      </div>
+      <div class="hist-table-wrap">
+        <table>
+          <thead>
+            <tr style="background:var(--primary);color:#fff">
+              <th>Fecha</th><th>Hora</th><th>Semana</th><th>Proyecto</th><th>Champion</th>
+              <th>Usuario</th><th>KPI%</th><th>GANTT%</th><th>PDCA%</th><th>General%</th>
+            </tr>
+          </thead>
+          <tbody id="tablaHistorialBody"></tbody>
+        </table>
+      </div>
+    </div>
 
   </div>
 </div>
 
-<!-- ===================== USER ===================== -->
+<!-- ==================== USER ==================== -->
 <div id="vista-user" style="display:none">
 
   <div class="header">
@@ -400,7 +359,7 @@ canvas { max-height: 240px; }
       <div class="card" style="margin-bottom:12px">
         <label class="field-label">Proyecto activo</label>
         <select id="selectProyectoUser" onchange="seleccionarProyecto(this.value)"></select>
-        <div id="infoProyecto" style="margin-top:10px;display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:13px">
+        <div style="margin-top:10px;display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:13px">
           <div><b>Champion:</b> <span id="infoChampion">-</span></div>
           <div><b>Sponsor:</b> <span id="infoSponsor">-</span></div>
           <div><b>Owner:</b> <span id="infoOwner">-</span></div>
@@ -408,82 +367,60 @@ canvas { max-height: 240px; }
         </div>
       </div>
 
+      <!-- Gauge: muestra estado actual guardado del proyecto -->
       <div class="card gauge-wrap" style="margin-bottom:12px;padding:20px">
-        <h3 style="font-size:16px">Calificación General</h3>
-        <canvas id="gaugeGeneral" style="max-height:220px"></canvas>
+        <h3 style="font-size:15px">Estado actual del proyecto</h3>
+        <p style="font-size:12px;color:var(--text-muted);margin-bottom:8px">Última calificación registrada</p>
+        <canvas id="gaugeGeneral" style="max-height:200px"></canvas>
         <div id="porc-general" class="gauge-pct">0%</div>
       </div>
 
       <div class="card" style="margin-bottom:12px">
         <div class="resumen-semaforos">
-          <div class="sem-item">
-            KPI
-            <div id="sem-kpi" class="luz" style="background:#808080"></div>
-            <div id="porc-kpi" class="pct">0%</div>
-          </div>
-          <div class="sem-item">
-            GANTT
-            <div id="sem-plan" class="luz" style="background:#808080"></div>
-            <div id="porc-gantt" class="pct">0%</div>
-          </div>
-          <div class="sem-item">
-            PDCA
-            <div id="sem-pdca" class="luz" style="background:#808080"></div>
-            <div id="porc-pdca" class="pct">0%</div>
-          </div>
+          <div class="sem-item">KPI<div id="sem-kpi" class="luz" style="background:#808080"></div><div id="porc-kpi" class="pct">0%</div></div>
+          <div class="sem-item">GANTT<div id="sem-plan" class="luz" style="background:#808080"></div><div id="porc-gantt" class="pct">0%</div></div>
+          <div class="sem-item">PDCA<div id="sem-pdca" class="luz" style="background:#808080"></div><div id="porc-pdca" class="pct">0%</div></div>
         </div>
       </div>
 
+      <!-- MEJORA 6: Formulario siempre en blanco -->
       <div class="card" style="margin-bottom:70px">
+        <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:10px;padding:10px 14px;margin-bottom:14px;font-size:12px;color:#92400e">
+          ℹ️ El formulario inicia en blanco para cada nueva evaluación. Las gráficas muestran la última evaluación guardada del proyecto.
+        </div>
 
         <p class="check-section-title">KPI</p>
         <div class="check-opciones">
-          <label><input type="radio" name="kpi" value="en_tiempo" onchange="setValor('kpi','en_tiempo')">
-            <span>KPI current vs target comply (100%)</span></label>
-          <label><input type="radio" name="kpi" value="cumple" onchange="setValor('kpi','cumple')">
-            <span>KPI current vs target 80% – 75%</span></label>
-          <label><input type="radio" name="kpi" value="mitigado" onchange="setValor('kpi','mitigado')">
-            <span>KPI current vs target 70% – 50%</span></label>
-          <label><input type="radio" name="kpi" value="retraso_kpi" onchange="setValor('kpi','retraso_kpi')">
-            <span>KPI current vs target menos del 49%</span></label>
-          <label><input type="radio" name="kpi" value="na" onchange="setValor('kpi','na')">
-            <span>No presentó</span></label>
+          <label><input type="radio" name="kpi" value="en_tiempo" onchange="setValor('kpi','en_tiempo')"><span>KPI current vs target comply (100%)</span></label>
+          <label><input type="radio" name="kpi" value="cumple" onchange="setValor('kpi','cumple')"><span>KPI current vs target 80% – 75%</span></label>
+          <label><input type="radio" name="kpi" value="mitigado" onchange="setValor('kpi','mitigado')"><span>KPI current vs target 70% – 50%</span></label>
+          <label><input type="radio" name="kpi" value="retraso_kpi" onchange="setValor('kpi','retraso_kpi')"><span>KPI current vs target menos del 49%</span></label>
+          <label><input type="radio" name="kpi" value="na" onchange="setValor('kpi','na')"><span>No presentó</span></label>
         </div>
         <label class="field-label">Comentario KPI</label>
         <textarea id="comentarioKPI" placeholder="Detalle o justificación..."></textarea>
 
         <p class="check-section-title">GANTT</p>
         <div class="check-opciones">
-          <label><input type="radio" name="gantt" value="valor" onchange="setValor('gantt','valor')">
-            <span>GANTT sin retrasos (100%)</span></label>
-          <label><input type="radio" name="gantt" value="retraso_gantt" onchange="setValor('gantt','retraso_gantt')">
-            <span>GANTT con 2 acciones retrasadas</span></label>
-          <label><input type="radio" name="gantt" value="r2" onchange="setValor('gantt','r2')">
-            <span>GANTT con más de 3 acciones retrasadas</span></label>
-          <label><input type="radio" name="gantt" value="r3" onchange="setValor('gantt','r3')">
-            <span>GANTT con más de 4 acciones retrasadas</span></label>
-          <label><input type="radio" name="gantt" value="na" onchange="setValor('gantt','na')">
-            <span>No presentó</span></label>
+          <label><input type="radio" name="gantt" value="valor" onchange="setValor('gantt','valor')"><span>GANTT sin retrasos (100%)</span></label>
+          <label><input type="radio" name="gantt" value="retraso_gantt" onchange="setValor('gantt','retraso_gantt')"><span>GANTT con 2 acciones retrasadas</span></label>
+          <label><input type="radio" name="gantt" value="r2" onchange="setValor('gantt','r2')"><span>GANTT con más de 3 acciones retrasadas</span></label>
+          <label><input type="radio" name="gantt" value="r3" onchange="setValor('gantt','r3')"><span>GANTT con más de 4 acciones retrasadas</span></label>
+          <label><input type="radio" name="gantt" value="na" onchange="setValor('gantt','na')"><span>No presentó</span></label>
         </div>
         <label class="field-label">Comentario GANTT</label>
         <textarea id="comentarioGANTT" placeholder="Avances o retrasos..."></textarea>
 
         <p class="check-section-title">PDCA</p>
         <div class="check-opciones">
-          <label><input type="checkbox" value="6pack" onchange="togglePDCA(this)">
-            <span>6-pack disponible</span></label>
-          <label><input type="checkbox" value="kpi" onchange="togglePDCA(this)">
-            <span>KPI presentado y actualizado</span></label>
-          <label><input type="checkbox" value="gantt" onchange="togglePDCA(this)">
-            <span>GANTT presentado y actualizado</span></label>
-          <label><input type="checkbox" value="psr" onchange="togglePDCA(this)">
-            <span>PSR presentado y actualizado</span></label>
-          <label><input type="checkbox" value="iplayers" onchange="togglePDCA(this)">
-            <span>Tiene IP mejorado (+25%)</span></label>
+          <label><input type="checkbox" value="6pack" onchange="togglePDCA(this)"><span>6-pack disponible</span></label>
+          <label><input type="checkbox" value="kpi" onchange="togglePDCA(this)"><span>KPI presentado y actualizado</span></label>
+          <label><input type="checkbox" value="gantt" onchange="togglePDCA(this)"><span>GANTT presentado y actualizado</span></label>
+          <label><input type="checkbox" value="psr" onchange="togglePDCA(this)"><span>PSR presentado y actualizado</span></label>
+          <label><input type="checkbox" value="iplayers" onchange="togglePDCA(this)"><span>Tiene IP mejorado (+25%)</span></label>
         </div>
         <label class="field-label">Comentario PDCA</label>
         <textarea id="comentarioPDCA" placeholder="Notas de implementación..."></textarea>
-
       </div>
 
     </div>
@@ -509,126 +446,96 @@ const STATE = {
   historial: [],
   proyectoActual: null,
   proyectoActualId: null,
+  evalTemp: null,
   filtrosUser: { tier: "", seccion: "", champion: "" },
   gaugeUser: null,
   gaugesAdmin: {},
-  chartHistorial: null
+  chartHistorial: null,
+  histTabActivo: null
 };
 
 const CHAMPIONS = {
-  "Buy to Make": ["Antonio Aguilar"],
-  "DTC": ["Jaime Castro"],
+  "Buy to Make":           ["Antonio Aguilar"],
+  "DTC":                   ["Jaime Castro"],
   "Material Optimization": ["Fabian Perez", "Jorge Millan"],
-  "Resourcing": ["Gerardo Loredo"],
-  "OH Cost Control": ["Carlos Perez"]
+  "Resourcing":            ["Gerardo Loredo"],
+  "OH Cost Control":       ["Carlos Perez"]
 };
 
-if (!STATE.uid || !STATE.rol) {
-  localStorage.clear();
-  window.location.href = "login.html";
-}
+if (!STATE.uid || !STATE.rol) { localStorage.clear(); window.location.href = "login.html"; }
 
 function calcKPI(v)   { return ({en_tiempo:100,cumple:75,mitigado:50,retraso_kpi:0,na:0}[v] ?? 0); }
 function calcGANTT(v) { return ({valor:100,retraso_gantt:75,r2:50,r3:0,na:0}[v] ?? 0); }
 function calcPDCA(ev) {
   if (!Array.isArray(ev?.pdca)) return 0;
-  const normal = ev.pdca.filter(x => x !== "iplayers").length;
-  return Math.min(normal * 25 + (ev.pdca.includes("iplayers") ? 25 : 0), 100);
+  const n = ev.pdca.filter(x => x !== "iplayers").length;
+  return Math.min(n * 25 + (ev.pdca.includes("iplayers") ? 25 : 0), 100);
 }
-function calcGeneral(ev) {
-  return (calcKPI(ev.kpi) + calcGANTT(ev.gantt) + calcPDCA(ev)) / 3;
-}
+function calcGeneral(ev) { return (calcKPI(ev.kpi) + calcGANTT(ev.gantt) + calcPDCA(ev)) / 3; }
 
 function colorSemaforo(tipo, v) {
-  if (!v || (Array.isArray(v) && v.length === 0)) return "#9ca3af";
-  if (tipo === "kpi") {
-    if (v === "en_tiempo") return "#16a34a";
-    if (v === "cumple")    return "#86efac";
-    if (v === "mitigado")  return "#fbbf24";
-    if (v === "retraso_kpi") return "#f97316";
-    return "#9ca3af";
-  }
-  if (tipo === "gantt") {
-    if (v === "valor")         return "#16a34a";
-    if (v === "retraso_gantt") return "#fbbf24";
-    if (v === "r2")            return "#f97316";
-    if (v === "r3")            return "#ef4444";
-    return "#9ca3af";
-  }
+  if (!v || (Array.isArray(v) && !v.length)) return "#9ca3af";
+  if (tipo === "kpi")  { return {en_tiempo:"#16a34a",cumple:"#86efac",mitigado:"#fbbf24",retraso_kpi:"#f97316"}[v] || "#9ca3af"; }
+  if (tipo === "gantt"){ return {valor:"#16a34a",retraso_gantt:"#fbbf24",r2:"#f97316",r3:"#ef4444"}[v] || "#9ca3af"; }
   if (tipo === "pdca") {
-    const p = calcPDCA({ pdca: v });
-    if (p >= 100) return "#16a34a";
-    if (p >= 75)  return "#86efac";
-    if (p >= 50)  return "#fbbf24";
-    if (p >= 25)  return "#f97316";
-    return "#ef4444";
+    const p = calcPDCA({pdca:v});
+    if (p>=100) return "#16a34a"; if (p>=75) return "#86efac";
+    if (p>=50)  return "#fbbf24"; if (p>=25) return "#f97316"; return "#ef4444";
   }
   return "#9ca3af";
 }
-
-function gaugeColor(v) {
-  if (v >= 75) return "#10b981";
-  if (v >= 50) return "#f59e0b";
-  return "#ef4444";
-}
-
+function gaugeColor(v) { return v >= 75 ? "#10b981" : v >= 50 ? "#f59e0b" : "#ef4444"; }
 function getSemana(fecha) {
-  const d = new Date(fecha);
-  const ini = new Date(d.getFullYear(), 0, 1);
-  return Math.ceil(((d - ini) / 86400000 + ini.getDay() + 1) / 7);
+  const d = new Date(fecha), ini = new Date(d.getFullYear(),0,1);
+  return Math.ceil(((d-ini)/86400000 + ini.getDay()+1)/7);
 }
-
 function fechaISO(ts) {
   if (!ts) return null;
   const d = ts.toDate ? ts.toDate() : new Date(ts);
-  return d.toISOString().slice(0, 10);
+  return d.toISOString().slice(0,10);
 }
 
-function notif(msg, error = false) {
+function notif(msg, error=false) {
   const el = document.getElementById("notif");
-  el.textContent = msg;
-  el.style.background = error ? "#ef4444" : "#1f2937";
-  el.classList.add("show");
-  setTimeout(() => el.classList.remove("show"), 2500);
+  el.textContent = msg; el.style.background = error ? "#ef4444" : "#1f2937";
+  el.classList.add("show"); setTimeout(()=>el.classList.remove("show"), 2500);
 }
-
-function setLoading(show, msg = "Cargando...") {
-  const el = document.getElementById("loading-overlay");
+function setLoading(show, msg="Cargando...") {
   document.getElementById("loading-msg").textContent = msg;
-  el.style.display = show ? "flex" : "none";
+  document.getElementById("loading-overlay").style.display = show ? "flex" : "none";
 }
 
 async function init() {
-  setLoading(true, "Cargando proyectos...");
+  setLoading(true, "Cargando datos...");
   try {
     const [snapP, snapH] = await Promise.all([
       db.collection("proyectos").limit(200).get(),
-      db.collection("historial").orderBy("fecha","desc").limit(500).get()
+      db.collection("historial").orderBy("fecha","desc").limit(1000).get()
     ]);
-
     STATE.proyectos = snapP.docs.map(d => ({
       id: d.id, ...d.data(),
       evaluacion: d.data().evaluacion || { kpi:"", gantt:"", pdca:[] }
     }));
-
     STATE.historial = snapH.docs.map(d => ({ id: d.id, ...d.data() }));
 
     if (STATE.rol === "admin") {
       document.getElementById("vista-admin").style.display = "block";
       document.getElementById("badge-rol").textContent = "Admin";
       renderTabla();
-      poblarSelectHistorial();
+      poblarFiltrosHistorial();
     } else {
       document.getElementById("vista-user").style.display = "block";
       poblarSelectUser();
     }
-  } catch (err) {
+  } catch(err) {
     console.error(err);
-    notif("Error al cargar datos: " + err.message, true);
+    notif("Error al cargar: " + err.message, true);
   } finally {
     setLoading(false);
   }
 }
+
+// ===== ADMIN =====
 
 function toggleForm() {
   const f = document.getElementById("formNuevo");
@@ -642,26 +549,20 @@ async function crearProyecto() {
   const champion = document.getElementById("championProyecto").value;
   const sponsor  = document.getElementById("sponsorProyecto").value.trim();
   const owner    = document.getElementById("ownerProyecto").value.trim();
-  if (!nombre || !tier || !seccion || !champion || !sponsor || !owner)
-    return notif("Completa todos los campos", true);
-  setLoading(true, "Creando proyecto...");
+  if (!nombre||!tier||!seccion||!champion||!sponsor||!owner) return notif("Completa todos los campos",true);
+  setLoading(true,"Creando...");
   try {
     const ref = await db.collection("proyectos").add({
-      nombre, tier, seccion, champion, sponsor, owner,
-      estado: "activo", createdAt: new Date(),
-      evaluacion: { kpi:"", gantt:"", pdca:[], comentarios:{kpi:"",gantt:"",pdca:""} }
+      nombre,tier,seccion,champion,sponsor,owner,estado:"activo",createdAt:new Date(),
+      evaluacion:{kpi:"",gantt:"",pdca:[],comentarios:{kpi:"",gantt:"",pdca:""}}
     });
-    STATE.proyectos.push({
-      id: ref.id, nombre, tier, seccion, champion, sponsor, owner,
-      estado:"activo", evaluacion:{ kpi:"", gantt:"", pdca:[] }
-    });
-    ["nombreProyecto","sponsorProyecto","ownerProyecto"].forEach(id => document.getElementById(id).value = "");
-    ["tierProyecto","seccionProyecto"].forEach(id => document.getElementById(id).value = "");
-    document.getElementById("championProyecto").innerHTML = '<option value="">Primero elige sección</option>';
-    renderTabla();
-    poblarSelectHistorial();
-    notif("Proyecto creado ✅");
-  } catch(err) { notif("Error: " + err.message, true); }
+    STATE.proyectos.push({id:ref.id,nombre,tier,seccion,champion,sponsor,owner,
+      estado:"activo",evaluacion:{kpi:"",gantt:"",pdca:[]}});
+    ["nombreProyecto","sponsorProyecto","ownerProyecto"].forEach(id=>document.getElementById(id).value="");
+    ["tierProyecto","seccionProyecto"].forEach(id=>document.getElementById(id).value="");
+    document.getElementById("championProyecto").innerHTML='<option value="">Primero elige sección</option>';
+    renderTabla(); poblarFiltrosHistorial(); notif("Proyecto creado ✅");
+  } catch(err) { notif("Error: "+err.message,true); }
   finally { setLoading(false); }
 }
 
@@ -669,31 +570,28 @@ function onSeccionChange() {
   const sec = document.getElementById("seccionProyecto").value;
   const sel = document.getElementById("championProyecto");
   sel.innerHTML = '<option value="">Selecciona Champion</option>';
-  (CHAMPIONS[sec] || []).forEach(ch => {
-    const o = document.createElement("option");
-    o.value = o.textContent = ch;
-    sel.appendChild(o);
+  (CHAMPIONS[sec]||[]).forEach(ch => {
+    const o=document.createElement("option"); o.value=o.textContent=ch; sel.appendChild(o);
   });
 }
 
 function getProyectosFiltrados() {
-  const tier     = document.getElementById("adminFiltroTier").value;
-  const seccion  = document.getElementById("adminFiltroSeccion").value;
-  const champion = document.getElementById("adminFiltroChampion").value;
-  const fecha    = document.getElementById("adminFecha").value;
+  const tier    = document.getElementById("adminFiltroTier").value;
+  const seccion = document.getElementById("adminFiltroSeccion").value;
+  const champ   = document.getElementById("adminFiltroChampion").value;
+  const fecha   = document.getElementById("adminFecha").value;
   let lista = [...STATE.proyectos];
-  if (tier)     lista = lista.filter(p => p.tier === tier);
-  if (seccion)  lista = lista.filter(p => p.seccion === seccion);
-  if (champion) lista = lista.filter(p => p.champion === champion);
+  if (tier)    lista = lista.filter(p=>p.tier===tier);
+  if (seccion) lista = lista.filter(p=>p.seccion===seccion);
+  if (champ)   lista = lista.filter(p=>p.champion===champ);
   if (fecha) {
-    const ultimaFecha = {};
+    const uf = {};
     STATE.historial.forEach(h => {
-      if (!h.proyectoId || !h.fecha) return;
+      if (!h.proyectoId||!h.fecha) return;
       const f = fechaISO(h.fecha);
-      if (!ultimaFecha[h.proyectoId] || f > ultimaFecha[h.proyectoId])
-        ultimaFecha[h.proyectoId] = f;
+      if (!uf[h.proyectoId] || f > uf[h.proyectoId]) uf[h.proyectoId] = f;
     });
-    lista = lista.filter(p => ultimaFecha[p.id] === fecha);
+    lista = lista.filter(p => uf[p.id] === fecha);
   }
   return lista;
 }
@@ -705,16 +603,14 @@ function renderTabla() {
   const frag = document.createDocumentFragment();
   tbody.innerHTML = "";
   lista.forEach(p => {
-    const ev = p.evaluacion || {};
+    const ev = p.evaluacion||{};
     const tr = document.createElement("tr");
-    const esActivo = p.estado !== "espera";
+    const act = p.estado !== "espera";
     tr.innerHTML = `
-      <td><span class="estado-badge ${esActivo ? 'estado-activo' : 'estado-espera'}" onclick="toggleEstado('${p.id}')">
-        ${esActivo ? "🟢 Activo" : "🟡 Espera"}</span></td>
-      <td><b>${p.nombre || "–"}</b><br><small style="color:var(--text-muted)">${p.tier || ""} · ${p.seccion || ""}</small></td>
-      <td>${p.champion || "–"}</td>
-      <td>${p.sponsor || "–"}</td>
-      <td>${p.owner || "–"}</td>
+      <td><span class="estado-badge ${act?'estado-activo':'estado-espera'}" onclick="toggleEstado('${p.id}')">
+        ${act?"🟢 Activo":"🟡 Espera"}</span></td>
+      <td><b>${p.nombre||"–"}</b><br><small style="color:var(--text-muted)">${p.tier||""} · ${p.seccion||""}</small></td>
+      <td>${p.champion||"–"}</td><td>${p.sponsor||"–"}</td><td>${p.owner||"–"}</td>
       <td><div class="semaforo" style="background:${colorSemaforo('kpi',ev.kpi)}" title="${calcKPI(ev.kpi)}%"></div></td>
       <td><div class="semaforo" style="background:${colorSemaforo('gantt',ev.gantt)}" title="${calcGANTT(ev.gantt)}%"></div></td>
       <td><div class="semaforo" style="background:${colorSemaforo('pdca',ev.pdca)}" title="${calcPDCA(ev)}%"></div></td>
@@ -723,89 +619,97 @@ function renderTabla() {
   });
   tbody.appendChild(frag);
   actualizarGraficasAdmin(lista);
+  actualizarHistTabs(lista);
 }
 
 function onAdminSeccionChange() {
   const sec = document.getElementById("adminFiltroSeccion").value;
   const sel = document.getElementById("adminFiltroChampion");
   sel.innerHTML = '<option value="">Todos los Champions</option>';
-  (CHAMPIONS[sec] || []).forEach(ch => {
-    const o = document.createElement("option");
-    o.value = o.textContent = ch;
-    sel.appendChild(o);
+  (CHAMPIONS[sec]||[]).forEach(ch => {
+    const o=document.createElement("option"); o.value=o.textContent=ch; sel.appendChild(o);
   });
   renderTabla();
 }
 
 async function toggleEstado(id) {
-  const p = STATE.proyectos.find(x => x.id === id);
+  const p = STATE.proyectos.find(x=>x.id===id);
   if (!p) return;
-  const nuevo = p.estado === "activo" ? "espera" : "activo";
+  const nuevo = p.estado==="activo" ? "espera" : "activo";
   try {
-    await db.collection("proyectos").doc(id).update({ estado: nuevo });
-    p.estado = nuevo;
-    renderTabla();
-  } catch(err) { notif("Error: " + err.message, true); }
+    await db.collection("proyectos").doc(id).update({estado:nuevo});
+    p.estado = nuevo; renderTabla();
+  } catch(err) { notif("Error: "+err.message,true); }
 }
 
 async function eliminarProyecto(id) {
-  if (!confirm("¿Eliminar este proyecto? Esta acción es irreversible.")) return;
+  if (!confirm("¿Eliminar este proyecto?")) return;
   try {
     await db.collection("proyectos").doc(id).delete();
-    STATE.proyectos = STATE.proyectos.filter(p => p.id !== id);
-    renderTabla();
-    poblarSelectHistorial();
-    notif("Proyecto eliminado");
-  } catch(err) { notif("Error: " + err.message, true); }
+    STATE.proyectos = STATE.proyectos.filter(p=>p.id!==id);
+    renderTabla(); poblarFiltrosHistorial(); notif("Eliminado");
+  } catch(err) { notif("Error: "+err.message,true); }
 }
 
 function actualizarGraficasAdmin(lista) {
-  const activos = lista.filter(p => p.estado !== "espera");
-  const n = activos.length || 1;
-  let sumKPI=0, sumGANTT=0, sumPDCA=0, sumG=0;
-  activos.forEach(p => {
-    const ev = p.evaluacion || {};
-    sumKPI   += calcKPI(ev.kpi);
-    sumGANTT += calcGANTT(ev.gantt);
-    sumPDCA  += calcPDCA(ev);
-    sumG     += calcGeneral(ev);
-  });
-  renderGaugeAdmin("grafGENERAL", sumG/n,    "pct-admin-general");
-  renderGaugeAdmin("grafKPI",     sumKPI/n,  "pct-admin-kpi");
-  renderGaugeAdmin("grafGANTT",   sumGANTT/n,"pct-admin-gantt");
-  renderGaugeAdmin("grafPDCA",    sumPDCA/n, "pct-admin-pdca");
+  const act = lista.filter(p=>p.estado!=="espera");
+  const n = act.length || 1;
+  let sK=0,sG=0,sP=0,sGen=0;
+  act.forEach(p=>{ const ev=p.evaluacion||{}; sK+=calcKPI(ev.kpi); sG+=calcGANTT(ev.gantt); sP+=calcPDCA(ev); sGen+=calcGeneral(ev); });
+  renderGaugeAdmin("grafGENERAL", sGen/n, "pct-admin-general");
+  renderGaugeAdmin("grafKPI",     sK/n,   "pct-admin-kpi");
+  renderGaugeAdmin("grafGANTT",   sG/n,   "pct-admin-gantt");
+  renderGaugeAdmin("grafPDCA",    sP/n,   "pct-admin-pdca");
 }
 
-function renderGaugeAdmin(canvasId, valor, pctId) {
-  const v = Math.round(valor * 10) / 10;
-  const col = gaugeColor(v);
-  if (STATE.gaugesAdmin[canvasId]) {
-    const c = STATE.gaugesAdmin[canvasId];
-    c.data.datasets[0].data = [v, 100 - v];
+function renderGaugeAdmin(cid, valor, pctId) {
+  const v = Math.round(valor*10)/10, col = gaugeColor(v);
+  if (STATE.gaugesAdmin[cid]) {
+    const c = STATE.gaugesAdmin[cid];
+    c.data.datasets[0].data = [v, 100-v];
     c.data.datasets[0].backgroundColor[0] = col;
     c.update("none");
   } else {
-    const canvas = document.getElementById(canvasId);
+    const canvas = document.getElementById(cid);
     if (!canvas) return;
-    STATE.gaugesAdmin[canvasId] = new Chart(canvas.getContext("2d"), {
-      type: "doughnut",
-      data: { datasets: [{ data: [v, 100-v], backgroundColor:[col,"#e5e7eb"], borderWidth:0, cutout:"75%" }] },
-      options: { animation:false, responsive:true, rotation:-90, circumference:180,
-        plugins:{ legend:{display:false}, tooltip:{enabled:false} } }
+    STATE.gaugesAdmin[cid] = new Chart(canvas.getContext("2d"), {
+      type:"doughnut",
+      data:{ datasets:[{data:[v,100-v],backgroundColor:[col,"#e5e7eb"],borderWidth:0,cutout:"75%"}] },
+      options:{ animation:false,responsive:true,rotation:-90,circumference:180,
+        plugins:{legend:{display:false},tooltip:{enabled:false}} }
     });
   }
-  if (pctId) document.getElementById(pctId).textContent = v.toFixed(1) + "%";
+  if (pctId) document.getElementById(pctId).textContent = v.toFixed(1)+"%";
 }
 
-function poblarSelectHistorial() {
-  const sel = document.getElementById("selectHistorial");
-  sel.innerHTML = "";
-  STATE.proyectos.forEach(p => {
-    const o = document.createElement("option");
-    o.value = p.id; o.textContent = p.nombre;
-    sel.appendChild(o);
+// MEJORA 2: Historial tabs reactivos
+function actualizarHistTabs(proyectosFiltrados) {
+  const cont = document.getElementById("histTabs");
+  cont.innerHTML = "";
+  if (!proyectosFiltrados.length) {
+    cont.innerHTML = '<span style="font-size:12px;color:var(--text-muted)">No hay proyectos con los filtros actuales</span>';
+    if (STATE.chartHistorial) {
+      STATE.chartHistorial.data.labels=[];
+      STATE.chartHistorial.data.datasets[0].data=[];
+      STATE.chartHistorial.update("none");
+    }
+    return;
+  }
+  proyectosFiltrados.slice(0,20).forEach((p, i) => {
+    const btn = document.createElement("button");
+    btn.className = "hist-tab" + (i===0 ? " active" : "");
+    btn.textContent = p.nombre;
+    btn.dataset.id = p.id;
+    btn.onclick = function() {
+      document.querySelectorAll(".hist-tab").forEach(b=>b.classList.remove("active"));
+      this.classList.add("active");
+      STATE.histTabActivo = p.id;
+      renderHistorial(p.id);
+    };
+    cont.appendChild(btn);
   });
-  if (STATE.proyectos.length) renderHistorial(STATE.proyectos[0].id);
+  STATE.histTabActivo = proyectosFiltrados[0].id;
+  renderHistorial(proyectosFiltrados[0].id);
 }
 
 function renderHistorial(proyectoId) {
@@ -816,9 +720,26 @@ function renderHistorial(proyectoId) {
       const fa = a.fecha?.toDate ? a.fecha.toDate() : new Date(a.fecha||0);
       const fb = b.fecha?.toDate ? b.fecha.toDate() : new Date(b.fecha||0);
       return fa - fb;
-    }).slice(0, 20);
-  const labels = hist.map(h => "Sem " + h.semana);
-  const data   = hist.map(h => h.general || 0);
+    }).slice(0,50);
+
+  // MEJORA 5: agrupar por semana, una entrada por usuario (la última), luego promediar
+  const porSemana = {};
+  hist.forEach(h => {
+    const k = h.semana || getSemana(h.fecha?.toDate ? h.fecha.toDate() : new Date(h.fecha||0));
+    if (!porSemana[k]) porSemana[k] = {};
+    const uid = h.usuario || "?";
+    const fa = h.fecha?.toDate ? h.fecha.toDate() : new Date(h.fecha||0);
+    if (!porSemana[k][uid] || fa > (porSemana[k][uid]._fa||0))
+      porSemana[k][uid] = { ...h, _fa: fa };
+  });
+
+  const semanas = Object.keys(porSemana).sort((a,b)=>+a-+b);
+  const labels  = semanas.map(s => "Sem "+s);
+  const data    = semanas.map(s => {
+    const vals = Object.values(porSemana[s]).map(e => e.general||0);
+    return +(vals.reduce((a,b)=>a+b,0)/vals.length).toFixed(1);
+  });
+
   const canvas = document.getElementById("grafHistorial");
   if (!canvas) return;
   if (STATE.chartHistorial) {
@@ -828,61 +749,164 @@ function renderHistorial(proyectoId) {
     return;
   }
   STATE.chartHistorial = new Chart(canvas.getContext("2d"), {
-    type: "line",
-    data: { labels, datasets: [{ label:"General %", data, tension:0.35,
-      borderColor:"#10b981", backgroundColor:"rgba(16,185,129,0.08)", fill:true, pointRadius:4 }] },
-    options: { animation:false, responsive:true,
-      scales:{ y:{min:0,max:100} }, plugins:{ legend:{display:true} } }
+    type:"line",
+    data:{ labels, datasets:[{
+      label:"General % (promedio evaluadores)",
+      data, tension:0.35,
+      borderColor:"#10b981", backgroundColor:"rgba(16,185,129,0.08)",
+      fill:true, pointRadius:5
+    }]},
+    options:{ animation:false, responsive:true,
+      scales:{ y:{min:0,max:100} },
+      plugins:{ legend:{display:true} }
+    }
   });
 }
 
-function exportarExcel() {
-  if (!STATE.proyectos.length) return notif("Sin proyectos para exportar", true);
-  const ultimoHist = {};
+// MEJORA 4: Tabla historial completo
+function poblarFiltrosHistorial() {
+  const selP = document.getElementById("histFiltroProyecto");
+  const selU = document.getElementById("histFiltroUsuario");
+  selP.innerHTML = '<option value="">Todos los proyectos</option>';
+  selU.innerHTML = '<option value="">Todos los usuarios</option>';
+  const proySet = new Set(), userSet = new Set();
   STATE.historial.forEach(h => {
-    const id = h.proyectoId;
-    if (!id) return;
-    const fa = h.fecha?.toDate ? h.fecha.toDate() : new Date(h.fecha||0);
-    const fb = ultimoHist[id]?.fecha?.toDate ? ultimoHist[id].fecha.toDate() : new Date(0);
-    if (fa > fb) ultimoHist[id] = h;
+    if (h.proyectoId && h.proyectoNombre)
+      proySet.add(JSON.stringify({id:h.proyectoId,nombre:h.proyectoNombre}));
+    if (h.usuarioNombre) userSet.add(h.usuarioNombre);
   });
-  const rows = STATE.proyectos.map(p => {
-    const ev = p.evaluacion || {};
-    const h  = ultimoHist[p.id] || {};
-    const fechaObj = h.fecha ? (h.fecha.toDate ? h.fecha.toDate() : new Date(h.fecha)) : null;
+  [...proySet].forEach(s => {
+    const {id,nombre} = JSON.parse(s);
+    const o = document.createElement("option"); o.value=id; o.textContent=nombre; selP.appendChild(o);
+  });
+  [...userSet].forEach(u => {
+    const o = document.createElement("option"); o.value=u; o.textContent=u; selU.appendChild(o);
+  });
+  renderTablaHistorial();
+}
+
+function renderTablaHistorial() {
+  const filP = document.getElementById("histFiltroProyecto").value;
+  const filU = document.getElementById("histFiltroUsuario").value;
+  let lista = [...STATE.historial];
+  if (filP) lista = lista.filter(h=>h.proyectoId===filP);
+  if (filU) lista = lista.filter(h=>h.usuarioNombre===filU);
+  lista.sort((a,b) => {
+    const fa = a.fecha?.toDate ? a.fecha.toDate() : new Date(a.fecha||0);
+    const fb = b.fecha?.toDate ? b.fecha.toDate() : new Date(b.fecha||0);
+    return fb - fa;
+  });
+  const tbody = document.getElementById("tablaHistorialBody");
+  const frag = document.createDocumentFragment();
+  tbody.innerHTML = "";
+  lista.slice(0,200).forEach(h => {
+    const fo = h.fecha?.toDate ? h.fecha.toDate() : new Date(h.fecha||0);
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${fo.toLocaleDateString()}</td>
+      <td>${fo.toLocaleTimeString()}</td>
+      <td>Sem ${h.semana||"–"}</td>
+      <td>${h.proyectoNombre||"–"}</td>
+      <td>${h.champion||"–"}</td>
+      <td>${h.usuarioNombre||h.usuario||"–"}</td>
+      <td>${h.kpi??0}%</td>
+      <td>${h.gantt??0}%</td>
+      <td>${h.pdca??0}%</td>
+      <td><b>${(h.general||0).toFixed(1)}%</b></td>`;
+    frag.appendChild(tr);
+  });
+  tbody.appendChild(frag);
+}
+
+// MEJORA 5: Exportar consolidado promediado por semana/proyecto/evaluadores
+function exportarExcel() {
+  if (!STATE.proyectos.length) return notif("Sin datos",true);
+  const consolidado = {};
+  STATE.historial.forEach(h => {
+    const sem = h.semana || getSemana(h.fecha?.toDate ? h.fecha.toDate() : new Date(h.fecha||0));
+    const key = `${h.proyectoId}_${sem}`;
+    if (!consolidado[key]) consolidado[key] = { meta:{}, usuarios:{} };
+    consolidado[key].meta = {
+      proyectoId:h.proyectoId, proyectoNombre:h.proyectoNombre,
+      champion:h.champion, seccion:h.seccion, tier:h.tier, semana:sem
+    };
+    const uid = h.usuario||"?";
+    const fa  = h.fecha?.toDate ? h.fecha.toDate() : new Date(h.fecha||0);
+    if (!consolidado[key].usuarios[uid] || fa > (consolidado[key].usuarios[uid]._fecha))
+      consolidado[key].usuarios[uid] = { ...h, _fecha: fa };
+  });
+
+  const rows = [];
+  Object.values(consolidado).forEach(({ meta, usuarios }) => {
+    const evals = Object.values(usuarios);
+    const n = evals.length || 1;
+    const promKPI     = +(evals.reduce((s,e)=>s+(e.kpi||0),0)/n).toFixed(1);
+    const promGANTT   = +(evals.reduce((s,e)=>s+(e.gantt||0),0)/n).toFixed(1);
+    const promPDCA    = +(evals.reduce((s,e)=>s+(e.pdca||0),0)/n).toFixed(1);
+    const promGeneral = +(evals.reduce((s,e)=>s+(e.general||0),0)/n).toFixed(2);
+    const evaluadores = evals.map(e=>e.usuarioNombre||e.usuario||"?").join(" / ");
+    const fechaRec    = evals.sort((a,b)=>b._fecha-a._fecha)[0]._fecha;
+    rows.push({
+      Semana:           meta.semana,
+      Fecha:            fechaRec.toLocaleDateString(),
+      Hora:             fechaRec.toLocaleTimeString(),
+      Proyecto:         meta.proyectoNombre||"–",
+      Champion:         meta.champion||"–",
+      Seccion:          meta.seccion||"–",
+      Tier:             meta.tier||"–",
+      Evaluadores:      evaluadores,
+      Num_Evaluadores:  n,
+      KPI_Promedio:     promKPI,
+      GANTT_Promedio:   promGANTT,
+      PDCA_Promedio:    promPDCA,
+      General_Promedio: promGeneral
+    });
+  });
+  rows.sort((a,b) => b.Semana - a.Semana);
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows), "Consolidado");
+  XLSX.writeFile(wb, `Consolidado_${new Date().toISOString().slice(0,10)}.xlsx`);
+  notif("Consolidado exportado ✅");
+}
+
+// MEJORA 4: Exportar historial completo
+function exportarHistorialCompleto() {
+  const rows = STATE.historial.map(h => {
+    const fo = h.fecha?.toDate ? h.fecha.toDate() : new Date(h.fecha||0);
     return {
-      Proyecto: p.nombre||"–", Champion: p.champion||"–", Seccion: p.seccion||"–",
-      Tier: p.tier||"–", Estado: p.estado||"activo",
-      Fecha: fechaObj ? fechaObj.toLocaleDateString() : "–",
-      Hora:  fechaObj ? fechaObj.toLocaleTimeString()  : "–",
-      KPI_pct: calcKPI(ev.kpi), GANTT_pct: calcGANTT(ev.gantt),
-      PDCA_pct: calcPDCA(ev), General_pct: +calcGeneral(ev).toFixed(2),
-      Comentario_KPI:   ev.comentarios?.kpi   || h.comentariosKPI   || "",
-      Comentario_GANTT: ev.comentarios?.gantt  || h.comentariosGANTT || "",
-      Comentario_PDCA:  ev.comentarios?.pdca   || h.comentariosPDCA  || ""
+      Fecha:    fo.toLocaleDateString(),
+      Hora:     fo.toLocaleTimeString(),
+      Semana:   h.semana,
+      Proyecto: h.proyectoNombre||"–",
+      Champion: h.champion||"–",
+      Seccion:  h.seccion||"–",
+      Tier:     h.tier||"–",
+      Usuario:  h.usuarioNombre||h.usuario||"–",
+      KPI:      h.kpi??0,
+      GANTT:    h.gantt??0,
+      PDCA:     h.pdca??0,
+      General:  +(h.general||0).toFixed(2),
+      Comentario_KPI:   h.comentariosKPI||"",
+      Comentario_GANTT: h.comentariosGANTT||"",
+      Comentario_PDCA:  h.comentariosPDCA||""
     };
   });
-  const histRows = STATE.historial.map(h => ({
-    Proyecto: h.proyectoNombre||h.proyectoId, Champion: h.champion||"–",
-    Seccion: h.seccion||"–", Tier: h.tier||"–", Semana: h.semana,
-    Fecha: h.fecha ? (h.fecha.toDate ? h.fecha.toDate().toLocaleDateString() : "–") : "–",
-    KPI: h.kpi, GANTT: h.gantt, PDCA: h.pdca,
-    General: h.general?.toFixed ? +h.general.toFixed(2) : h.general,
-    Usuario: h.usuarioNombre||h.usuario||"–"
-  }));
+  rows.sort((a,b) => new Date(b.Fecha+' '+b.Hora) - new Date(a.Fecha+' '+a.Hora));
   const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows),     "Estado_Final");
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(histRows), "Historial");
-  XLSX.writeFile(wb, `Proyectos_${new Date().toISOString().slice(0,10)}.xlsx`);
-  notif("Excel exportado ✅");
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows), "Historial_Completo");
+  XLSX.writeFile(wb, `Historial_${new Date().toISOString().slice(0,10)}.xlsx`);
+  notif("Historial exportado ✅");
 }
+
+// ===== USER =====
 
 function poblarSelectUser() { renderSelectUser(); }
 
 function setFiltroUser(tipo, valor, el) {
   STATE.filtrosUser[tipo] = valor;
-  const container = document.getElementById(`filtro${tipo.charAt(0).toUpperCase()+tipo.slice(1)}`);
-  if (container) container.querySelectorAll(".filtro-btn").forEach(b => b.classList.remove("active"));
+  const cont = document.getElementById(`filtro${tipo.charAt(0).toUpperCase()+tipo.slice(1)}`);
+  if (cont) cont.querySelectorAll(".filtro-btn").forEach(b=>b.classList.remove("active"));
   if (el) el.classList.add("active");
   renderSelectUser();
 }
@@ -890,204 +914,212 @@ function setFiltroUser(tipo, valor, el) {
 function poblarChampionFiltros(seccion) {
   const cont = document.getElementById("filtroChampion");
   cont.innerHTML = `<button class="filtro-btn active" onclick="setFiltroUser('champion','',this)">Todos</button>`;
-  const champions = seccion ? (CHAMPIONS[seccion]||[]) : [...new Set(STATE.proyectos.map(p=>p.champion).filter(Boolean))];
-  champions.forEach(ch => {
+  const champs = seccion ? (CHAMPIONS[seccion]||[]) : [...new Set(STATE.proyectos.map(p=>p.champion).filter(Boolean))];
+  champs.forEach(ch => {
     const btn = document.createElement("button");
-    btn.className = "filtro-btn";
-    btn.textContent = ch;
-    btn.onclick = function(){ setFiltroUser("champion", ch, this); };
+    btn.className="filtro-btn"; btn.textContent=ch;
+    btn.onclick = function(){ setFiltroUser("champion",ch,this); };
     cont.appendChild(btn);
   });
 }
 
 function renderSelectUser() {
-  const { tier, seccion, champion } = STATE.filtrosUser;
-  let lista = STATE.proyectos.filter(p => p.estado !== "espera");
-  if (tier)     lista = lista.filter(p => p.tier === tier);
-  if (seccion)  lista = lista.filter(p => p.seccion === seccion);
-  if (champion) lista = lista.filter(p => p.champion === champion);
+  const {tier,seccion,champion} = STATE.filtrosUser;
+  let lista = STATE.proyectos.filter(p=>p.estado!=="espera");
+  if (tier)     lista = lista.filter(p=>p.tier===tier);
+  if (seccion)  lista = lista.filter(p=>p.seccion===seccion);
+  if (champion) lista = lista.filter(p=>p.champion===champion);
   const sel = document.getElementById("selectProyectoUser");
   sel.innerHTML = "";
   if (!lista.length) {
-    sel.innerHTML = '<option value="">Sin proyectos</option>';
-    ["infoChampion","infoSponsor","infoOwner","infoSeccion"].forEach(id => document.getElementById(id).textContent="–");
+    sel.innerHTML='<option value="">Sin proyectos</option>';
+    ["infoChampion","infoSponsor","infoOwner","infoSeccion"].forEach(id=>document.getElementById(id).textContent="–");
     return;
   }
   lista.forEach(p => {
-    const o = document.createElement("option");
-    o.value = p.id; o.textContent = p.nombre;
-    sel.appendChild(o);
+    const o=document.createElement("option"); o.value=p.id; o.textContent=p.nombre; sel.appendChild(o);
   });
   seleccionarProyecto(lista[0].id);
 }
 
 function seleccionarProyecto(id) {
-  const p = STATE.proyectos.find(x => x.id === id);
+  const p = STATE.proyectos.find(x=>x.id===id);
   if (!p) return;
   STATE.proyectoActualId = id;
-  STATE.proyectoActual   = JSON.parse(JSON.stringify(p));
+  STATE.proyectoActual   = p;
   document.getElementById("infoChampion").textContent = p.champion||"–";
   document.getElementById("infoSponsor").textContent  = p.sponsor ||"–";
   document.getElementById("infoOwner").textContent    = p.owner   ||"–";
   document.getElementById("infoSeccion").textContent  = p.seccion ||"–";
-  const com = p.evaluacion?.comentarios || {};
-  document.getElementById("comentarioKPI").value   = com.kpi   ||"";
-  document.getElementById("comentarioGANTT").value = com.gantt ||"";
-  document.getElementById("comentarioPDCA").value  = com.pdca  ||"";
-  marcarRadios(p.evaluacion);
-  renderSemaforos();
+
+  // MEJORA 6: siempre en blanco
+  STATE.evalTemp = { kpi:"", gantt:"", pdca:[] };
+  limpiarFormulario();
+
+  // Gauges muestran última evaluación guardada
+  renderSemaforosDesdeProyecto(p.evaluacion);
 }
 
-function marcarRadios(ev) {
+function limpiarFormulario() {
+  document.querySelectorAll('input[name="kpi"], input[name="gantt"]').forEach(r=>r.checked=false);
+  document.querySelectorAll('.check-opciones input[type="checkbox"]').forEach(c=>c.checked=false);
+  ["comentarioKPI","comentarioGANTT","comentarioPDCA"].forEach(id=>document.getElementById(id).value="");
+}
+
+function renderSemaforosDesdeProyecto(ev) {
   if (!ev) return;
-  ["kpi","gantt"].forEach(tipo => {
-    document.querySelectorAll(`input[name="${tipo}"]`).forEach(r => { r.checked = r.value === ev[tipo]; });
-  });
-  document.querySelectorAll('.check-opciones input[type="checkbox"]').forEach(c => {
-    c.checked = Array.isArray(ev.pdca) && ev.pdca.includes(c.value);
-  });
-}
-
-function setValor(tipo, valor) {
-  if (!STATE.proyectoActual) return;
-  STATE.proyectoActual.evaluacion[tipo] = valor;
-  renderSemaforos();
-}
-
-function togglePDCA(checkbox) {
-  if (!STATE.proyectoActual) return;
-  const ev = STATE.proyectoActual.evaluacion;
-  if (!Array.isArray(ev.pdca)) ev.pdca = [];
-  if (checkbox.checked) {
-    if (!ev.pdca.includes(checkbox.value)) ev.pdca.push(checkbox.value);
-  } else {
-    ev.pdca = ev.pdca.filter(v => v !== checkbox.value);
-  }
-  renderSemaforos();
-}
-
-function renderSemaforos() {
-  const p = STATE.proyectoActual;
-  if (!p) return;
-  const ev = p.evaluacion;
   document.getElementById("sem-kpi").style.background  = colorSemaforo("kpi",  ev.kpi);
   document.getElementById("sem-plan").style.background = colorSemaforo("gantt",ev.gantt);
   document.getElementById("sem-pdca").style.background = colorSemaforo("pdca", ev.pdca);
-  document.getElementById("porc-kpi").textContent   = calcKPI(ev.kpi) + "%";
-  document.getElementById("porc-gantt").textContent = calcGANTT(ev.gantt) + "%";
-  document.getElementById("porc-pdca").textContent  = calcPDCA(ev) + "%";
-  document.getElementById("porc-general").textContent = Math.round(calcGeneral(ev)) + "%";
-  renderGaugeUser(calcGeneral(ev));
+  document.getElementById("porc-kpi").textContent   = calcKPI(ev.kpi)+"%";
+  document.getElementById("porc-gantt").textContent = calcGANTT(ev.gantt)+"%";
+  document.getElementById("porc-pdca").textContent  = calcPDCA(ev)+"%";
+  const gen = calcGeneral(ev);
+  document.getElementById("porc-general").textContent = Math.round(gen)+"%";
+  renderGaugeUser(gen);
+}
+
+function setValor(tipo, valor) {
+  if (!STATE.evalTemp) return;
+  STATE.evalTemp[tipo] = valor;
+  renderSemaforosDesdeProyecto(STATE.evalTemp);
+}
+
+function togglePDCA(checkbox) {
+  if (!STATE.evalTemp) return;
+  if (!Array.isArray(STATE.evalTemp.pdca)) STATE.evalTemp.pdca=[];
+  if (checkbox.checked) {
+    if (!STATE.evalTemp.pdca.includes(checkbox.value)) STATE.evalTemp.pdca.push(checkbox.value);
+  } else {
+    STATE.evalTemp.pdca = STATE.evalTemp.pdca.filter(v=>v!==checkbox.value);
+  }
+  renderSemaforosDesdeProyecto(STATE.evalTemp);
 }
 
 function renderGaugeUser(valor) {
-  const v = Math.round(valor * 10) / 10;
-  const col = gaugeColor(v);
+  const v = Math.round(valor*10)/10, col = gaugeColor(v);
   const canvas = document.getElementById("gaugeGeneral");
   if (!canvas) return;
   if (STATE.gaugeUser) {
-    STATE.gaugeUser.data.datasets[0].data = [v, 100-v];
-    STATE.gaugeUser.data.datasets[0].backgroundColor[0] = col;
-    STATE.gaugeUser.update("none");
-    return;
+    STATE.gaugeUser.data.datasets[0].data=[v,100-v];
+    STATE.gaugeUser.data.datasets[0].backgroundColor[0]=col;
+    STATE.gaugeUser.update("none"); return;
   }
-  STATE.gaugeUser = new Chart(canvas.getContext("2d"), {
-    type: "doughnut",
-    data: { datasets: [{ data:[v,100-v], backgroundColor:[col,"#e5e7eb"], borderWidth:0, cutout:"78%" }] },
-    options: { animation:false, responsive:true, rotation:-90, circumference:180,
-      plugins:{ legend:{display:false}, tooltip:{enabled:false} } }
+  STATE.gaugeUser = new Chart(canvas.getContext("2d"),{
+    type:"doughnut",
+    data:{datasets:[{data:[v,100-v],backgroundColor:[col,"#e5e7eb"],borderWidth:0,cutout:"78%"}]},
+    options:{animation:false,responsive:true,rotation:-90,circumference:180,
+      plugins:{legend:{display:false},tooltip:{enabled:false}}}
   });
 }
 
 async function guardar() {
-  if (!STATE.proyectoActualId || !STATE.proyectoActual)
-    return notif("Selecciona un proyecto", true);
+  if (!STATE.proyectoActualId||!STATE.evalTemp) return notif("Selecciona un proyecto",true);
+  if (!STATE.evalTemp.kpi && !STATE.evalTemp.gantt && !STATE.evalTemp.pdca.length)
+    return notif("Completa al menos un campo antes de guardar",true);
+
   const btn = document.getElementById("btnGuardar");
-  btn.disabled = true; btn.textContent = "Guardando...";
-  const ev = STATE.proyectoActual.evaluacion;
-  ev.comentarios = {
-    kpi:   document.getElementById("comentarioKPI").value,
-    gantt: document.getElementById("comentarioGANTT").value,
-    pdca:  document.getElementById("comentarioPDCA").value
+  btn.disabled=true; btn.textContent="Guardando...";
+
+  const ev = {
+    ...STATE.evalTemp,
+    comentarios:{
+      kpi:   document.getElementById("comentarioKPI").value,
+      gantt: document.getElementById("comentarioGANTT").value,
+      pdca:  document.getElementById("comentarioPDCA").value
+    }
   };
+
   try {
     const now = new Date();
-    await db.collection("proyectos").doc(STATE.proyectoActualId).update({ evaluacion: ev, fechaCalificacion: now });
+    await db.collection("proyectos").doc(STATE.proyectoActualId).update({ evaluacion:ev, fechaCalificacion:now });
+
     const histEntry = {
-      proyectoId: STATE.proyectoActualId, proyectoNombre: STATE.proyectoActual.nombre,
-      champion: STATE.proyectoActual.champion||"–", seccion: STATE.proyectoActual.seccion||"–",
-      tier: STATE.proyectoActual.tier||"–", usuario: STATE.uid,
+      proyectoId:     STATE.proyectoActualId,
+      proyectoNombre: STATE.proyectoActual.nombre,
+      champion: STATE.proyectoActual.champion||"–",
+      seccion:  STATE.proyectoActual.seccion ||"–",
+      tier:     STATE.proyectoActual.tier    ||"–",
+      usuario:       STATE.uid,
       usuarioNombre: firebase.auth().currentUser?.displayName||firebase.auth().currentUser?.email||"–",
-      fecha: now, semana: getSemana(now),
-      kpi: calcKPI(ev.kpi), gantt: calcGANTT(ev.gantt), pdca: calcPDCA(ev), general: calcGeneral(ev),
-      comentariosKPI: ev.comentarios.kpi, comentariosGANTT: ev.comentarios.gantt, comentariosPDCA: ev.comentarios.pdca
+      fecha:  now,
+      semana: getSemana(now),
+      kpi:    calcKPI(ev.kpi),
+      gantt:  calcGANTT(ev.gantt),
+      pdca:   calcPDCA(ev),
+      general:calcGeneral(ev),
+      comentariosKPI:   ev.comentarios.kpi,
+      comentariosGANTT: ev.comentarios.gantt,
+      comentariosPDCA:  ev.comentarios.pdca
     };
+
     await db.collection("historial").add(histEntry);
-    const idx = STATE.proyectos.findIndex(p => p.id === STATE.proyectoActualId);
-    if (idx !== -1) STATE.proyectos[idx].evaluacion = JSON.parse(JSON.stringify(ev));
-    STATE.historial.unshift(histEntry);
+
+    const idx = STATE.proyectos.findIndex(p=>p.id===STATE.proyectoActualId);
+    if (idx!==-1) STATE.proyectos[idx].evaluacion = JSON.parse(JSON.stringify(ev));
+    STATE.historial.unshift({...histEntry, _fecha: now});
+
+    // Actualizar gauges con la evaluación recién guardada
+    renderSemaforosDesdeProyecto(ev);
     notif("Evaluación guardada ✅");
+
+    // MEJORA 6: limpiar para la siguiente
+    STATE.evalTemp = { kpi:"", gantt:"", pdca:[] };
+    limpiarFormulario();
+
   } catch(err) {
-    console.error(err);
-    notif("Error al guardar: " + err.message, true);
+    console.error(err); notif("Error: "+err.message,true);
   } finally {
-    btn.disabled = false;
-    btn.textContent = "💾 Guardar Evaluación";
+    btn.disabled=false; btn.textContent="💾 Guardar Evaluación";
   }
 }
 
 async function cargarExcel() {
   const file = document.getElementById("inputExcel").files[0];
-  if (!file) return notif("Selecciona un archivo", true);
+  if (!file) return notif("Selecciona un archivo",true);
   const reader = new FileReader();
   reader.onload = async e => {
-    const wb   = XLSX.read(new Uint8Array(e.target.result), { type:"array" });
-    const json = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
-    await guardarMasivo(json);
+    const wb = XLSX.read(new Uint8Array(e.target.result),{type:"array"});
+    await guardarMasivo(XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]));
   };
   reader.readAsArrayBuffer(file);
 }
 
 async function guardarMasivo(rows) {
-  const TIERS = ["Tier 1","Tier 2","Tier 3","Tier 4","Tier 5","Tier 6"];
-  const SECS  = Object.keys(CHAMPIONS);
-  let ok = 0, err = 0;
-  setLoading(true, "Cargando proyectos...");
+  const TIERS=["Tier 1","Tier 2","Tier 3","Tier 4","Tier 5","Tier 6"], SECS=Object.keys(CHAMPIONS);
+  let ok=0,err=0;
+  setLoading(true,"Cargando proyectos...");
   for (const row of rows) {
-    const { nombre, tier, seccion, champion, sponsor, owner } = row;
+    const {nombre,tier,seccion,champion,sponsor,owner}=row;
     if (!nombre||!tier||!seccion||!champion||!sponsor||!owner||!TIERS.includes(tier)||!SECS.includes(seccion)) { err++; continue; }
     try {
       const ref = await db.collection("proyectos").add({
-        nombre, tier, seccion, champion, sponsor, owner,
-        estado:"activo", createdAt: new Date(),
-        evaluacion:{ kpi:"", gantt:"", pdca:[], comentarios:{kpi:"",gantt:"",pdca:""} }
+        nombre,tier,seccion,champion,sponsor,owner,estado:"activo",createdAt:new Date(),
+        evaluacion:{kpi:"",gantt:"",pdca:[],comentarios:{kpi:"",gantt:"",pdca:""}}
       });
-      STATE.proyectos.push({ id:ref.id, nombre, tier, seccion, champion, sponsor, owner,
-        estado:"activo", evaluacion:{kpi:"",gantt:"",pdca:[]} });
+      STATE.proyectos.push({id:ref.id,nombre,tier,seccion,champion,sponsor,owner,
+        estado:"activo",evaluacion:{kpi:"",gantt:"",pdca:[]}});
       ok++;
     } catch { err++; }
   }
-  setLoading(false);
-  renderTabla();
-  poblarSelectHistorial();
+  setLoading(false); renderTabla(); poblarFiltrosHistorial();
   notif(`${ok} proyectos cargados · ${err} errores`);
 }
 
 function descargarPlantilla() {
-  const plantilla = [{ nombre:"Proyecto ejemplo", tier:"Tier 1", seccion:"Buy to Make",
-    champion:"Antonio Aguilar", sponsor:"Nombre Sponsor", owner:"Nombre Owner" }];
-  const catalogo = [
-    {tier:"Tier 1",seccion:"Buy to Make",          champion:"Antonio Aguilar"},
-    {tier:"Tier 2",seccion:"DTC",                  champion:"Jaime Castro"},
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet([
+    {nombre:"Proyecto ejemplo",tier:"Tier 1",seccion:"Buy to Make",champion:"Antonio Aguilar",sponsor:"Nombre Sponsor",owner:"Nombre Owner"}
+  ]),"Plantilla");
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet([
+    {tier:"Tier 1",seccion:"Buy to Make",champion:"Antonio Aguilar"},
+    {tier:"Tier 2",seccion:"DTC",champion:"Jaime Castro"},
     {tier:"Tier 3",seccion:"Material Optimization",champion:"Fabian Perez"},
     {tier:"Tier 3",seccion:"Material Optimization",champion:"Jorge Millan"},
-    {tier:"Tier 4",seccion:"Resourcing",            champion:"Gerardo Loredo"},
-    {tier:"Tier 5",seccion:"OH Cost Control",       champion:"Carlos Perez"}
-  ];
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(plantilla), "Plantilla");
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(catalogo),  "Catalogo");
-  XLSX.writeFile(wb, "Plantilla_Proyectos.xlsx");
+    {tier:"Tier 4",seccion:"Resourcing",champion:"Gerardo Loredo"},
+    {tier:"Tier 5",seccion:"OH Cost Control",champion:"Carlos Perez"}
+  ]),"Catalogo");
+  XLSX.writeFile(wb,"Plantilla_Proyectos.xlsx");
 }
 
 function logout() { localStorage.clear(); window.location.href = "index.html"; }
