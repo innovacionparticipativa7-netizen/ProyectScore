@@ -847,7 +847,11 @@ function exportarExcel() {
     const promGANTT   = +(evals.reduce((s, e) => s + (e.gantt || 0), 0) / n).toFixed(1);
     const promPDCA    = +(evals.reduce((s, e) => s + (e.pdca  || 0), 0) / n).toFixed(1);
     const promGeneral = +(evals.reduce((s, e) => s + (e.general || 0), 0) / n).toFixed(2);
-    const evaluadores = evals.map(e => STATE.mapaUsuarios[e.usuario] || e.usuarioNombre || e.usuario || "?").join(" / ");
+    const evaluadores = evals.map(e => {
+      const uid = e.usuario || "";
+      const nombre = STATE.mapaUsuarios[uid] || e.usuarioNombre || uid || "?";
+      return nombre;
+    }).join(" / ");
     const fechaRec    = evals.sort((a, b) => b._fecha - a._fecha)[0]._fecha;
 
     rows.push({
