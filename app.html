@@ -820,18 +820,19 @@ function renderTablaHistorial() {
 
 // MEJORA 5: Exportar consolidado promediado por semana/proyecto/evaluadores
 function exportarExcel() {
-  if (!STATE.proyectos.length) return notif("Sin datos",true);
+  if (!STATE.proyectos.length) return notif("Sin datos", true);
+
   const consolidado = {};
   STATE.historial.forEach(h => {
-    const sem = h.semana || getSemana(h.fecha?.toDate ? h.fecha.toDate() : new Date(h.fecha||0));
+    const sem = h.semana || getSemana(h.fecha?.toDate ? h.fecha.toDate() : new Date(h.fecha || 0));
     const key = `${h.proyectoId}_${sem}`;
-    if (!consolidado[key]) consolidado[key] = { meta:{}, usuarios:{} };
+    if (!consolidado[key]) consolidado[key] = { meta: {}, usuarios: {} };
     consolidado[key].meta = {
-      proyectoId:h.proyectoId, proyectoNombre:h.proyectoNombre,
-      champion:h.champion, seccion:h.seccion, tier:h.tier, semana:sem
+      proyectoId: h.proyectoId, proyectoNombre: h.proyectoNombre,
+      champion: h.champion, seccion: h.seccion, tier: h.tier, semana: sem
     };
-    const uid = h.usuario||"?";
-    const fa  = h.fecha?.toDate ? h.fecha.toDate() : new Date(h.fecha||0);
+    const uid = h.usuario || "?";
+    const fa  = h.fecha?.toDate ? h.fecha.toDate() : new Date(h.fecha || 0);
     if (!consolidado[key].usuarios[uid] || fa > (consolidado[key].usuarios[uid]._fecha))
       consolidado[key].usuarios[uid] = { ...h, _fecha: fa };
   });
@@ -840,20 +841,21 @@ function exportarExcel() {
   Object.values(consolidado).forEach(({ meta, usuarios }) => {
     const evals = Object.values(usuarios);
     const n = evals.length || 1;
-    const promKPI     = +(evals.reduce((s,e)=>s+(e.kpi||0),0)/n).toFixed(1);
-    const promGANTT   = +(evals.reduce((s,e)=>s+(e.gantt||0),0)/n).toFixed(1);
-    const promPDCA    = +(evals.reduce((s,e)=>s+(e.pdca||0),0)/n).toFixed(1);
-    const promGeneral = +(evals.reduce((s,e)=>s+(e.general||0),0)/n).toFixed(2);
-    const evaluadores = evals.map(e=>e.usuarioNombre||e.usuario||"?").join(" / ");
-    const fechaRec    = evals.sort((a,b)=>b._fecha-a._fecha)[0]._fecha;
+    const promKPI     = +(evals.reduce((s, e) => s + (e.kpi   || 0), 0) / n).toFixed(1);
+    const promGANTT   = +(evals.reduce((s, e) => s + (e.gantt || 0), 0) / n).toFixed(1);
+    const promPDCA    = +(evals.reduce((s, e) => s + (e.pdca  || 0), 0) / n).toFixed(1);
+    const promGeneral = +(evals.reduce((s, e) => s + (e.general || 0), 0) / n).toFixed(2);
+    const evaluadores = evals.map(e => e.usuarioNombre || e.usuario || "?").join(" / ");
+    const fechaRec    = evals.sort((a, b) => b._fecha - a._fecha)[0]._fecha;
+
     rows.push({
       Semana:           meta.semana,
-      Fecha:            fechaRec.toLocaleDateString(),
-      Hora:             fechaRec.toLocaleTimeString(),
-      Proyecto:         meta.proyectoNombre||"–",
-      Champion:         meta.champion||"–",
-      Seccion:          meta.seccion||"–",
-      Tier:             meta.tier||"–",
+      Fecha:            fechaRec,                        // <-- Date nativo
+      Hora:             fechaRec.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'}),
+      Proyecto:         meta.proyectoNombre || "–",
+      Champion:         meta.champion       || "–",
+      Seccion:          meta.seccion        || "–",
+      Tier:             meta.tier           || "–",
       Evaluadores:      evaluadores,
       Num_Evaluadores:  n,
       KPI_Promedio:     promKPI,
@@ -862,43 +864,103 @@ function exportarExcel() {
       General_Promedio: promGeneral
     });
   });
-  rows.sort((a,b) => b.Semana - a.Semana);
+
+  rows.sort((a, b) => b.Semana - a.Semana);
+
+  const ws = XLSX.utils.json_to_sheet(rows, { cellDates: true });
+
+  // ===== FORMATO FECHA =====
+  const range = XLSX.utils.decode_range(ws['!ref']);
+  for (let R = 1; R <= range.e.r; R++) {
+    const celda = ws[XLSX.utils.encode_cell({ r: R, c: 1 })]; // columna B = Fecha
+    if (celda && celda.t === 'd') {
+      celda.z = 'dd/mm/yyyy';   // formato de fecha sin hora
+    }
+  }
+
+  // Anchos de columna para que se vea bien
+  ws['!cols'] = [
+    { wch: 8  },  // Semana
+    { wch: 14 },  // Fecha
+    { wch: 10 },  // Hora
+    { wch: 30 },  // Proyecto
+    { wch: 20 },  // Champion
+    { wch: 22 },  // Seccion
+    { wch: 8  },  // Tier
+    { wch: 35 },  // Evaluadores
+    { wch: 16 },  // Num_Evaluadores
+    { wch: 14 },  // KPI
+    { wch: 14 },  // GANTT
+    { wch: 14 },  // PDCA
+    { wch: 16 },  // General
+  ];
 
   const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows), "Consolidado");
-  XLSX.writeFile(wb, `Consolidado_${new Date().toISOString().slice(0,10)}.xlsx`);
+  XLSX.utils.book_append_sheet(wb, ws, "Consolidado");
+  XLSX.writeFile(wb, `Consolidado_${new Date().toISOString().slice(0, 10)}.xlsx`);
   notif("Consolidado exportado ✅");
 }
 
-// MEJORA 4: Exportar historial completo
+
 function exportarHistorialCompleto() {
   const rows = STATE.historial.map(h => {
-    const fo = h.fecha?.toDate ? h.fecha.toDate() : new Date(h.fecha||0);
+    const fo = h.fecha?.toDate ? h.fecha.toDate() : new Date(h.fecha || 0);
     return {
-      Fecha:    fo.toLocaleDateString(),
-      Hora:     fo.toLocaleTimeString(),
-      Semana:   h.semana,
-      Proyecto: h.proyectoNombre||"–",
-      Champion: h.champion||"–",
-      Seccion:  h.seccion||"–",
-      Tier:     h.tier||"–",
-      Usuario:  h.usuarioNombre||h.usuario||"–",
-      KPI:      h.kpi??0,
-      GANTT:    h.gantt??0,
-      PDCA:     h.pdca??0,
-      General:  +(h.general||0).toFixed(2),
-      Comentario_KPI:   h.comentariosKPI||"",
-      Comentario_GANTT: h.comentariosGANTT||"",
-      Comentario_PDCA:  h.comentariosPDCA||""
+      Fecha:            fo,                              // <-- Date nativo
+      Hora:             fo.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'}),
+      Semana:           h.semana,
+      Proyecto:         h.proyectoNombre || "–",
+      Champion:         h.champion       || "–",
+      Seccion:          h.seccion        || "–",
+      Tier:             h.tier           || "–",
+      Usuario:          h.usuarioNombre  || h.usuario || "–",
+      KPI:              h.kpi   ?? 0,
+      GANTT:            h.gantt ?? 0,
+      PDCA:             h.pdca  ?? 0,
+      General:          +(h.general || 0).toFixed(2),
+      Comentario_KPI:   h.comentariosKPI   || "",
+      Comentario_GANTT: h.comentariosGANTT || "",
+      Comentario_PDCA:  h.comentariosPDCA  || ""
     };
   });
-  rows.sort((a,b) => new Date(b.Fecha+' '+b.Hora) - new Date(a.Fecha+' '+a.Hora));
+
+  rows.sort((a, b) => b.Fecha - a.Fecha);   // ahora son Date, se comparan directo
+
+  const ws = XLSX.utils.json_to_sheet(rows, { cellDates: true });
+
+  // ===== FORMATO FECHA =====
+  const range = XLSX.utils.decode_range(ws['!ref']);
+  for (let R = 1; R <= range.e.r; R++) {
+    const celda = ws[XLSX.utils.encode_cell({ r: R, c: 0 })]; // columna A = Fecha
+    if (celda && celda.t === 'd') {
+      celda.z = 'dd/mm/yyyy';
+    }
+  }
+
+  // Anchos de columna
+  ws['!cols'] = [
+    { wch: 14 },  // Fecha
+    { wch: 10 },  // Hora
+    { wch: 8  },  // Semana
+    { wch: 30 },  // Proyecto
+    { wch: 20 },  // Champion
+    { wch: 22 },  // Seccion
+    { wch: 8  },  // Tier
+    { wch: 25 },  // Usuario
+    { wch: 8  },  // KPI
+    { wch: 8  },  // GANTT
+    { wch: 8  },  // PDCA
+    { wch: 10 },  // General
+    { wch: 35 },  // Comentario KPI
+    { wch: 35 },  // Comentario GANTT
+    { wch: 35 },  // Comentario PDCA
+  ];
+
   const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows), "Historial_Completo");
-  XLSX.writeFile(wb, `Historial_${new Date().toISOString().slice(0,10)}.xlsx`);
+  XLSX.utils.book_append_sheet(wb, ws, "Historial_Completo");
+  XLSX.writeFile(wb, `Historial_${new Date().toISOString().slice(0, 10)}.xlsx`);
   notif("Historial exportado ✅");
 }
-
 // ===== USER =====
 
 function poblarSelectUser() { renderSelectUser(); }
