@@ -444,6 +444,7 @@ const STATE = {
   uid: localStorage.getItem("uid"),
   proyectos: [],
   historial: [],
+  mapaUsuarios: {},
   proyectoActual: null,
   proyectoActualId: null,
   evalTemp: null,
@@ -510,7 +511,8 @@ async function init() {
   try {
     const [snapP, snapH] = await Promise.all([
       db.collection("proyectos").limit(200).get(),
-      db.collection("historial").orderBy("fecha","desc").limit(1000).get()
+      db.collection("historial").orderBy("fecha","desc").limit(1000).get(),
+      db.collection("users").get()
     ]);
     STATE.proyectos = snapP.docs.map(d => ({
       id: d.id, ...d.data(),
@@ -845,7 +847,7 @@ function exportarExcel() {
     const promGANTT   = +(evals.reduce((s, e) => s + (e.gantt || 0), 0) / n).toFixed(1);
     const promPDCA    = +(evals.reduce((s, e) => s + (e.pdca  || 0), 0) / n).toFixed(1);
     const promGeneral = +(evals.reduce((s, e) => s + (e.general || 0), 0) / n).toFixed(2);
-    const evaluadores = evals.map(e => e.usuarioNombre || e.usuario || "?").join(" / ");
+    const evaluadores = evals.map(e => STATE.mapaUsuarios[e.usuario] || e.usuarioNombre || e.usuario || "?").join(" / ");
     const fechaRec    = evals.sort((a, b) => b._fecha - a._fecha)[0]._fecha;
 
     rows.push({
@@ -913,7 +915,7 @@ function exportarHistorialCompleto() {
       Champion:         h.champion       || "–",
       Seccion:          h.seccion        || "–",
       Tier:             h.tier           || "–",
-      Usuario:          h.usuarioNombre  || h.usuario || "–",
+      Usuario:          STATE.mapaUsuarios[h.usuario] || h.usuarioNombre || h.usuario || "–",
       KPI:              h.kpi   ?? 0,
       GANTT:            h.gantt ?? 0,
       PDCA:             h.pdca  ?? 0,
@@ -1103,7 +1105,7 @@ async function guardar() {
       seccion:  STATE.proyectoActual.seccion ||"–",
       tier:     STATE.proyectoActual.tier    ||"–",
       usuario:       STATE.uid,
-      usuarioNombre: firebase.auth().currentUser?.displayName||firebase.auth().currentUser?.email||"–",
+      usuarioNombre: STATE.mapaUsuarios[STATE.uid] || firebase.auth().currentUser?.displayName || firebase.auth().currentUser?.email || "–",
       fecha:  now,
       semana: getSemana(now),
       kpi:    calcKPI(ev.kpi),
