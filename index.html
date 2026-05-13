@@ -87,10 +87,9 @@
   <div class="error-msg" id="errorMsg">Usuario o contraseña incorrectos</div>
 
   <div class="campo">
-    <label>Correo electrónico</label>
-    <!-- ✅ Usamos email real, no el truco @proyects.com -->
-    <input id="email" type="email" placeholder="correo@empresa.com" autocomplete="email">
-  </div>
+  <label>Usuario</label>
+  <input id="email" type="text" placeholder="Usuario" autocomplete="username">
+</div>
 
   <div class="campo">
     <label>Contraseña</label>
@@ -118,44 +117,38 @@ function ocultarError() {
 }
 
 window.login = async () => {
-  const email = document.getElementById("email").value.trim();
-  const pass  = document.getElementById("pass").value;
+  const usuario = document.getElementById("email").value.trim();
+  const pass    = document.getElementById("pass").value;
 
   ocultarError();
 
-  if (!email || !pass) {
+  if (!usuario || !pass) {
     mostrarError("Completa todos los campos");
     return;
   }
 
-  // Deshabilitar botón mientras carga
+  // ✅ Agrega el dominio automáticamente
+  const email = `${usuario}@tuempresa.com`;
+
   btnLogin.disabled = true;
   btnLogin.textContent = "Entrando...";
 
   try {
-    // ✅ Login con Firebase Auth real
     await signInWithEmailAndPassword(auth, email, pass);
-
-    // ✅ NO guardamos rol en localStorage
-    // El rol se leerá de Firestore en app.html
     location.href = "app.html";
 
   } catch (error) {
-    // Mensajes de error amigables sin exponer detalles técnicos
     if (
       error.code === "auth/user-not-found"  ||
       error.code === "auth/wrong-password"  ||
       error.code === "auth/invalid-credential"
     ) {
-      mostrarError("Correo o contraseña incorrectos");
+      mostrarError("Usuario o contraseña incorrectos");
     } else if (error.code === "auth/too-many-requests") {
       mostrarError("Demasiados intentos. Espera unos minutos.");
-    } else if (error.code === "auth/invalid-email") {
-      mostrarError("Formato de correo no válido");
     } else {
       mostrarError("Error al iniciar sesión. Intenta de nuevo.");
     }
-
     btnLogin.disabled = false;
     btnLogin.textContent = "Entrar";
   }
