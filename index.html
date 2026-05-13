@@ -2,14 +2,10 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <title>Login</title>
-
 <style>
-  * {
-    box-sizing: border-box;
-    font-family: Arial, sans-serif;
-  }
+  * { box-sizing: border-box; font-family: Arial, sans-serif; }
 
   body {
     min-height: 100vh;
@@ -19,6 +15,7 @@
     align-items: center;
     justify-content: center;
     padding: 16px;
+    -webkit-tap-highlight-color: transparent;
   }
 
   .login-card {
@@ -30,181 +27,148 @@
     box-shadow: 0 10px 25px rgba(0,0,0,.25);
   }
 
-  .login-card h2 {
-    text-align: center;
-    margin-bottom: 6px;
-  }
+  .login-card h2 { text-align: center; margin-bottom: 6px; }
+  .login-card p  { text-align: center; font-size: 14px; color: #666; margin-bottom: 20px; }
 
-  .login-card p {
-    text-align: center;
-    font-size: 14px;
-    color: #666;
-    margin-bottom: 20px;
-  }
-
-  .campo {
-    margin-bottom: 14px;
-  }
-
-  .campo label {
-    font-size: 13px;
-    color: #555;
-    display: block;
-    margin-bottom: 4px;
-  }
-
+  .campo { margin-bottom: 14px; }
+  .campo label { font-size: 13px; color: #555; display: block; margin-bottom: 4px; }
   .campo input {
-    width: 100%;
-    padding: 12px;
-    border-radius: 8px;
-    border: 1px solid #ccc;
-    font-size: 14px;
+    width: 100%; padding: 12px; border-radius: 8px;
+    border: 1px solid #ccc; font-size: 16px;
     transition: border .2s, box-shadow .2s;
   }
-
   .campo input:focus {
-    outline: none;
-    border-color: #4caf50;
+    outline: none; border-color: #4caf50;
     box-shadow: 0 0 0 2px rgba(76,175,80,.25);
   }
 
   .btn-login {
-    width: 100%;
-    padding: 12px;
-    border: none;
+    width: 100%; padding: 12px; border: none;
     border-radius: 10px;
     background: linear-gradient(135deg, #4caf50, #2e7d32);
-    color: white;
-    font-size: 15px;
-    font-weight: bold;
-    cursor: pointer;
-    box-shadow: 0 4px 10px rgba(0,0,0,.25);
-    transition: transform .15s ease, box-shadow .15s ease, opacity .15s;
+    color: white; font-size: 15px; font-weight: bold;
+    cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,.25);
+    transition: transform .15s, box-shadow .15s, opacity .15s;
   }
-
-  .btn-login:hover {
+  .btn-login:hover:not(:disabled) {
     transform: translateY(-1px);
     box-shadow: 0 6px 14px rgba(0,0,0,.3);
     opacity: .95;
   }
+  .btn-login:active { transform: scale(.98); }
+  .btn-login:disabled { opacity: .6; cursor: not-allowed; }
 
-  .btn-login:active {
-    transform: scale(.98);
-  }
-
-  .footer {
-    text-align: center;
-    font-size: 12px;
-    color: #888;
-    margin-top: 14px;
-  }
-body {
-  min-height: 100vh;
-  margin: 0;
-  background: linear-gradient(135deg, #4caf50, #2e7d32);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 16px;
-  -webkit-tap-highlight-color: transparent;
-}
-
-@media (max-width: 600px) {
-
-  .login-card {
-    width: 100%;
-    max-width: 100%;
-    border-radius: 14px;
-    padding: 20px;
-  }
-
-  .login-card h2 {
-    font-size: 20px;
-  }
-
-  .login-card p {
+  .error-msg {
+    display: none;
+    background: #fee2e2;
+    color: #991b1b;
+    border-radius: 8px;
+    padding: 10px 12px;
     font-size: 13px;
+    margin-bottom: 14px;
+    text-align: center;
   }
+  .error-msg.show { display: block; }
 
-  .campo input {
-    font-size: 16px; /* evita zoom automático en iOS */
-    padding: 14px;
-  }
+  .footer { text-align: center; font-size: 12px; color: #888; margin-top: 14px; }
 
-  .btn-login {
-    font-size: 16px;
-    padding: 14px;
+  @media (max-width: 600px) {
+    .login-card { border-radius: 14px; padding: 20px; }
+    .login-card h2 { font-size: 20px; }
   }
-}
- 
 </style>
 </head>
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <body>
 
 <div class="login-card">
   <h2>Iniciar sesión</h2>
   <p>Accede al panel de proyectos</p>
 
+  <div class="error-msg" id="errorMsg">Usuario o contraseña incorrectos</div>
+
   <div class="campo">
-    <label>Usuario</label>
-    <input id="user" placeholder="Tu usuario">
+    <label>Correo electrónico</label>
+    <!-- ✅ Usamos email real, no el truco @proyects.com -->
+    <input id="email" type="email" placeholder="correo@empresa.com" autocomplete="email">
   </div>
 
   <div class="campo">
     <label>Contraseña</label>
-    <input id="pass" type="password" placeholder="••••••••">
+    <input id="pass" type="password" placeholder="••••••••" autocomplete="current-password">
   </div>
 
-  <button class="btn-login" onclick="login()">Entrar</button>
+  <button class="btn-login" id="btnLogin" onclick="login()">Entrar</button>
 
-  <div class="footer">
-    © Panel de Proyectos
-  </div>
+  <div class="footer">© Panel de Proyectos</div>
 </div>
 
 <script type="module">
-import { auth, db } from "./firebase.js"; 
-import { signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js"; 
-import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js"; 
+import { auth, db } from "./firebase.js";
+import { signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-const passInput = document.getElementById("pass");
+const btnLogin  = document.getElementById("btnLogin");
+const errorMsg  = document.getElementById("errorMsg");
+
+function mostrarError(msg) {
+  errorMsg.textContent = msg;
+  errorMsg.classList.add("show");
+}
+function ocultarError() {
+  errorMsg.classList.remove("show");
+}
 
 window.login = async () => {
-  const user = document.getElementById("user").value.trim(); 
-  const pass = passInput.value; 
+  const email = document.getElementById("email").value.trim();
+  const pass  = document.getElementById("pass").value;
 
-  const emailFake = `${user}@proyects.com`;
+  ocultarError();
+
+  if (!email || !pass) {
+    mostrarError("Completa todos los campos");
+    return;
+  }
+
+  // Deshabilitar botón mientras carga
+  btnLogin.disabled = true;
+  btnLogin.textContent = "Entrando...";
 
   try {
-    const cred = await signInWithEmailAndPassword(auth, emailFake, pass);
+    // ✅ Login con Firebase Auth real
+    await signInWithEmailAndPassword(auth, email, pass);
 
-    const uid = cred.user.uid; 
-    const snap = await getDoc(doc(db, "users", uid)); 
-
-    localStorage.setItem("uid", uid);
-    localStorage.setItem("rol", snap.data().rol); 
-
+    // ✅ NO guardamos rol en localStorage
+    // El rol se leerá de Firestore en app.html
     location.href = "app.html";
-  } 
-  catch (error) {
-    console.error(error); // 👈 importante para ver el error real
-    alert("Usuario o contraseña incorrectos");
+
+  } catch (error) {
+    // Mensajes de error amigables sin exponer detalles técnicos
+    if (
+      error.code === "auth/user-not-found"  ||
+      error.code === "auth/wrong-password"  ||
+      error.code === "auth/invalid-credential"
+    ) {
+      mostrarError("Correo o contraseña incorrectos");
+    } else if (error.code === "auth/too-many-requests") {
+      mostrarError("Demasiados intentos. Espera unos minutos.");
+    } else if (error.code === "auth/invalid-email") {
+      mostrarError("Formato de correo no válido");
+    } else {
+      mostrarError("Error al iniciar sesión. Intenta de nuevo.");
+    }
+
+    btnLogin.disabled = false;
+    btnLogin.textContent = "Entrar";
   }
 };
 
-passInput.addEventListener("keydown", (e) => {
-  if (e.key === "Enter") {
-    window.login();
-  }
+// ✅ Enter también hace login
+document.getElementById("pass").addEventListener("keydown", (e) => {
+  if (e.key === "Enter") window.login();
+});
+document.getElementById("email").addEventListener("keydown", (e) => {
+  if (e.key === "Enter") window.login();
 });
 </script>
 
 </body>
 </html>
-
-
-
-
-
-
