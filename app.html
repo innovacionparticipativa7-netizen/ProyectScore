@@ -865,47 +865,64 @@ function exportarExcel() {
   Object.values(consolidado).forEach(({ meta, usuarios }) => {
     const evals = Object.values(usuarios);
     const n = evals.length || 1;
+
     const promKPI     = +(evals.reduce((s, e) => s + (e.kpi   || 0), 0) / n).toFixed(1);
     const promGANTT   = +(evals.reduce((s, e) => s + (e.gantt || 0), 0) / n).toFixed(1);
     const promPDCA    = +(evals.reduce((s, e) => s + (e.pdca  || 0), 0) / n).toFixed(1);
     const promGeneral = +(evals.reduce((s, e) => s + (e.general || 0), 0) / n).toFixed(2);
-    const evaluadores = evals.map(e => {
-      const uid = e.usuario || "";
-      const nombre = STATE.mapaUsuarios[uid] || e.usuarioNombre || uid || "?";
-      return nombre;
-    }).join(" / ");
-    const fechaRec    = evals.sort((a, b) => b._fecha - a._fecha)[0]._fecha;
+
+    const evaluadores = evals.map(e =>
+      STATE.mapaUsuarios[e.usuario || ""] || e.usuarioNombre || e.usuario || "?"
+    ).join(" / ");
+
+    // ✅ Concatenar comentarios de todos los evaluadores
+    const comentariosKPI = evals
+      .filter(e => e.comentariosKPI)
+      .map(e => {
+        const nombre = STATE.mapaUsuarios[e.usuario||""] || e.usuarioNombre || "?";
+        return `[${nombre}]: ${e.comentariosKPI}`;
+      }).join(" | ");
+
+    const comentariosGANTT = evals
+      .filter(e => e.comentariosGANTT)
+      .map(e => {
+        const nombre = STATE.mapaUsuarios[e.usuario||""] || e.usuarioNombre || "?";
+        return `[${nombre}]: ${e.comentariosGANTT}`;
+      }).join(" | ");
+
+    const comentariosPDCA = evals
+      .filter(e => e.comentariosPDCA)
+      .map(e => {
+        const nombre = STATE.mapaUsuarios[e.usuario||""] || e.usuarioNombre || "?";
+        return `[${nombre}]: ${e.comentariosPDCA}`;
+      }).join(" | ");
+
+    const fechaRec = evals.sort((a, b) => b._fecha - a._fecha)[0]._fecha;
 
     rows.push({
-      Semana:           meta.semana,
+      Semana:            meta.semana,
       Fecha:             `${String(fechaRec.getMonth()+1).padStart(2,'0')}/${String(fechaRec.getDate()).padStart(2,'0')}/${fechaRec.getFullYear()}`,
-      Hora:             fechaRec.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'}),
-      Proyecto:         meta.proyectoNombre || "–",
-      Champion:         meta.champion       || "–",
-      Seccion:          meta.seccion        || "–",
-      Tier:             meta.tier           || "–",
-      Evaluadores:      evaluadores,
-      Num_Evaluadores:  n,
-      KPI_Promedio:     promKPI,
-      GANTT_Promedio:   promGANTT,
-      PDCA_Promedio:    promPDCA,
-      General_Promedio: promGeneral
+      Hora:              fechaRec.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'}),
+      Proyecto:          meta.proyectoNombre || "–",
+      Champion:          meta.champion       || "–",
+      Seccion:           meta.seccion        || "–",
+      Tier:              meta.tier           || "–",
+      Evaluadores:       evaluadores,
+      Num_Evaluadores:   n,
+      KPI_Promedio:      promKPI,
+      GANTT_Promedio:    promGANTT,
+      PDCA_Promedio:     promPDCA,
+      General_Promedio:  promGeneral,
+      // ✅ Columnas de comentarios agregadas
+      Comentarios_KPI:   comentariosKPI   || "",
+      Comentarios_GANTT: comentariosGANTT || "",
+      Comentarios_PDCA:  comentariosPDCA  || ""
     });
   });
 
   rows.sort((a, b) => b.Semana - a.Semana);
 
   const ws = XLSX.utils.json_to_sheet(rows, { cellDates: true });
-
-  // ===== FORMATO FECHA =====
-  const range = XLSX.utils.decode_range(ws['!ref']);
-  for (let R = 1; R <= range.e.r; R++) {
-    const celda = ws[XLSX.utils.encode_cell({ r: R, c: 1 })]; // columna B = Fecha
-    if (celda && celda.t === 'd') {
-      celda.z = 'dd/mm/yyyy';
-      celda.v = Math.floor(celda.v); // ← elimina la hora (decimales del serial)
-    }
-  }
 
   ws['!cols'] = [
     { wch: 8  },  // Semana
@@ -921,11 +938,14 @@ function exportarExcel() {
     { wch: 14 },  // GANTT
     { wch: 14 },  // PDCA
     { wch: 16 },  // General
+    { wch: 50 },  // Comentarios KPI
+    { wch: 50 },  // Comentarios GANTT
+    { wch: 50 },  // Comentarios PDCA
   ];
 
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, "Consolidado");
-  XLSX.writeFile(wb, `Consolidado_${new Date().toISOString().slice(0, 10)}.xlsx`);
+  XLSX.writeFile(wb, `Consolidado_${new Date().toISOString().slice(0,10)}.xlsx`);
   notif("Consolidado exportado ✅");
 }
 
