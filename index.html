@@ -84,12 +84,13 @@
   <h2>Iniciar sesión</h2>
   <p>Accede al panel de proyectos</p>
 
-  <div class="error-msg" id="errorMsg">Usuario o contraseña incorrectos</div>
+  <div class="error-msg" id="errorMsg"></div>
 
+  <!-- ✅ Solo usuario, sin @ -->
   <div class="campo">
-  <label>Usuario</label>
-  <input id="email" type="text" placeholder="Usuario" autocomplete="username">
-</div>
+    <label>Usuario</label>
+    <input id="usuario" type="text" placeholder="tu.nombre" autocomplete="username">
+  </div>
 
   <div class="campo">
     <label>Contraseña</label>
@@ -102,11 +103,14 @@
 </div>
 
 <script type="module">
-import { auth, db } from "./firebase.js";
+import { auth } from "./firebase.js";
 import { signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-const btnLogin  = document.getElementById("btnLogin");
-const errorMsg  = document.getElementById("errorMsg");
+// ✅ Cambia esto por el dominio que quieras
+const DOMINIO = "proyects.com";
+
+const btnLogin = document.getElementById("btnLogin");
+const errorMsg = document.getElementById("errorMsg");
 
 function mostrarError(msg) {
   errorMsg.textContent = msg;
@@ -117,7 +121,7 @@ function ocultarError() {
 }
 
 window.login = async () => {
-  const usuario = document.getElementById("email").value.trim();
+  const usuario = document.getElementById("usuario").value.trim().toLowerCase();
   const pass    = document.getElementById("pass").value;
 
   ocultarError();
@@ -127,38 +131,43 @@ window.login = async () => {
     return;
   }
 
-  // ✅ Agrega el dominio automáticamente
-  const email = `${usuario}@tuempresa.com`;
+  // ✅ El dominio se agrega automático, el usuario solo escribe su nombre
+  const email = `${usuario}@${DOMINIO}`;
 
   btnLogin.disabled = true;
   btnLogin.textContent = "Entrando...";
 
   try {
     await signInWithEmailAndPassword(auth, email, pass);
+
+    // ✅ Sin localStorage — Firebase guarda la sesión
     location.href = "app.html";
 
   } catch (error) {
     if (
-      error.code === "auth/user-not-found"  ||
-      error.code === "auth/wrong-password"  ||
+      error.code === "auth/user-not-found" ||
+      error.code === "auth/wrong-password" ||
       error.code === "auth/invalid-credential"
     ) {
       mostrarError("Usuario o contraseña incorrectos");
     } else if (error.code === "auth/too-many-requests") {
       mostrarError("Demasiados intentos. Espera unos minutos.");
+    } else if (error.code === "auth/invalid-email") {
+      mostrarError("Usuario no válido");
     } else {
       mostrarError("Error al iniciar sesión. Intenta de nuevo.");
     }
+
     btnLogin.disabled = false;
     btnLogin.textContent = "Entrar";
   }
 };
 
-// ✅ Enter también hace login
-document.getElementById("pass").addEventListener("keydown", (e) => {
+// ✅ Enter funciona en ambos campos
+document.getElementById("usuario").addEventListener("keydown", (e) => {
   if (e.key === "Enter") window.login();
 });
-document.getElementById("email").addEventListener("keydown", (e) => {
+document.getElementById("pass").addEventListener("keydown", (e) => {
   if (e.key === "Enter") window.login();
 });
 </script>
