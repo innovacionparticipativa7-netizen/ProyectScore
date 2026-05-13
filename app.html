@@ -440,8 +440,8 @@ firebase.initializeApp({
 const db = firebase.firestore();
 
 const STATE = {
-  rol: (localStorage.getItem("rol") || "").toLowerCase().trim(),
-  uid: localStorage.getItem("uid"),
+  rol: "",
+  uid: "",
   proyectos: [],
   historial: [],
   mapaUsuarios: {},
@@ -463,7 +463,7 @@ const CHAMPIONS = {
   "OH Cost Control":       ["Carlos Perez"]
 };
 
-if (!STATE.uid || !STATE.rol) { localStorage.clear(); window.location.href = "index.html"; }
+
 
 function calcKPI(v)   { return ({en_tiempo:100,cumple:75,mitigado:50,retraso_kpi:0,na:0}[v] ?? 0); }
 function calcGANTT(v) { return ({valor:100,retraso_gantt:75,r2:50,r3:0,na:0}[v] ?? 0); }
@@ -507,36 +507,58 @@ function setLoading(show, msg="Cargando...") {
 }
 
 async function init() {
-  setLoading(true, "Cargando datos...");
-  try {
-    const [snapP, snapH] = await Promise.all([
-      db.collection("proyectos").limit(200).get(),
-      db.collection("historial").orderBy("fecha","desc").limit(1000).get(),
-      db.collection("users").get()
-    ]);
-    STATE.proyectos = snapP.docs.map(d => ({
-      id: d.id, ...d.data(),
-      evaluacion: d.data().evaluacion || { kpi:"", gantt:"", pdca:[] }
-    }));
-    STATE.historial = snapH.docs.map(d => ({ id: d.id, ...d.data() }));
+  setLoading(true, "Verificando sesión...");
 
-    if (STATE.rol === "admin") {
-      document.getElementById("vista-admin").style.display = "block";
-      document.getElementById("badge-rol").textContent = "Admin";
-      renderTabla();
-      poblarFiltrosHistorial();
-    } else {
-      document.getElementById("vista-user").style.display = "block";
-      poblarSelectUser();
+  firebase.auth().onAuthStateChanged(async (user) => {
+    if (!user) {
+      window.location.href = "index.html";
+      return;
     }
-  } catch(err) {
-    console.error(err);
-    notif("Error al cargar: " + err.message, true);
-  } finally {
-    setLoading(false);
-  }
-}
 
+    try {
+      const userDoc = await db.collection("users").doc(user.uid).get();
+
+      if (!userDoc.exists) {
+        notif("Usuario sin acceso configurado", true);
+        await firebase.auth().signOut();
+        window.location.href = "index.html";
+        return;
+      }
+
+      const userData = userDoc.data();
+      STATE.uid    = user.uid;
+      STATE.rol    = (userData.rol || "user").toLowerCase().trim();
+      STATE.nombre = userData.nombre || user.email;
+
+      const [snapP, snapH] = await Promise.all([
+        db.collection("proyectos").limit(200).get(),
+        db.collection("historial").orderBy("fecha","desc").limit(1000).get()
+      ]);
+
+      STATE.proyectos = snapP.docs.map(d => ({
+        id: d.id, ...d.data(),
+        evaluacion: d.data().evaluacion || { kpi:"", gantt:"", pdca:[] }
+      }));
+      STATE.historial = snapH.docs.map(d => ({ id: d.id, ...d.data() }));
+
+      if (STATE.rol === "admin") {
+        document.getElementById("vista-admin").style.display = "block";
+        document.getElementById("badge-rol").textContent = "Admin";
+        renderTabla();
+        poblarFiltrosHistorial();
+      } else {
+        document.getElementById("vista-user").style.display = "block";
+        poblarSelectUser();
+      }
+
+    } catch(err) {
+      console.error(err);
+      notif("Error al cargar: " + err.message, true);
+    } finally {
+      setLoading(false);
+    }
+  });
+}
 // ===== ADMIN =====
 
 function toggleForm() {
@@ -1190,7 +1212,11 @@ function descargarPlantilla() {
   XLSX.writeFile(wb,"Plantilla_Proyectos.xlsx");
 }
 
-function logout() { localStorage.clear(); window.location.href = "index.html"; }
+function logout() {
+  firebase.auth().signOut().then(() => {
+    window.location.href = "index.html";
+  });
+}
 
 init();
 </script>
