@@ -412,7 +412,8 @@ canvas { max-height: 240px; }
     <div class="card" style="margin-bottom:16px">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
         <h3 style="margin:0">📋 Historial de Evaluaciones (Todos los usuarios)</h3>
-        <button class="btn-sm btn-blue" onclick="exportarHistorialCompleto()">📥 Exportar</button>
+        <button class="btn-sm btn-secondary" onclick="exportarProyectos()" style="margin-right:6px">📋 Exportar Proyectos</button>
+        <button class="btn-sm btn-blue" onclick="exportarHistorialCompleto()">📥 Exportar Historial</button>
       </div>
       <div class="form-grid" style="margin-bottom:10px">
         <div><label class="field-label">Filtrar proyecto</label>
@@ -1129,6 +1130,34 @@ function exportarHistorialCompleto() {
   notif("Historial exportado ✅");
 }
 
+function exportarProyectos() {
+  if (!STATE.proyectos.length) return notif("Sin proyectos para exportar", true);
+  const rows = STATE.proyectos.map(p => ({
+    Nombre:   p.nombre   || "–",
+    Tier:     p.tier     || "–",
+    Seccion:  p.seccion  || "–",
+    Champion: p.champion || "–",
+    Sponsor:  p.sponsor  || "–",
+    Owner:    p.owner    || "–",
+    Estado:   p.estado   || "activo"
+  }));
+  rows.sort((a, b) => a.Seccion.localeCompare(b.Seccion) || a.Nombre.localeCompare(b.Nombre));
+  const ws = XLSX.utils.json_to_sheet(rows);
+  ws['!cols'] = [
+    { wch: 35 }, // Nombre
+    { wch: 10 }, // Tier
+    { wch: 25 }, // Seccion
+    { wch: 22 }, // Champion
+    { wch: 22 }, // Sponsor
+    { wch: 22 }, // Owner
+    { wch: 10 }  // Estado
+  ];
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Proyectos");
+  XLSX.writeFile(wb, `Proyectos_${new Date().toISOString().slice(0, 10)}.xlsx`);
+  notif("Proyectos exportados ✅");
+}
+  
 /* ============================================================
    EXCEL MASIVO
 ============================================================ */
