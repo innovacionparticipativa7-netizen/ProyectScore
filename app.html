@@ -1403,21 +1403,100 @@ async function guardarMasivo(rows) {
 }
 
 function descargarPlantilla() {
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet([
-    {nombre:"Proyecto ejemplo",tier:"Tier 1",seccion:"Buy to Make",champion:"Antonio Aguilar",sponsor:"Nombre Sponsor",owner:"Nombre Owner"}
-  ]),"Plantilla");
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet([
-    {tier:"Tier 1",seccion:"Buy to Make",champion:"Antonio Aguilar"},
-    {tier:"Tier 2",seccion:"DTC",champion:"Jaime Castro"},
-    {tier:"Tier 3",seccion:"Material Optimization",champion:"Fabian Perez"},
-    {tier:"Tier 3",seccion:"Material Optimization",champion:"Jorge Millan"},
-    {tier:"Tier 4",seccion:"Resourcing",champion:"Gerardo Loredo"},
-    {tier:"Tier 5",seccion:"OH Cost Control",champion:"Carlos Perez"}
-  ]),"Catalogo");
-  XLSX.writeFile(wb,"Plantilla_Proyectos.xlsx");
-}
 
+  const plantilla = [
+
+    {
+      "Nombre": "",
+      "Tier": "",
+      "Seccion": "",
+      "Champion": "",
+      "Sponsor": "",
+      "Owner": "",
+
+      "Priority Level": "",
+      "L1 Coding": "",
+      "Nivel 1": "",
+      "L1 KPI": "",
+      "Primary Lead L1": "",
+      "Support Lead": "",
+
+      "L2 Coding": "",
+      "Nivel 2": "",
+      "Primary Lead L2": "",
+
+      "Type 2": "",
+      "Nivel 3": "",
+      "L3 CODE": "",
+      "Primary Lead L3": "",
+
+      "Type": "",
+      "FRONT AXIS": "",
+      "Concatenate": "",
+      "PRESENTED": "",
+
+      "TARGET": "",
+      "DATE": "",
+      "FORUM": "",
+      "STATUS": ""
+    }
+
+  ];
+
+  const ws = XLSX.utils.json_to_sheet(plantilla);
+
+  ws["!cols"] = [
+
+    {wch:30},
+    {wch:12},
+    {wch:22},
+    {wch:22},
+    {wch:22},
+    {wch:22},
+
+    {wch:18},
+    {wch:18},
+    {wch:18},
+    {wch:18},
+    {wch:25},
+    {wch:25},
+
+    {wch:18},
+    {wch:18},
+    {wch:25},
+
+    {wch:18},
+    {wch:18},
+    {wch:18},
+    {wch:25},
+
+    {wch:18},
+    {wch:18},
+    {wch:22},
+    {wch:18},
+
+    {wch:18},
+    {wch:18},
+    {wch:18},
+    {wch:18}
+
+  ];
+
+  const wb = XLSX.utils.book_new();
+
+  XLSX.utils.book_append_sheet(
+    wb,
+    ws,
+    "Plantilla_Proyectos"
+  );
+
+  XLSX.writeFile(
+    wb,
+    "Plantilla_Proyectos_Completa.xlsx"
+  );
+
+  notif("Plantilla descargada ✅");
+}
 /* ============================================================
    USER
 ============================================================ */
