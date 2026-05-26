@@ -97,7 +97,10 @@
     <input id="pass" type="password" placeholder="••••••••" autocomplete="current-password">
   </div>
 
-  <button class="btn-login" id="btnLogin" onclick="login()">Entrar</button>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+  <button class="btn-login" id="btnTijuana" onclick="login('app.html')">🏙️ Tijuana</button>
+  <button class="btn-login" id="btnChihuahua" onclick="login('appCh.html')">🏔️ Chihuahua</button>
+  </div>
 
   <div class="footer">© Panel de Proyectos</div>
 </div>
@@ -120,7 +123,7 @@ function ocultarError() {
   errorMsg.classList.remove("show");
 }
 
-window.login = async () => {
+window.login = async (destino) => {
   const usuario = document.getElementById("usuario").value.trim().toLowerCase();
   const pass    = document.getElementById("pass").value;
 
@@ -131,22 +134,20 @@ window.login = async () => {
     return;
   }
 
-  // ✅ El dominio se agrega automático, el usuario solo escribe su nombre
   const email = `${usuario}@${DOMINIO}`;
 
-  btnLogin.disabled = true;
-  btnLogin.textContent = "Entrando...";
+  // Deshabilita ambos botones
+  document.getElementById("btnTijuana").disabled   = true;
+  document.getElementById("btnChihuahua").disabled = true;
 
   try {
     await signInWithEmailAndPassword(auth, email, pass);
-
-    // ✅ Sin localStorage — Firebase guarda la sesión
-    location.href = "app.html";
+    location.href = destino;
 
   } catch (error) {
     if (
-      error.code === "auth/user-not-found" ||
-      error.code === "auth/wrong-password" ||
+      error.code === "auth/user-not-found"     ||
+      error.code === "auth/wrong-password"     ||
       error.code === "auth/invalid-credential"
     ) {
       mostrarError("Usuario o contraseña incorrectos");
@@ -158,17 +159,16 @@ window.login = async () => {
       mostrarError("Error al iniciar sesión. Intenta de nuevo.");
     }
 
-    btnLogin.disabled = false;
-    btnLogin.textContent = "Entrar";
+    document.getElementById("btnTijuana").disabled   = false;
+    document.getElementById("btnChihuahua").disabled = false;
   }
 };
 
-// ✅ Enter funciona en ambos campos
 document.getElementById("usuario").addEventListener("keydown", (e) => {
-  if (e.key === "Enter") window.login();
+  if (e.key === "Enter") document.getElementById("pass").focus();
 });
 document.getElementById("pass").addEventListener("keydown", (e) => {
-  if (e.key === "Enter") window.login();
+  if (e.key === "Enter") mostrarError("Selecciona una planta: Tijuana o Chihuahua");
 });
 </script>
 
