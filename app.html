@@ -1203,51 +1203,72 @@ function getCamposExtraProyecto() {
 function exportarExcel() {
   if (!STATE.proyectos.length) return notif("No hay proyectos", true);
 
-  const rows = STATE.proyectos.map(p => {
-    return {
-      "#": p.numeroProyecto || "",
+  const headers = [
+    "#",
+    "Priority Level",
+    "L1 Coding",
+    "Nivel 1",
+    "L1 KPI",
+    "Primary Lead Site L1",
+    "Support Lead Site L1",
+    "L2 Coding",
+    "Nivel 2",
+    "Primary Lead L2",
+    "Type 2",
+    "Nivel 3",
+    "L3 CODE",
+    "Primary Lead L3",
+    "Type",
+    "FRONT AXIS",
+    "Concatenate",
+    "PRESENTED",
+    "Score Presentation",
+    "Score Schedule",
+    "Score KPI",
+    "Overall SCORE",
+    "TARGET",
+    "Fecha",
+    "FORUM",
+    "STATUS"
+  ];
 
-      "Priority Level": p.priorityLevel || "",
-      "L1 Coding": p.l1Coding || "",
-      "Nivel 1": p.nivel1 || "",
-      "L1 KPI": p.l1KPI || "",
-      "Primary Lead Site L1": p.primaryLeadL1 || p.champion || "",
-      "Support Lead Site L1": p.supportLead || p.sponsor || "",
+  const data = STATE.proyectos.map(p => [
+    p.numeroProyecto || "",
+    p.priorityLevel || "",
+    p.l1Coding || "",
+    p.nivel1 || "",
+    p.l1KPI || "",
+    p.primaryLeadL1 || p.champion || "",
+    p.supportLead || p.sponsor || "",
+    p.l2Coding || "",
+    p.nivel2 || "",
+    p.primaryLeadL2 || "",
+    p.type2 || "",
+    p.nivel3 || p.nombre || "",
+    p.l3Code || "",
+    p.primaryLeadL3 || p.owner || "",
+    p.type || "",
+    p.frontAxis || p.seccion || "",
+    p.concatenate || "",
+    p.presented || "",
+    p.scorePresentation || "",
+    p.scoreSchedule || "",
+    p.scoreKPI || "",
+    p.overallScore || "",
+    p.target || "",
+    p.dateProject || "",
+    p.forum || p.tier || "",
+    p.projectStatus || "2026"
+  ]);
 
-      "L2 Coding": p.l2Coding || "",
-      "Nivel 2": p.nivel2 || "",
-      "Primary Lead L2": p.primaryLeadL2 || "",
-
-      "Type 2": p.type2 || "",
-      "Nivel 3": p.nivel3 || p.nombre || "",
-      "L3 CODE": p.l3Code || "",
-      "Primary Lead L3": p.primaryLeadL3 || p.owner || "",
-
-      "Type": p.type || "",
-      "FRONT AXIS": p.frontAxis || p.seccion || "",
-      "Concatenate": p.concatenate || "",
-      "PRESENTED": p.presented || "",
-
-      "Score Presentation": p.scorePresentation || "",
-      "Score Schedule": p.scoreSchedule || "",
-      "Score KPI": p.scoreKPI || "",
-      "Overall SCORE": p.overallScore || "",
-
-      "TARGET": p.target || "",
-      "Fecha": p.dateProject || "",
-      "FORUM": p.forum || p.tier || "",
-      "STATUS": p.projectStatus || p.estado || ""
-    };
-  });
-
-  const ws = XLSX.utils.json_to_sheet(rows);
+  const ws = XLSX.utils.aoa_to_sheet([headers, ...data]);
 
   ws["!cols"] = [
-    {wch:8}, {wch:18}, {wch:18}, {wch:25}, {wch:18}, {wch:25},
+    {wch:8}, {wch:18}, {wch:18}, {wch:30}, {wch:18}, {wch:25},
     {wch:25}, {wch:18}, {wch:35}, {wch:25}, {wch:15}, {wch:35},
     {wch:18}, {wch:25}, {wch:15}, {wch:20}, {wch:30}, {wch:15},
-    {wch:18}, {wch:18}, {wch:18}, {wch:18}, {wch:15}, {wch:15},
-    {wch:18}, {wch:18}
+    {wch:20}, {wch:18}, {wch:15}, {wch:18}, {wch:15}, {wch:15},
+    {wch:15}, {wch:15}
   ];
 
   const wb = XLSX.utils.book_new();
@@ -1394,7 +1415,7 @@ async function cargarExcel() {
         target: row["TARGET"] || "",
         dateProject: row["DATE"] || row["Fecha"] || "",
         forum: row["FORUM"] || "",
-        projectStatus: row["STATUS"] || "",
+        projectStatus: row["STATUS"] || "2026",
 
         estado: "activo",
         createdAt: new Date(),
