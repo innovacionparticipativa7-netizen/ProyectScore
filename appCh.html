@@ -254,27 +254,6 @@ canvas { max-height: 240px; }
           <div><label class="field-label">Sponsor</label><input id="sponsorProyecto" placeholder="Sponsor"></div>
           <div><label class="field-label">Owner</label><input id="ownerProyecto" placeholder="Owner"></div>
         </div>
-        <div><label class="field-label">Priority Level</label><input id="priorityLevel"></div>
-            <div><label class="field-label">L1 Coding</label><input id="l1Coding"></div>
-            <div><label class="field-label">Nivel 1</label><input id="nivel1"></div>
-            <div><label class="field-label">L1 KPI</label><input id="l1KPI"></div>
-            <div><label class="field-label">Primary Lead L1</label><input id="primaryLeadL1"></div>
-            <div><label class="field-label">Support Lead</label><input id="supportLead"></div>
-            <div><label class="field-label">L2 Coding</label><input id="l2Coding"></div>
-            <div><label class="field-label">Nivel 2</label><input id="nivel2"></div>
-            <div><label class="field-label">Primary Lead L2</label><input id="primaryLeadL2"></div>
-            <div><label class="field-label">Type 2</label><input id="type2"></div>
-            <div><label class="field-label">Nivel 3</label><input id="nivel3"></div>
-            <div><label class="field-label">L3 CODE</label><input id="l3Code"></div>
-            <div><label class="field-label">Primary Lead L3</label><input id="primaryLeadL3"></div>
-            <div><label class="field-label">Type</label><input id="type"></div>
-            <div><label class="field-label">FRONT AXIS</label><input id="frontAxis"></div>
-            <div><label class="field-label">Concatenate</label><input id="concatenate"></div>
-            <div><label class="field-label">PRESENTED</label><input id="presented"></div>
-            <div><label class="field-label">TARGET</label><input id="target"></div>
-            <div><label class="field-label">DATE</label><input id="dateProject" type="date"></div>
-            <div><label class="field-label">FORUM</label><input id="forum"></div>
-            <div><label class="field-label">STATUS</label><input id="projectStatus"></div>
         <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
           <button class="btn" onclick="crearProyecto()" style="flex:1;min-width:120px">Crear Proyecto</button>
           <div style="flex:1;min-width:200px">
@@ -799,8 +778,8 @@ async function init() {
       STATE.nombre = userData.nombre || user.email;
 
       const [snapP, snapH] = await Promise.all([
-        db.collection("proyectos_ch").limit(200).get(),
-        db.collection("historial_ch").orderBy("fecha","desc").limit(1000).get()
+        db.collection("proyectos").limit(200).get(),
+        db.collection("historial").orderBy("fecha","desc").limit(1000).get()
       ]);
       STATE.proyectos = snapP.docs.map(d => ({ id: d.id, ...d.data(), evaluacion: d.data().evaluacion || { kpi:"", gantt:"", pdca:[] } }));
       STATE.historial = snapH.docs.map(d => ({ id: d.id, ...d.data() }));
@@ -829,116 +808,27 @@ function toggleForm() {
 }
 
 async function crearProyecto() {
-
   const nombre   = document.getElementById("nombreProyecto").value.trim();
   const tier     = document.getElementById("tierProyecto").value;
   const seccion  = document.getElementById("seccionProyecto").value;
   const champion = document.getElementById("championProyecto").value;
   const sponsor  = document.getElementById("sponsorProyecto").value.trim();
   const owner    = document.getElementById("ownerProyecto").value.trim();
-
-  if (!nombre || !tier || !seccion || !champion || !sponsor || !owner) {
-    return notif("Completa los campos principales", true);
-  }
-
-  const extras = getCamposExtraProyecto();
-
-  setLoading(true, "Creando proyecto...");
-
+  if (!nombre||!tier||!seccion||!champion||!sponsor||!owner) return notif("Completa todos los campos",true);
+  setLoading(true,"Creando...");
   try {
-
-    const dataProyecto = {
-
-      nombre,
-      tier,
-      seccion,
-      champion,
-      sponsor,
-      owner,
-
-      ...extras,
-
-      estado: "activo",
-
-      createdAt: new Date(),
-
-      evaluacion: {
-        kpi: "",
-        gantt: "",
-        pdca: [],
-        comentarios: {
-          kpi: "",
-          gantt: "",
-          pdca: ""
-        }
-      }
-    };
-
-    const ref = await db.collection("proyectos_ch").add(dataProyecto);
-
-    STATE.proyectos.push({
-      id: ref.id,
-      ...dataProyecto
+    const ref = await db.collection("proyectos").add({
+      nombre,tier,seccion,champion,sponsor,owner,estado:"activo",createdAt:new Date(),
+      evaluacion:{kpi:"",gantt:"",pdca:[],comentarios:{kpi:"",gantt:"",pdca:""}}
     });
-
-    const camposLimpiar = [
-
-      "nombreProyecto",
-      "sponsorProyecto",
-      "ownerProyecto",
-
-      "priorityLevel",
-      "l1Coding",
-      "nivel1",
-      "l1KPI",
-      "primaryLeadL1",
-      "supportLead",
-      "l2Coding",
-      "nivel2",
-      "primaryLeadL2",
-      "type2",
-      "nivel3",
-      "l3Code",
-      "primaryLeadL3",
-      "type",
-      "frontAxis",
-      "concatenate",
-      "presented",
-      "target",
-      "dateProject",
-      "forum",
-      "projectStatus"
-
-    ];
-
-    camposLimpiar.forEach(id => {
-      const el = document.getElementById(id);
-      if (el) el.value = "";
-    });
-
-    document.getElementById("tierProyecto").value = "";
-    document.getElementById("seccionProyecto").value = "";
-
-    document.getElementById("championProyecto").innerHTML =
-      '<option value="">Primero elige sección</option>';
-
-    renderTabla();
-    poblarFiltrosHistorial();
-
-    notif("Proyecto creado correctamente ✅");
-
-  } catch(err) {
-
-    console.error(err);
-    notif("Error: " + err.message, true);
-
-  } finally {
-
-    setLoading(false);
-
-  }
+    STATE.proyectos.push({id:ref.id,nombre,tier,seccion,champion,sponsor,owner,estado:"activo",evaluacion:{kpi:"",gantt:"",pdca:[]}});
+    ["nombreProyecto","sponsorProyecto","ownerProyecto"].forEach(id=>document.getElementById(id).value="");
+    ["tierProyecto","seccionProyecto"].forEach(id=>document.getElementById(id).value="");
+    document.getElementById("championProyecto").innerHTML='<option value="">Primero elige sección</option>';
+    renderTabla(); poblarFiltrosHistorial(); notif("Proyecto creado ✅");
+  } catch(err) { notif("Error: "+err.message,true); }
+  finally { setLoading(false); }
 }
-
 
 function onSeccionChange() {
   const sec = document.getElementById("seccionProyecto").value;
@@ -1010,14 +900,14 @@ async function toggleEstado(id) {
   const p = STATE.proyectos.find(x=>x.id===id);
   if (!p) return;
   const nuevo = p.estado==="activo" ? "espera" : "activo";
-  try { await db.collection("proyectos_ch").doc(id).update({estado:nuevo}); p.estado=nuevo; renderTabla(); }
+  try { await db.collection("proyectos").doc(id).update({estado:nuevo}); p.estado=nuevo; renderTabla(); }
   catch(err) { notif("Error: "+err.message,true); }
 }
 
 async function eliminarProyecto(id) {
   if (!confirm("¿Eliminar este proyecto?")) return;
   try {
-    await db.collection("proyectos_ch").doc(id).delete();
+    await db.collection("proyectos").doc(id).delete();
     STATE.proyectos = STATE.proyectos.filter(p=>p.id!==id);
     renderTabla(); poblarFiltrosHistorial(); notif("Eliminado");
   } catch(err) { notif("Error: "+err.message,true); }
@@ -1172,122 +1062,53 @@ function renderTablaHistorial() {
   });
   tbody.appendChild(frag);
 }
-function getCamposExtraProyecto() {
-  return {
-    priorityLevel: document.getElementById("priorityLevel")?.value.trim() || "",
-    l1Coding: document.getElementById("l1Coding")?.value.trim() || "",
-    nivel1: document.getElementById("nivel1")?.value.trim() || "",
-    l1KPI: document.getElementById("l1KPI")?.value.trim() || "",
-    primaryLeadL1: document.getElementById("primaryLeadL1")?.value.trim() || "",
-    supportLead: document.getElementById("supportLead")?.value.trim() || "",
-    l2Coding: document.getElementById("l2Coding")?.value.trim() || "",
-    nivel2: document.getElementById("nivel2")?.value.trim() || "",
-    primaryLeadL2: document.getElementById("primaryLeadL2")?.value.trim() || "",
-    type2: document.getElementById("type2")?.value.trim() || "",
-    nivel3: document.getElementById("nivel3")?.value.trim() || "",
-    l3Code: document.getElementById("l3Code")?.value.trim() || "",
-    primaryLeadL3: document.getElementById("primaryLeadL3")?.value.trim() || "",
-    type: document.getElementById("type")?.value.trim() || "",
-    frontAxis: document.getElementById("frontAxis")?.value.trim() || "",
-    concatenate: document.getElementById("concatenate")?.value.trim() || "",
-    presented: document.getElementById("presented")?.value.trim() || "",
-    target: document.getElementById("target")?.value.trim() || "",
-    dateProject: document.getElementById("dateProject")?.value || "",
-    forum: document.getElementById("forum")?.value.trim() || "",
-    projectStatus: document.getElementById("projectStatus")?.value.trim() || ""
-  };
-}
+
 /* ============================================================
    EXPORTAR
 ============================================================ */
 function exportarExcel() {
-  if (!STATE.proyectos.length) return notif("No hay proyectos", true);
-
-  const headers = [
-    "#",
-    "Priority Level",
-    "L1 Coding",
-    "Nivel 1",
-    "L1 KPI",
-    "Primary Lead Site L1",
-    "Support Lead Site L1",
-    "L2 Coding",
-    "Nivel 2",
-    "Primary Lead L2",
-    "Type 2",
-    "Nivel 3",
-    "L3 CODE",
-    "Primary Lead L3",
-    "Type",
-    "FRONT AXIS",
-    "Concatenate",
-    "PRESENTED",
-    "Score Presentation",
-    "Score Schedule",
-    "Score KPI",
-    "Overall SCORE",
-    "TARGET",
-    "Fecha",
-    "FORUM",
-    "STATUS"
-  ];
-
-const data = STATE.proyectos.map(p => {
-    const ev = p.evaluacion || { kpi: "", gantt: "", pdca: [] };
-
-    const scoreKPI          = ev.kpi                        ? calcKPI(ev.kpi)    : "";
-    const scoreSchedule     = ev.gantt                      ? calcGANTT(ev.gantt): "";
-    const scorePresentation = (ev.pdca && ev.pdca.length)   ? calcPDCA(ev)       : "";
-    const overallScore      = (scoreKPI !== "" || scoreSchedule !== "" || scorePresentation !== "")
-                              ? +calcGeneral(ev).toFixed(2) : "";
-
-    return [
-      p.numeroProyecto  || "",
-      p.priorityLevel   || "",
-      p.l1Coding        || "",
-      p.nivel1          || "",
-      p.l1KPI           || "",
-      p.primaryLeadL1   || p.champion || "",   // Primary Lead Site L1 = Champion
-      p.supportLead     || p.sponsor  || "",   // Support Lead Site L1 = Sponsor
-      p.l2Coding        || "",
-      p.nivel2          || "",
-      p.primaryLeadL2   || "",
-      p.type2           || "",
-      p.nivel3          || p.nombre   || "",   // Nivel 3 = Nombre proyecto
-      p.l3Code          || "",
-      p.primaryLeadL3   || p.owner    || "",   // Primary Lead L3 = Owner
-      p.type            || "",
-      p.frontAxis       || "",
-      p.concatenate     || "",
-      p.presented       || "",
-      scorePresentation,                        // Score Presentation = PDCA%
-      scoreSchedule,                            // Score Schedule = GANTT%
-      scoreKPI,                                 // Score KPI = KPI%
-      overallScore,                             // Overall SCORE = General%
-      p.target          || "",
-      p.fechaCalificacion ? (p.fechaCalificacion.toDate ? p.fechaCalificacion.toDate() : new Date(p.fechaCalificacion)).toLocaleDateString() : (p.dateProject || ""),
-      p.forum           || p.tier     || "",   // FORUM = Tier
-      p.projectStatus   || "2026"
-    ];
+  if (!STATE.proyectos.length) return notif("Sin datos", true);
+  const consolidado = {};
+  STATE.historial.forEach(h => {
+    const sem = h.semana || getSemana(h.fecha?.toDate ? h.fecha.toDate() : new Date(h.fecha||0));
+    const key = `${h.proyectoId}_${sem}`;
+    if (!consolidado[key]) consolidado[key] = { meta:{}, usuarios:{} };
+    consolidado[key].meta = { proyectoId:h.proyectoId, proyectoNombre:h.proyectoNombre, champion:h.champion, seccion:h.seccion, tier:h.tier, semana:sem };
+    const uid = h.usuario||"?";
+    const fa  = h.fecha?.toDate ? h.fecha.toDate() : new Date(h.fecha||0);
+    if (!consolidado[key].usuarios[uid] || fa > (consolidado[key].usuarios[uid]._fecha))
+      consolidado[key].usuarios[uid] = { ...h, _fecha:fa };
   });
-
-  const ws = XLSX.utils.aoa_to_sheet([headers, ...data]);
-
-  ws["!cols"] = [
-    {wch:8},{wch:18},{wch:18},{wch:30},{wch:18},{wch:25},
-    {wch:25},{wch:18},{wch:35},{wch:25},{wch:15},{wch:35},
-    {wch:18},{wch:25},{wch:15},{wch:20},{wch:30},{wch:15},
-    {wch:20},{wch:18},{wch:15},{wch:18},{wch:15},{wch:15},
-    {wch:15},{wch:15}
-  ];
-
+  const rows = [];
+  Object.values(consolidado).forEach(({ meta, usuarios }) => {
+    const evals       = Object.values(usuarios), n = evals.length||1;
+    const promKPI     = +(evals.reduce((s,e)=>s+(e.kpi||0),0)/n).toFixed(1);
+    const promGANTT   = +(evals.reduce((s,e)=>s+(e.gantt||0),0)/n).toFixed(1);
+    const promPDCA    = +(evals.reduce((s,e)=>s+(e.pdca||0),0)/n).toFixed(1);
+    const promGeneral = +(evals.reduce((s,e)=>s+(e.general||0),0)/n).toFixed(2);
+    const evaluadores = evals.map(e=>STATE.mapaUsuarios[e.usuario||""]||e.usuarioNombre||e.usuario||"?").join(" / ");
+    const cKPI   = evals.filter(e=>e.comentariosKPI).map(e=>`[${STATE.mapaUsuarios[e.usuario||""]||e.usuarioNombre||"?"}]: ${e.comentariosKPI}`).join(" | ");
+    const cGANTT = evals.filter(e=>e.comentariosGANTT).map(e=>`[${STATE.mapaUsuarios[e.usuario||""]||e.usuarioNombre||"?"}]: ${e.comentariosGANTT}`).join(" | ");
+    const cPDCA  = evals.filter(e=>e.comentariosPDCA).map(e=>`[${STATE.mapaUsuarios[e.usuario||""]||e.usuarioNombre||"?"}]: ${e.comentariosPDCA}`).join(" | ");
+    const fechaRec = evals.sort((a,b)=>b._fecha-a._fecha)[0]._fecha;
+    rows.push({
+      Semana:meta.semana, Fecha:`${String(fechaRec.getMonth()+1).padStart(2,'0')}/${String(fechaRec.getDate()).padStart(2,'0')}/${fechaRec.getFullYear()}`,
+      Hora:fechaRec.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}),
+      Proyecto:meta.proyectoNombre||"–", Champion:meta.champion||"–", Seccion:meta.seccion||"–", Tier:meta.tier||"–",
+      Evaluadores:evaluadores, Num_Evaluadores:n,
+      KPI_Promedio:promKPI, GANTT_Promedio:promGANTT, PDCA_Promedio:promPDCA, General_Promedio:promGeneral,
+      Comentarios_KPI:cKPI||"", Comentarios_GANTT:cGANTT||"", Comentarios_PDCA:cPDCA||""
+    });
+  });
+  rows.sort((a,b)=>b.Semana-a.Semana);
+  const ws = XLSX.utils.json_to_sheet(rows,{cellDates:true});
+  ws['!cols']=[{wch:8},{wch:14},{wch:10},{wch:30},{wch:20},{wch:22},{wch:8},{wch:35},{wch:16},{wch:14},{wch:14},{wch:14},{wch:16},{wch:50},{wch:50},{wch:50}];
   const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, "Proyectos");
-
-  XLSX.writeFile(wb, `Proyectos_Formato_${new Date().toISOString().slice(0,10)}.xlsx`);
-
-  notif("Excel exportado correctamente ✅");
+  XLSX.utils.book_append_sheet(wb,ws,"Consolidado");
+  XLSX.writeFile(wb,`Consolidado_${new Date().toISOString().slice(0,10)}.xlsx`);
+  notif("Consolidado exportado ✅");
 }
+
 function exportarHistorialCompleto() {
   const rows = STATE.historial.map(h => {
     const fo = h.fecha?.toDate ? h.fecha.toDate() : new Date(h.fecha||0);
@@ -1342,126 +1163,13 @@ function exportarProyectos() {
 ============================================================ */
 async function cargarExcel() {
   const file = document.getElementById("inputExcel").files[0];
-  if (!file) return notif("Selecciona un archivo Excel", true);
-
-  if (!confirm("Esto borrará TODOS los proyectos actuales y cargará los nuevos. ¿Continuar?")) return;
-
-  setLoading(true, "Borrando proyectos actuales...");
-
-  try {
-    const snap = await db.collection("proyectos_ch").get();
-    const batchDelete = db.batch();
-
-    snap.docs.forEach(doc => {
-      batchDelete.delete(doc.ref);
-    });
-
-    await batchDelete.commit();
-
-    setLoading(true, "Leyendo archivo Excel...");
-
-    const data = await file.arrayBuffer();
-    const workbook = XLSX.read(data);
-    const sheet = workbook.Sheets[workbook.SheetNames[0]];
-    const rows = XLSX.utils.sheet_to_json(sheet);
-
-    if (!rows.length) {
-      setLoading(false);
-      return notif("El archivo está vacío", true);
-    }
-
-    setLoading(true, "Cargando nuevos proyectos...");
-
-    const batch = db.batch();
-
-    rows.forEach(row => {
-      const ref = db.collection("proyectos").doc();
-
-      const nombreFinal =
-        row["Nivel 3"] ||
-        row["Nivel 2"] ||
-        row["Nivel 1"] ||
-        "";
-
-      const proyecto = {
-        numeroProyecto: row["#"] || "",
-
-        nombre: nombreFinal,
-        tier: row["FORUM"] || "",
-        seccion: row["FRONT AXIS"] || "",
-        champion: row["Primary Lead Site L1"] || row["Primary Lead L1"] || "",
-        sponsor: row["Support Lead Site L1"] || row["Support Lead"] || "",
-        owner: row["Primary Lead L3"] || "",
-
-        priorityLevel: row["Priority Level"] || "",
-        l1Coding: row["L1 Coding"] || "",
-        nivel1: row["Nivel 1"] || "",
-        l1KPI: row["L1 KPI"] || "",
-        primaryLeadL1: row["Primary Lead Site L1"] || row["Primary Lead L1"] || "",
-        supportLead: row["Support Lead Site L1"] || row["Support Lead"] || "",
-
-        l2Coding: row["L2 Coding"] || "",
-        nivel2: row["Nivel 2"] || "",
-        primaryLeadL2: row["Primary Lead L2"] || "",
-
-        type2: row["Type 2"] || "",
-        nivel3: row["Nivel 3"] || "",
-        l3Code: row["L3 CODE"] || "",
-        primaryLeadL3: row["Primary Lead L3"] || "",
-
-        type: row["Type"] || "",
-        frontAxis: row["FRONT AXIS"] || "",
-        concatenate: row["Concatenate"] || "",
-        presented: row["PRESENTED"] || "",
-
-        target: row["TARGET"] || "",
-        dateProject: row["DATE"] || row["Fecha"] || "",
-        forum: row["FORUM"] || "",
-        projectStatus: row["STATUS"] || "2026",
-
-        estado: "activo",
-        createdAt: new Date(),
-
-        evaluacion: {
-          kpi: "",
-          gantt: "",
-          pdca: [],
-          comentarios: {
-            kpi: "",
-            gantt: "",
-            pdca: ""
-          }
-        }
-      };
-
-      batch.set(ref, proyecto);
-    });
-
-    await batch.commit();
-
-    const snapNuevo = await db.collection("proyectos_ch").limit(500).get();
-
-    STATE.proyectos = snapNuevo.docs.map(d => ({
-      id: d.id,
-      ...d.data(),
-      evaluacion: d.data().evaluacion || {
-        kpi: "",
-        gantt: "",
-        pdca: []
-      }
-    }));
-
-    renderTabla();
-    poblarFiltrosHistorial();
-
-    notif("Proyectos cargados correctamente ✅");
-
-  } catch (err) {
-    console.error(err);
-    notif("Error: " + err.message, true);
-  } finally {
-    setLoading(false);
-  }
+  if (!file) return notif("Selecciona un archivo",true);
+  const reader = new FileReader();
+  reader.onload = async e => {
+    const wb = XLSX.read(new Uint8Array(e.target.result),{type:"array"});
+    await guardarMasivo(XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]));
+  };
+  reader.readAsArrayBuffer(file);
 }
 
 async function guardarMasivo(rows) {
@@ -1472,7 +1180,7 @@ async function guardarMasivo(rows) {
     const {nombre,tier,seccion,champion,sponsor,owner}=row;
     if (!nombre||!tier||!seccion||!champion||!sponsor||!owner||!TIERS.includes(tier)||!SECS.includes(seccion)){err++;continue;}
     try {
-      const ref = await db.collection("proyectos_ch").add({
+      const ref = await db.collection("proyectos").add({
         nombre,tier,seccion,champion,sponsor,owner,estado:"activo",createdAt:new Date(),
         evaluacion:{kpi:"",gantt:"",pdca:[],comentarios:{kpi:"",gantt:"",pdca:""}}
       });
@@ -1485,68 +1193,21 @@ async function guardarMasivo(rows) {
 }
 
 function descargarPlantilla() {
-
-  const plantilla = [
-    {
-      "#": "",
-      "Priority Level": "",
-      "L1 Coding": "",
-      "Nivel 1": "",
-      "L1 KPI": "",
-      "Primary Lead L1": "",
-      "Support Lead": "",
-      "L2 Coding": "",
-      "Nivel 2": "",
-      "Primary Lead L2": "",
-      "Type 2": "",
-      "Nivel 3": "",
-      "L3 CODE": "",
-      "Primary Lead L3": "",
-      "Type": "",
-      "FRONT AXIS": "",
-      "Concatenate": "",
-      "PRESENTED": "",
-      "TARGET": "",
-      "DATE": "",
-      "FORUM": "",
-      "STATUS": ""
-    }
-  ];
-
-  const ws = XLSX.utils.json_to_sheet(plantilla);
-
-  ws["!cols"] = [
-    {wch:8},
-    {wch:18},
-    {wch:18},
-    {wch:18},
-    {wch:18},
-    {wch:25},
-    {wch:25},
-    {wch:18},
-    {wch:18},
-    {wch:25},
-    {wch:18},
-    {wch:25},
-    {wch:18},
-    {wch:25},
-    {wch:18},
-    {wch:18},
-    {wch:25},
-    {wch:18},
-    {wch:18},
-    {wch:18},
-    {wch:18},
-    {wch:18}
-  ];
-
   const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, "Plantilla_Proyectos");
-
-  XLSX.writeFile(wb, "Plantilla_Proyectos_Completa.xlsx");
-
-  notif("Plantilla descargada ✅");
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet([
+    {nombre:"Proyecto ejemplo",tier:"Tier 1",seccion:"Buy to Make",champion:"Antonio Aguilar",sponsor:"Nombre Sponsor",owner:"Nombre Owner"}
+  ]),"Plantilla");
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet([
+    {tier:"Tier 1",seccion:"Buy to Make",champion:"Antonio Aguilar"},
+    {tier:"Tier 2",seccion:"DTC",champion:"Jaime Castro"},
+    {tier:"Tier 3",seccion:"Material Optimization",champion:"Fabian Perez"},
+    {tier:"Tier 3",seccion:"Material Optimization",champion:"Jorge Millan"},
+    {tier:"Tier 4",seccion:"Resourcing",champion:"Gerardo Loredo"},
+    {tier:"Tier 5",seccion:"OH Cost Control",champion:"Carlos Perez"}
+  ]),"Catalogo");
+  XLSX.writeFile(wb,"Plantilla_Proyectos.xlsx");
 }
+
 /* ============================================================
    USER
 ============================================================ */
@@ -1663,14 +1324,7 @@ async function guardar() {
   }};
   try {
     const now = new Date();
-    await db.collection("proyectos_ch").doc(STATE.proyectoActualId).update({
-      evaluacion:        ev,
-      fechaCalificacion: now,
-      scoreKPI:          calcKPI(ev.kpi),
-      scoreSchedule:     calcGANTT(ev.gantt),
-      scorePresentation: calcPDCA(ev),
-      overallScore:      +calcGeneral(ev).toFixed(2)
-    });
+    await db.collection("proyectos").doc(STATE.proyectoActualId).update({ evaluacion:ev, fechaCalificacion:now });
     const histEntry = {
       proyectoId:STATE.proyectoActualId, proyectoNombre:STATE.proyectoActual.nombre,
       champion:STATE.proyectoActual.champion||"–", seccion:STATE.proyectoActual.seccion||"–", tier:STATE.proyectoActual.tier||"–",
@@ -1680,16 +1334,9 @@ async function guardar() {
       kpi:calcKPI(ev.kpi), gantt:calcGANTT(ev.gantt), pdca:calcPDCA(ev), general:calcGeneral(ev),
       comentariosKPI:ev.comentarios.kpi, comentariosGANTT:ev.comentarios.gantt, comentariosPDCA:ev.comentarios.pdca
     };
-    await db.collection("historial_ch").add(histEntry);
+    await db.collection("historial").add(histEntry);
     const idx = STATE.proyectos.findIndex(p=>p.id===STATE.proyectoActualId);
-      if (idx !== -1) {
-        STATE.proyectos[idx].evaluacion      = JSON.parse(JSON.stringify(ev));
-        STATE.proyectos[idx].fechaCalificacion = now;
-        STATE.proyectos[idx].scoreKPI          = calcKPI(ev.kpi);
-        STATE.proyectos[idx].scoreSchedule     = calcGANTT(ev.gantt);
-        STATE.proyectos[idx].scorePresentation = calcPDCA(ev);
-        STATE.proyectos[idx].overallScore      = +calcGeneral(ev).toFixed(2);
-      }
+    if (idx!==-1) STATE.proyectos[idx].evaluacion = JSON.parse(JSON.stringify(ev));
     STATE.historial.unshift({...histEntry, _fecha:now});
     renderSemaforosDesdeProyecto(ev);
     notif("Evaluación guardada ✅");
