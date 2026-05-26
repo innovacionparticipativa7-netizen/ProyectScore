@@ -799,8 +799,8 @@ async function init() {
       STATE.nombre = userData.nombre || user.email;
 
       const [snapP, snapH] = await Promise.all([
-        db.collection("proyectos").limit(200).get(),
-        db.collection("historial").orderBy("fecha","desc").limit(1000).get()
+        db.collection("proyectos_ch").limit(200).get(),
+        db.collection("historial_ch").orderBy("fecha","desc").limit(1000).get()
       ]);
       STATE.proyectos = snapP.docs.map(d => ({ id: d.id, ...d.data(), evaluacion: d.data().evaluacion || { kpi:"", gantt:"", pdca:[] } }));
       STATE.historial = snapH.docs.map(d => ({ id: d.id, ...d.data() }));
@@ -874,7 +874,7 @@ async function crearProyecto() {
       }
     };
 
-    const ref = await db.collection("proyectos").add(dataProyecto);
+    const ref = await db.collection("proyectos_ch").add(dataProyecto);
 
     STATE.proyectos.push({
       id: ref.id,
@@ -1010,14 +1010,14 @@ async function toggleEstado(id) {
   const p = STATE.proyectos.find(x=>x.id===id);
   if (!p) return;
   const nuevo = p.estado==="activo" ? "espera" : "activo";
-  try { await db.collection("proyectos").doc(id).update({estado:nuevo}); p.estado=nuevo; renderTabla(); }
+  try { await db.collection("proyectos_ch").doc(id).update({estado:nuevo}); p.estado=nuevo; renderTabla(); }
   catch(err) { notif("Error: "+err.message,true); }
 }
 
 async function eliminarProyecto(id) {
   if (!confirm("¿Eliminar este proyecto?")) return;
   try {
-    await db.collection("proyectos").doc(id).delete();
+    await db.collection("proyectos_ch").doc(id).delete();
     STATE.proyectos = STATE.proyectos.filter(p=>p.id!==id);
     renderTabla(); poblarFiltrosHistorial(); notif("Eliminado");
   } catch(err) { notif("Error: "+err.message,true); }
@@ -1349,7 +1349,7 @@ async function cargarExcel() {
   setLoading(true, "Borrando proyectos actuales...");
 
   try {
-    const snap = await db.collection("proyectos").get();
+    const snap = await db.collection("proyectos_ch").get();
     const batchDelete = db.batch();
 
     snap.docs.forEach(doc => {
@@ -1439,7 +1439,7 @@ async function cargarExcel() {
 
     await batch.commit();
 
-    const snapNuevo = await db.collection("proyectos").limit(500).get();
+    const snapNuevo = await db.collection("proyectos_ch").limit(500).get();
 
     STATE.proyectos = snapNuevo.docs.map(d => ({
       id: d.id,
@@ -1472,7 +1472,7 @@ async function guardarMasivo(rows) {
     const {nombre,tier,seccion,champion,sponsor,owner}=row;
     if (!nombre||!tier||!seccion||!champion||!sponsor||!owner||!TIERS.includes(tier)||!SECS.includes(seccion)){err++;continue;}
     try {
-      const ref = await db.collection("proyectos").add({
+      const ref = await db.collection("proyectos_ch").add({
         nombre,tier,seccion,champion,sponsor,owner,estado:"activo",createdAt:new Date(),
         evaluacion:{kpi:"",gantt:"",pdca:[],comentarios:{kpi:"",gantt:"",pdca:""}}
       });
@@ -1663,7 +1663,7 @@ async function guardar() {
   }};
   try {
     const now = new Date();
-    await db.collection("proyectos").doc(STATE.proyectoActualId).update({
+    await db.collection("proyectos_ch").doc(STATE.proyectoActualId).update({
       evaluacion:        ev,
       fechaCalificacion: now,
       scoreKPI:          calcKPI(ev.kpi),
@@ -1680,7 +1680,7 @@ async function guardar() {
       kpi:calcKPI(ev.kpi), gantt:calcGANTT(ev.gantt), pdca:calcPDCA(ev), general:calcGeneral(ev),
       comentariosKPI:ev.comentarios.kpi, comentariosGANTT:ev.comentarios.gantt, comentariosPDCA:ev.comentarios.pdca
     };
-    await db.collection("historial").add(histEntry);
+    await db.collection("historial_ch").add(histEntry);
     const idx = STATE.proyectos.findIndex(p=>p.id===STATE.proyectoActualId);
       if (idx !== -1) {
         STATE.proyectos[idx].evaluacion      = JSON.parse(JSON.stringify(ev));
