@@ -1682,7 +1682,14 @@ async function guardar() {
     };
     await db.collection("historial").add(histEntry);
     const idx = STATE.proyectos.findIndex(p=>p.id===STATE.proyectoActualId);
-    if (idx!==-1) STATE.proyectos[idx].evaluacion = JSON.parse(JSON.stringify(ev));
+      if (idx !== -1) {
+        STATE.proyectos[idx].evaluacion      = JSON.parse(JSON.stringify(ev));
+        STATE.proyectos[idx].fechaCalificacion = now;
+        STATE.proyectos[idx].scoreKPI          = calcKPI(ev.kpi);
+        STATE.proyectos[idx].scoreSchedule     = calcGANTT(ev.gantt);
+        STATE.proyectos[idx].scorePresentation = calcPDCA(ev);
+        STATE.proyectos[idx].overallScore      = +calcGeneral(ev).toFixed(2);
+      }
     STATE.historial.unshift({...histEntry, _fecha:now});
     renderSemaforosDesdeProyecto(ev);
     notif("Evaluación guardada ✅");
