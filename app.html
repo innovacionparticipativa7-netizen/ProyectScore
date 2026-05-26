@@ -1232,14 +1232,16 @@ function exportarExcel() {
     "STATUS"
   ];
 
-  const data = STATE.proyectos.map(p => {
+ const data = STATE.proyectos.map(p => {
     const ev = p.evaluacion || { kpi: "", gantt: "", pdca: [] };
-    const scoreKPI          = ev.kpi   ? calcKPI(ev.kpi)    : "";
-    const scoreSchedule     = ev.gantt ? calcGANTT(ev.gantt): "";
-    const scorePresentation = (ev.pdca && ev.pdca.length)   ? calcPDCA(ev) : "";
+    
+    // Calculados desde evaluacion (prioridad) o campos guardados como fallback
+    const scoreKPI          = ev.kpi   ? calcKPI(ev.kpi)     : (p.scoreKPI          !== "" && p.scoreKPI          != null ? p.scoreKPI          : "");
+    const scoreSchedule     = ev.gantt ? calcGANTT(ev.gantt) : (p.scoreSchedule     !== "" && p.scoreSchedule     != null ? p.scoreSchedule     : "");
+    const scorePresentation = (ev.pdca && ev.pdca.length)    ? calcPDCA(ev)         : (p.scorePresentation !== "" && p.scorePresentation != null ? p.scorePresentation : "");
     const overallScore      = (scoreKPI !== "" || scoreSchedule !== "" || scorePresentation !== "")
-      ? +calcGeneral(ev).toFixed(2)
-      : "";
+      ? +calcGeneral({ kpi: ev.kpi, gantt: ev.gantt, pdca: ev.pdca || [] }).toFixed(2)
+      : (p.overallScore !== "" && p.overallScore != null ? p.overallScore : "");
 
     return [
       p.numeroProyecto  || "",
@@ -1257,7 +1259,7 @@ function exportarExcel() {
       p.l3Code          || "",
       p.primaryLeadL3   || p.owner    || "",   // Primary Lead L3 = Owner
       p.type            || "",
-      p.frontAxis       || p.seccion  || "",   // FRONT AXIS = Sección
+      p.frontAxis       || "",
       p.concatenate     || "",
       p.presented       || "",
       scorePresentation,                        // Score Presentation = PDCA%
@@ -1265,7 +1267,7 @@ function exportarExcel() {
       scoreKPI,                                 // Score KPI = KPI%
       overallScore,                             // Overall SCORE = General%
       p.target          || "",
-      p.dateProject     || "",
+      p.fechaCalificacion ? (p.fechaCalificacion.toDate ? p.fechaCalificacion.toDate() : new Date(p.fechaCalificacion)).toLocaleDateString() : (p.dateProject || ""),
       p.forum           || p.tier     || "",   // FORUM = Tier
       p.projectStatus   || "2026"
     ];
