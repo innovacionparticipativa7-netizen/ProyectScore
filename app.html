@@ -1201,113 +1201,56 @@ function getCamposExtraProyecto() {
    EXPORTAR
 ============================================================ */
 function exportarExcel() {
-
-  if (!STATE.proyectos.length) {
-    return notif("No hay proyectos", true);
-  }
+  if (!STATE.proyectos.length) return notif("No hay proyectos", true);
 
   const rows = STATE.proyectos.map(p => {
-
-    const ev = p.evaluacion || {};
-
-    const scoreKPI          = calcKPI(ev.kpi);
-    const scoreSchedule     = calcGANTT(ev.gantt);
-    const scorePresentation = calcPDCA(ev);
-    const overallScore      = +calcGeneral(ev).toFixed(2);
-
     return {
-
-      "#": "",
+      "#": p.numeroProyecto || "",
 
       "Priority Level": p.priorityLevel || "",
-
       "L1 Coding": p.l1Coding || "",
-
       "Nivel 1": p.nivel1 || "",
-
       "L1 KPI": p.l1KPI || "",
-
-      "Primary Lead L1": p.primaryLeadL1 || "",
-
-      "Support Lead": p.supportLead || "",
+      "Primary Lead Site L1": p.primaryLeadL1 || p.champion || "",
+      "Support Lead Site L1": p.supportLead || p.sponsor || "",
 
       "L2 Coding": p.l2Coding || "",
-
       "Nivel 2": p.nivel2 || "",
-
       "Primary Lead L2": p.primaryLeadL2 || "",
 
       "Type 2": p.type2 || "",
-
-      "Nivel 3": p.nivel3 || "",
-
+      "Nivel 3": p.nivel3 || p.nombre || "",
       "L3 CODE": p.l3Code || "",
-
-      "Primary Lead L3": p.primaryLeadL3 || "",
+      "Primary Lead L3": p.primaryLeadL3 || p.owner || "",
 
       "Type": p.type || "",
-
-      "FRONT AXIS": p.frontAxis || "",
-
+      "FRONT AXIS": p.frontAxis || p.seccion || "",
       "Concatenate": p.concatenate || "",
-
       "PRESENTED": p.presented || "",
 
-      "SCORE Presentation": scorePresentation,
-
-      "SCORE Schedule": scoreSchedule,
-
-      "SCORE KPI": scoreKPI,
-
-      "Overall SCORE": overallScore,
+      "Score Presentation": p.scorePresentation || "",
+      "Score Schedule": p.scoreSchedule || "",
+      "Score KPI": p.scoreKPI || "",
+      "Overall SCORE": p.overallScore || "",
 
       "TARGET": p.target || "",
-
-      "DATE": p.dateProject || "",
-
-      "FORUM": p.forum || "",
-
+      "Fecha": p.dateProject || "",
+      "FORUM": p.forum || p.tier || "",
       "STATUS": p.projectStatus || p.estado || ""
-
     };
-
   });
 
   const ws = XLSX.utils.json_to_sheet(rows);
 
   ws["!cols"] = [
-
-    {wch:5},
-    {wch:18},
-    {wch:18},
-    {wch:18},
-    {wch:18},
-    {wch:25},
-    {wch:25},
-    {wch:18},
-    {wch:18},
-    {wch:25},
-    {wch:18},
-    {wch:18},
-    {wch:18},
-    {wch:25},
-    {wch:18},
-    {wch:18},
-    {wch:25},
-    {wch:18},
-    {wch:18},
-    {wch:18},
-    {wch:18},
-    {wch:18},
-    {wch:18},
-    {wch:18},
-    {wch:18},
-    {wch:18}
-
+    {wch:8}, {wch:18}, {wch:18}, {wch:25}, {wch:18}, {wch:25},
+    {wch:25}, {wch:18}, {wch:35}, {wch:25}, {wch:15}, {wch:35},
+    {wch:18}, {wch:25}, {wch:15}, {wch:20}, {wch:30}, {wch:15},
+    {wch:18}, {wch:18}, {wch:18}, {wch:18}, {wch:15}, {wch:15},
+    {wch:18}, {wch:18}
   ];
 
   const wb = XLSX.utils.book_new();
-
   XLSX.utils.book_append_sheet(wb, ws, "Proyectos");
 
   XLSX.writeFile(
@@ -1316,9 +1259,7 @@ function exportarExcel() {
   );
 
   notif("Excel exportado correctamente ✅");
-
 }
-
 function exportarHistorialCompleto() {
   const rows = STATE.historial.map(h => {
     const fo = h.fecha?.toDate ? h.fecha.toDate() : new Date(h.fecha||0);
@@ -1373,13 +1314,131 @@ function exportarProyectos() {
 ============================================================ */
 async function cargarExcel() {
   const file = document.getElementById("inputExcel").files[0];
-  if (!file) return notif("Selecciona un archivo",true);
-  const reader = new FileReader();
-  reader.onload = async e => {
-    const wb = XLSX.read(new Uint8Array(e.target.result),{type:"array"});
-    await guardarMasivo(XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]));
-  };
-  reader.readAsArrayBuffer(file);
+  if (!file) return notif("Selecciona un archivo Excel", true);
+
+  if (!confirm("Esto borrará TODOS los proyectos actuales y cargará los nuevos. ¿Continuar?")) return;
+
+  setLoading(true, "Borrando proyectos actuales...");
+
+  try {
+    const snap = await db.collection("proyectos").get();
+    const batchDelete = db.batch();
+
+    snap.docs.forEach(doc => {
+      batchDelete.delete(doc.ref);
+    });
+
+    await batchDelete.commit();
+
+    setLoading(true, "Leyendo archivo Excel...");
+
+    const data = await file.arrayBuffer();
+    const workbook = XLSX.read(data);
+    const sheet = workbook.Sheets[workbook.SheetNames[0]];
+    const rows = XLSX.utils.sheet_to_json(sheet);
+
+    if (!rows.length) {
+      setLoading(false);
+      return notif("El archivo está vacío", true);
+    }
+
+    setLoading(true, "Cargando nuevos proyectos...");
+
+    const batch = db.batch();
+
+    rows.forEach(row => {
+      const ref = db.collection("proyectos").doc();
+
+      const nombreFinal =
+        row["Nivel 3"] ||
+        row["Nivel 2"] ||
+        row["Nivel 1"] ||
+        "";
+
+      const proyecto = {
+        numeroProyecto: row["#"] || "",
+
+        nombre: nombreFinal,
+        tier: row["FORUM"] || "",
+        seccion: row["FRONT AXIS"] || "",
+        champion: row["Primary Lead Site L1"] || row["Primary Lead L1"] || "",
+        sponsor: row["Support Lead Site L1"] || row["Support Lead"] || "",
+        owner: row["Primary Lead L3"] || "",
+
+        priorityLevel: row["Priority Level"] || "",
+        l1Coding: row["L1 Coding"] || "",
+        nivel1: row["Nivel 1"] || "",
+        l1KPI: row["L1 KPI"] || "",
+        primaryLeadL1: row["Primary Lead Site L1"] || row["Primary Lead L1"] || "",
+        supportLead: row["Support Lead Site L1"] || row["Support Lead"] || "",
+
+        l2Coding: row["L2 Coding"] || "",
+        nivel2: row["Nivel 2"] || "",
+        primaryLeadL2: row["Primary Lead L2"] || "",
+
+        type2: row["Type 2"] || "",
+        nivel3: row["Nivel 3"] || "",
+        l3Code: row["L3 CODE"] || "",
+        primaryLeadL3: row["Primary Lead L3"] || "",
+
+        type: row["Type"] || "",
+        frontAxis: row["FRONT AXIS"] || "",
+        concatenate: row["Concatenate"] || "",
+        presented: row["PRESENTED"] || "",
+
+        scorePresentation: row["SCORE Presentation"] || row["Score Presentation"] || "",
+        scoreSchedule: row["SCORE Schedule"] || row["Score Schedule"] || "",
+        scoreKPI: row["SCORE KPI"] || row["Score KPI"] || "",
+        overallScore: row["Overall SCORE"] || row["Overall Score"] || "",
+
+        target: row["TARGET"] || "",
+        dateProject: row["DATE"] || row["Fecha"] || "",
+        forum: row["FORUM"] || "",
+        projectStatus: row["STATUS"] || "",
+
+        estado: "activo",
+        createdAt: new Date(),
+
+        evaluacion: {
+          kpi: "",
+          gantt: "",
+          pdca: [],
+          comentarios: {
+            kpi: "",
+            gantt: "",
+            pdca: ""
+          }
+        }
+      };
+
+      batch.set(ref, proyecto);
+    });
+
+    await batch.commit();
+
+    const snapNuevo = await db.collection("proyectos").limit(500).get();
+
+    STATE.proyectos = snapNuevo.docs.map(d => ({
+      id: d.id,
+      ...d.data(),
+      evaluacion: d.data().evaluacion || {
+        kpi: "",
+        gantt: "",
+        pdca: []
+      }
+    }));
+
+    renderTabla();
+    poblarFiltrosHistorial();
+
+    notif("Proyectos cargados correctamente ✅");
+
+  } catch (err) {
+    console.error(err);
+    notif("Error: " + err.message, true);
+  } finally {
+    setLoading(false);
+  }
 }
 
 async function guardarMasivo(rows) {
@@ -1405,95 +1464,63 @@ async function guardarMasivo(rows) {
 function descargarPlantilla() {
 
   const plantilla = [
-
     {
-      "Nombre": "",
-      "Tier": "",
-      "Seccion": "",
-      "Champion": "",
-      "Sponsor": "",
-      "Owner": "",
-
+      "#": "",
       "Priority Level": "",
       "L1 Coding": "",
       "Nivel 1": "",
       "L1 KPI": "",
       "Primary Lead L1": "",
       "Support Lead": "",
-
       "L2 Coding": "",
       "Nivel 2": "",
       "Primary Lead L2": "",
-
       "Type 2": "",
       "Nivel 3": "",
       "L3 CODE": "",
       "Primary Lead L3": "",
-
       "Type": "",
       "FRONT AXIS": "",
       "Concatenate": "",
       "PRESENTED": "",
-
       "TARGET": "",
       "DATE": "",
       "FORUM": "",
       "STATUS": ""
     }
-
   ];
 
   const ws = XLSX.utils.json_to_sheet(plantilla);
 
   ws["!cols"] = [
-
-    {wch:30},
-    {wch:12},
-    {wch:22},
-    {wch:22},
-    {wch:22},
-    {wch:22},
-
+    {wch:8},
     {wch:18},
     {wch:18},
     {wch:18},
     {wch:18},
     {wch:25},
     {wch:25},
-
     {wch:18},
     {wch:18},
     {wch:25},
-
     {wch:18},
+    {wch:25},
+    {wch:18},
+    {wch:25},
     {wch:18},
     {wch:18},
     {wch:25},
-
     {wch:18},
-    {wch:18},
-    {wch:22},
-    {wch:18},
-
     {wch:18},
     {wch:18},
     {wch:18},
     {wch:18}
-
   ];
 
   const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Plantilla_Proyectos");
 
-  XLSX.utils.book_append_sheet(
-    wb,
-    ws,
-    "Plantilla_Proyectos"
-  );
-
-  XLSX.writeFile(
-    wb,
-    "Plantilla_Proyectos_Completa.xlsx"
-  );
+  XLSX.writeFile(wb, "Plantilla_Proyectos_Completa.xlsx");
 
   notif("Plantilla descargada ✅");
 }
