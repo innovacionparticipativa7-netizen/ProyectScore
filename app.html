@@ -1232,52 +1232,59 @@ function exportarExcel() {
     "STATUS"
   ];
 
-  const data = STATE.proyectos.map(p => [
-    p.numeroProyecto || "",
-    p.priorityLevel || "",
-    p.l1Coding || "",
-    p.nivel1 || "",
-    p.l1KPI || "",
-    p.primaryLeadL1 || p.champion || "",
-    p.supportLead || p.sponsor || "",
-    p.l2Coding || "",
-    p.nivel2 || "",
-    p.primaryLeadL2 || "",
-    p.type2 || "",
-    p.nivel3 || p.nombre || "",
-    p.l3Code || "",
-    p.primaryLeadL3 || p.owner || "",
-    p.type || "",
-    p.frontAxis || p.seccion || "",
-    p.concatenate || "",
-    p.presented || "",
-    p.scorePresentation || "",
-    p.scoreSchedule || "",
-    p.scoreKPI || "",
-    p.overallScore || "",
-    p.target || "",
-    p.dateProject || "",
-    p.forum || p.tier || "",
-    p.projectStatus || "2026"
-  ]);
+  const data = STATE.proyectos.map(p => {
+    const ev = p.evaluacion || { kpi: "", gantt: "", pdca: [] };
+    const scoreKPI          = ev.kpi   ? calcKPI(ev.kpi)    : "";
+    const scoreSchedule     = ev.gantt ? calcGANTT(ev.gantt): "";
+    const scorePresentation = (ev.pdca && ev.pdca.length)   ? calcPDCA(ev) : "";
+    const overallScore      = (scoreKPI !== "" || scoreSchedule !== "" || scorePresentation !== "")
+      ? +calcGeneral(ev).toFixed(2)
+      : "";
+
+    return [
+      p.numeroProyecto  || "",
+      p.priorityLevel   || "",
+      p.l1Coding        || "",
+      p.nivel1          || "",
+      p.l1KPI           || "",
+      p.primaryLeadL1   || p.champion || "",   // Primary Lead Site L1 = Champion
+      p.supportLead     || p.sponsor  || "",   // Support Lead Site L1 = Sponsor
+      p.l2Coding        || "",
+      p.nivel2          || "",
+      p.primaryLeadL2   || "",
+      p.type2           || "",
+      p.nivel3          || p.nombre   || "",   // Nivel 3 = Nombre proyecto
+      p.l3Code          || "",
+      p.primaryLeadL3   || p.owner    || "",   // Primary Lead L3 = Owner
+      p.type            || "",
+      p.frontAxis       || p.seccion  || "",   // FRONT AXIS = Sección
+      p.concatenate     || "",
+      p.presented       || "",
+      scorePresentation,                        // Score Presentation = PDCA%
+      scoreSchedule,                            // Score Schedule = GANTT%
+      scoreKPI,                                 // Score KPI = KPI%
+      overallScore,                             // Overall SCORE = General%
+      p.target          || "",
+      p.dateProject     || "",
+      p.forum           || p.tier     || "",   // FORUM = Tier
+      p.projectStatus   || "2026"
+    ];
+  });
 
   const ws = XLSX.utils.aoa_to_sheet([headers, ...data]);
 
   ws["!cols"] = [
-    {wch:8}, {wch:18}, {wch:18}, {wch:30}, {wch:18}, {wch:25},
-    {wch:25}, {wch:18}, {wch:35}, {wch:25}, {wch:15}, {wch:35},
-    {wch:18}, {wch:25}, {wch:15}, {wch:20}, {wch:30}, {wch:15},
-    {wch:20}, {wch:18}, {wch:15}, {wch:18}, {wch:15}, {wch:15},
-    {wch:15}, {wch:15}
+    {wch:8},{wch:18},{wch:18},{wch:30},{wch:18},{wch:25},
+    {wch:25},{wch:18},{wch:35},{wch:25},{wch:15},{wch:35},
+    {wch:18},{wch:25},{wch:15},{wch:20},{wch:30},{wch:15},
+    {wch:20},{wch:18},{wch:15},{wch:18},{wch:15},{wch:15},
+    {wch:15},{wch:15}
   ];
 
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, "Proyectos");
 
-  XLSX.writeFile(
-    wb,
-    `Proyectos_Formato_${new Date().toISOString().slice(0,10)}.xlsx`
-  );
+  XLSX.writeFile(wb, `Proyectos_Formato_${new Date().toISOString().slice(0,10)}.xlsx`);
 
   notif("Excel exportado correctamente ✅");
 }
