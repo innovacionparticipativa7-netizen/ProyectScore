@@ -1,0 +1,1709 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Panel de Proyectos</title>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #f0f2f5;
+  --surface: #ffffff;
+  --surface2: #f8f9fb;
+  --border: #e2e6ea;
+  --text: #1a1f2e;
+  --text-muted: #6b7280;
+  --primary: #1f2937;
+  --accent: #10b981;
+  --accent2: #3b82f6;
+  --danger: #ef4444;
+  --radius: 14px;
+  --shadow: 0 2px 12px rgba(0,0,0,0.07);
+  --shadow-lg: 0 8px 30px rgba(0,0,0,0.10);
+}
+
+body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); font-size: 14px; line-height: 1.5; }
+
+#loading-overlay {
+  position: fixed; inset: 0; background: rgba(255,255,255,0.93);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  z-index: 9999; gap: 14px;
+}
+.spinner { width: 40px; height: 40px; border: 4px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin .75s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+#loading-msg { color: var(--text-muted); font-size: 13px; }
+
+.header { background: var(--primary); color: #fff; padding: 14px 20px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
+.header h2 { font-size: 16px; font-weight: 600; }
+.header-right { display: flex; align-items: center; gap: 10px; }
+#badge-rol { background: rgba(255,255,255,0.15); padding: 3px 10px; border-radius: 20px; font-size: 12px; }
+
+.container { padding: 16px; max-width: 1400px; margin: auto; }
+.grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+
+.card { background: var(--surface); border-radius: var(--radius); padding: 16px; box-shadow: var(--shadow); border: 1px solid var(--border); }
+.card h3 { font-size: 14px; font-weight: 600; margin-bottom: 12px; }
+
+button { border: none; border-radius: 10px; cursor: pointer; font-family: inherit; font-weight: 600; transition: opacity .15s, transform .1s; }
+button:active { transform: scale(.97); }
+button:disabled { opacity: .5; cursor: not-allowed; }
+.btn { width: 100%; padding: 11px; background: linear-gradient(135deg, var(--accent), #059669); color: #fff; font-size: 14px; }
+.btn:hover:not(:disabled) { opacity: .9; }
+.btn-sm { padding: 7px 14px; font-size: 12px; }
+.btn-secondary { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+.btn-danger { background: var(--danger); color: #fff; }
+.btn-blue { background: var(--accent2); color: #fff; }
+
+input, select, textarea { width: 100%; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--border); background: var(--surface2); color: var(--text); font-family: inherit; font-size: 14px; transition: border-color .15s, box-shadow .15s; outline: none; }
+input:focus, select:focus, textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(16,185,129,.15); background: #fff; }
+label.field-label { display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 4px; margin-top: 10px; }
+textarea { min-height: 70px; resize: vertical; }
+
+/* ===== MULTI-SELECT ===== */
+.multi-select-wrap { position: relative; }
+.multi-select-trigger {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 9px 12px; border-radius: 10px; border: 1px solid var(--border);
+  background: var(--surface2); cursor: pointer; user-select: none;
+  font-size: 13px; color: var(--text); gap: 8px;
+  transition: border-color .15s, box-shadow .15s;
+}
+.multi-select-trigger:hover { border-color: var(--accent); }
+.multi-select-trigger.open { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(16,185,129,.15); background: #fff; }
+.multi-select-trigger .trigger-text { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.multi-select-trigger .arrow { font-size: 10px; color: var(--text-muted); transition: transform .2s; flex-shrink: 0; }
+.multi-select-trigger.open .arrow { transform: rotate(180deg); }
+
+.multi-select-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
+.ms-tag {
+  display: inline-flex; align-items: center; gap: 4px;
+  background: #d1fae5; color: #065f46; border-radius: 20px;
+  padding: 2px 8px; font-size: 11px; font-weight: 600;
+}
+.ms-tag .rm { cursor: pointer; opacity: .6; font-size: 12px; line-height: 1; }
+.ms-tag .rm:hover { opacity: 1; }
+
+.multi-select-dropdown {
+  position: absolute; top: calc(100% + 6px); left: 0; right: 0;
+  background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+  box-shadow: var(--shadow-lg); z-index: 200; overflow: hidden;
+  max-height: 0; opacity: 0; pointer-events: none;
+  transition: max-height .2s ease, opacity .15s ease;
+}
+.multi-select-dropdown.open { max-height: 280px; opacity: 1; pointer-events: all; }
+.ms-options { overflow-y: auto; max-height: 260px; padding: 4px; }
+.ms-option {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 10px; border-radius: 8px; cursor: pointer;
+  font-size: 13px; transition: background .1s;
+}
+.ms-option:hover { background: var(--surface2); }
+.ms-option input[type=checkbox] { width: 15px; height: 15px; flex-shrink: 0; accent-color: var(--accent); cursor: pointer; }
+.ms-option label { cursor: pointer; flex: 1; }
+.ms-all { border-bottom: 1px solid var(--border); margin-bottom: 4px; font-weight: 600; }
+
+/* date range */
+.date-range-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.date-range-row input[type=date] { padding: 9px 10px; font-size: 13px; }
+
+/* active filter chips */
+.filter-chips { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
+.filter-chip {
+  display: inline-flex; align-items: center; gap: 4px;
+  background: #eff6ff; color: #1e40af; border-radius: 20px;
+  padding: 3px 10px; font-size: 11px; font-weight: 600; border: 1px solid #bfdbfe;
+}
+.filter-chip .rm { cursor: pointer; opacity: .6; }
+.filter-chip .rm:hover { opacity: 1; }
+.active-filters-bar { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border); }
+.active-filters-label { font-size: 11px; color: var(--text-muted); font-weight: 600; margin-bottom: 5px; text-transform: uppercase; letter-spacing: .4px; }
+
+.filtro-group { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+.filtro-btn { padding: 6px 13px; border-radius: 20px; border: 1px solid var(--border); background: var(--surface2); font-size: 12px; font-weight: 500; color: var(--text-muted); }
+.filtro-btn.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+.filtro-btn:hover:not(.active) { background: #e5e7eb; }
+
+.table-wrap { overflow-x: auto; border-radius: var(--radius); border: 1px solid var(--border); }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+thead tr { background: var(--primary); color: #fff; }
+th, td { padding: 10px 12px; text-align: left; }
+th { font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: .4px; }
+tbody tr { border-bottom: 1px solid var(--border); }
+tbody tr:last-child { border-bottom: none; }
+tbody tr:hover { background: var(--surface2); }
+td { vertical-align: middle; }
+
+.semaforo { width: 18px; height: 18px; border-radius: 50%; display: inline-block; }
+.luz { width: 32px; height: 32px; border-radius: 50%; margin: 6px auto; box-shadow: 0 2px 6px rgba(0,0,0,.2); }
+
+.gauge-wrap { text-align: center; }
+.gauge-wrap canvas { max-height: 180px; }
+.gauge-pct { font-size: 28px; font-weight: 700; margin-top: 4px; }
+#pct-admin-general { font-size: 36px; }
+
+.resumen-semaforos { display: flex; gap: 10px; justify-content: space-around; }
+.sem-item { flex: 1; background: var(--surface2); border-radius: 12px; padding: 12px; text-align: center; font-size: 12px; font-weight: 600; color: var(--text-muted); }
+.sem-item .pct { font-size: 15px; font-weight: 700; color: var(--text); margin-top: 4px; }
+
+.check-opciones label {
+  display: flex; align-items: center; gap: 10px;
+  background: var(--surface2); padding: 11px 13px;
+  border-radius: 10px; margin-bottom: 6px; cursor: pointer;
+  border: 1px solid transparent; transition: background .12s, border-color .12s; text-align: left;
+}
+.check-opciones label:hover { background: #e0e7ff; border-color: #c7d2fe; }
+.check-opciones input { width: auto; flex-shrink: 0; }
+.check-opciones span { text-align: left; line-height: 1.4; }
+.check-opciones input[type=radio]:checked + span,
+.check-opciones input[type=checkbox]:checked + span { color: var(--accent); font-weight: 600; }
+.check-section-title { font-weight: 600; font-size: 13px; margin: 14px 0 6px; color: var(--text-muted); text-transform: uppercase; letter-spacing: .5px; text-align: left; }
+
+.save-bar { position: sticky; bottom: 0; left: 0; right: 0; background: var(--surface); padding: 12px 16px; box-shadow: 0 -2px 12px rgba(0,0,0,.08); border-top: 1px solid var(--border); }
+
+.estado-badge { display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; cursor: pointer; user-select: none; }
+.estado-activo { background: #d1fae5; color: #065f46; }
+.estado-espera { background: #fef3c7; color: #92400e; }
+
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 12px; }
+@media (max-width: 500px) { .form-grid { grid-template-columns: 1fr; } }
+
+#notif { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); background: var(--primary); color: #fff; padding: 10px 22px; border-radius: 30px; font-size: 13px; font-weight: 600; box-shadow: var(--shadow-lg); z-index: 9998; opacity: 0; pointer-events: none; transition: opacity .25s; white-space: nowrap; }
+#notif.show { opacity: 1; }
+
+canvas { max-height: 240px; }
+
+.hist-tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
+.hist-tab { padding: 5px 12px; border-radius: 20px; border: 1px solid var(--border); background: var(--surface2); font-size: 12px; cursor: pointer; font-weight: 500; color: var(--text-muted); }
+.hist-tab.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+
+.hist-table-wrap { overflow-x: auto; max-height: 340px; overflow-y: auto; border-radius: 10px; border: 1px solid var(--border); margin-top: 10px; }
+.hist-table-wrap table { font-size: 12px; }
+
+.filter-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
+
+@media (max-width: 600px) {
+  .container { padding: 10px; }
+  .filtro-group { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 4px; -webkit-overflow-scrolling: touch; }
+  .filtro-btn { flex: 0 0 auto; white-space: nowrap; }
+  .grid-3 { grid-template-columns: 1fr; }
+  th, td { padding: 8px 10px; font-size: 12px; }
+  .filter-grid { grid-template-columns: 1fr; }
+  .date-range-row { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<div id="loading-overlay">
+  <div class="spinner"></div>
+  <div id="loading-msg">Cargando datos...</div>
+</div>
+<div id="notif"></div>
+
+<!-- ==================== ADMIN ==================== -->
+<div id="vista-admin" style="display:none">
+
+  <div class="header">
+    <h2>⚙️ Panel Admin</h2>
+    <div class="header-right">
+      <span id="badge-rol"></span>
+      <button class="btn-sm btn-secondary" onclick="logout()">Salir</button>
+    </div>
+  </div>
+
+  <div class="container">
+
+    <div class="card" style="margin-bottom:16px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <h3 style="margin:0">Gestión de Proyectos</h3>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn-sm btn-secondary" onclick="toggleForm()">＋ Nuevo</button>
+          <button class="btn-sm btn-blue" onclick="exportarExcel()">📥 Exportar Consolidado</button>
+          <button class="btn-sm btn-secondary" onclick="exportarHistorialCompleto()">📋 Exportar Historial</button>
+        </div>
+      </div>
+
+      <div id="formNuevo" style="display:none;margin-top:12px;border-top:1px solid var(--border);padding-top:12px">
+        <div class="form-grid">
+          <div><label class="field-label">Nombre</label><input id="nombreProyecto" placeholder="Nombre del proyecto"></div>
+          <div><label class="field-label">Tier</label>
+            <select id="tierProyecto">
+              <option value="">Selecciona Tier</option>
+              <option>Tier 1</option><option>Tier 2</option><option>Tier 3</option>
+              <option>Tier 4</option><option>Tier 5</option><option>Tier 6</option>
+            </select>
+          </div>
+          <div><label class="field-label">Sección</label>
+            <select id="seccionProyecto" onchange="onSeccionChange()">
+              <option value="">Selecciona Sección</option>
+              <option>Buy to Make</option><option>DTC</option>
+              <option>Material Optimization</option><option>OH Cost Control</option><option>Resourcing</option>
+            </select>
+          </div>
+          <div><label class="field-label">Champion</label>
+            <select id="championProyecto"><option value="">Primero elige sección</option></select>
+          </div>
+          <div><label class="field-label">Sponsor</label><input id="sponsorProyecto" placeholder="Sponsor"></div>
+          <div><label class="field-label">Owner</label><input id="ownerProyecto" placeholder="Owner"></div>
+        </div>
+        <div><label class="field-label">Priority Level</label><input id="priorityLevel"></div>
+            <div><label class="field-label">L1 Coding</label><input id="l1Coding"></div>
+            <div><label class="field-label">Nivel 1</label><input id="nivel1"></div>
+            <div><label class="field-label">L1 KPI</label><input id="l1KPI"></div>
+            <div><label class="field-label">Primary Lead L1</label><input id="primaryLeadL1"></div>
+            <div><label class="field-label">Support Lead</label><input id="supportLead"></div>
+            <div><label class="field-label">L2 Coding</label><input id="l2Coding"></div>
+            <div><label class="field-label">Nivel 2</label><input id="nivel2"></div>
+            <div><label class="field-label">Primary Lead L2</label><input id="primaryLeadL2"></div>
+            <div><label class="field-label">Type 2</label><input id="type2"></div>
+            <div><label class="field-label">Nivel 3</label><input id="nivel3"></div>
+            <div><label class="field-label">L3 CODE</label><input id="l3Code"></div>
+            <div><label class="field-label">Primary Lead L3</label><input id="primaryLeadL3"></div>
+            <div><label class="field-label">Type</label><input id="type"></div>
+            <div><label class="field-label">FRONT AXIS</label><input id="frontAxis"></div>
+            <div><label class="field-label">Concatenate</label><input id="concatenate"></div>
+            <div><label class="field-label">PRESENTED</label><input id="presented"></div>
+            <div><label class="field-label">TARGET</label><input id="target"></div>
+            <div><label class="field-label">DATE</label><input id="dateProject" type="date"></div>
+            <div><label class="field-label">FORUM</label><input id="forum"></div>
+            <div><label class="field-label">STATUS</label><input id="projectStatus"></div>
+        <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn" onclick="crearProyecto()" style="flex:1;min-width:120px">Crear Proyecto</button>
+          <div style="flex:1;min-width:200px">
+            <label class="field-label">Carga masiva (.xlsx)</label>
+            <div style="display:flex;gap:6px">
+              <input type="file" id="inputExcel" accept=".xlsx,.xls" style="flex:1">
+              <button class="btn-sm btn-secondary" onclick="cargarExcel()">Subir</button>
+              <button class="btn-sm btn-secondary" onclick="descargarPlantilla()">Plantilla</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card gauge-wrap" style="margin-bottom:12px">
+      <h3>Calificación General (Promedio)</h3>
+      <canvas id="grafGENERAL" style="max-height:220px"></canvas>
+      <div id="pct-admin-general" class="gauge-pct">–</div>
+    </div>
+    <div class="grid-3" style="margin-bottom:16px">
+      <div class="card gauge-wrap"><h3>KPI</h3><canvas id="grafKPI"></canvas><div id="pct-admin-kpi" class="gauge-pct">–</div></div>
+      <div class="card gauge-wrap"><h3>GANTT</h3><canvas id="grafGANTT"></canvas><div id="pct-admin-gantt" class="gauge-pct">–</div></div>
+      <div class="card gauge-wrap"><h3>PDCA</h3><canvas id="grafPDCA"></canvas><div id="pct-admin-pdca" class="gauge-pct">–</div></div>
+    </div>
+
+    <!-- ===== FILTROS MEJORADOS ===== -->
+    <div class="card" style="margin-bottom:16px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+        <h3 style="margin:0">🔍 Filtros</h3>
+        <button class="btn-sm btn-secondary" onclick="limpiarFiltrosAdmin()" style="font-size:11px">✕ Limpiar todo</button>
+      </div>
+
+      <div class="filter-grid">
+
+        <!-- TIER multi-select -->
+        <div>
+          <label class="field-label">Tier</label>
+          <div class="multi-select-wrap" id="ms-tier">
+            <div class="multi-select-trigger" onclick="toggleMS('ms-tier')">
+              <span class="trigger-text" id="ms-tier-label">Todos los Tiers</span>
+              <span class="arrow">▼</span>
+            </div>
+            <div class="multi-select-tags" id="ms-tier-tags"></div>
+            <div class="multi-select-dropdown" id="ms-tier-drop">
+              <div class="ms-options" id="ms-tier-opts">
+                <div class="ms-option ms-all">
+                  <input type="checkbox" id="ms-tier-all" onchange="toggleAllMS('ms-tier')">
+                  <label for="ms-tier-all">Todos</label>
+                </div>
+                <div class="ms-option"><input type="checkbox" value="Tier 1" onchange="updateMS('ms-tier')"><label>Tier 1</label></div>
+                <div class="ms-option"><input type="checkbox" value="Tier 2" onchange="updateMS('ms-tier')"><label>Tier 2</label></div>
+                <div class="ms-option"><input type="checkbox" value="Tier 3" onchange="updateMS('ms-tier')"><label>Tier 3</label></div>
+                <div class="ms-option"><input type="checkbox" value="Tier 4" onchange="updateMS('ms-tier')"><label>Tier 4</label></div>
+                <div class="ms-option"><input type="checkbox" value="Tier 5" onchange="updateMS('ms-tier')"><label>Tier 5</label></div>
+                <div class="ms-option"><input type="checkbox" value="Tier 6" onchange="updateMS('ms-tier')"><label>Tier 6</label></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SECCIÓN multi-select -->
+        <div>
+          <label class="field-label">Sección / Directiva</label>
+          <div class="multi-select-wrap" id="ms-seccion">
+            <div class="multi-select-trigger" onclick="toggleMS('ms-seccion')">
+              <span class="trigger-text" id="ms-seccion-label">Todas las Secciones</span>
+              <span class="arrow">▼</span>
+            </div>
+            <div class="multi-select-tags" id="ms-seccion-tags"></div>
+            <div class="multi-select-dropdown" id="ms-seccion-drop">
+              <div class="ms-options" id="ms-seccion-opts">
+                <div class="ms-option ms-all">
+                  <input type="checkbox" id="ms-seccion-all" onchange="toggleAllMS('ms-seccion')">
+                  <label for="ms-seccion-all">Todas</label>
+                </div>
+                <div class="ms-option"><input type="checkbox" value="Buy to Make" onchange="updateMS('ms-seccion');syncChampionMS()"><label>Buy to Make</label></div>
+                <div class="ms-option"><input type="checkbox" value="DTC" onchange="updateMS('ms-seccion');syncChampionMS()"><label>DTC</label></div>
+                <div class="ms-option"><input type="checkbox" value="Material Optimization" onchange="updateMS('ms-seccion');syncChampionMS()"><label>Material Optimization</label></div>
+                <div class="ms-option"><input type="checkbox" value="OH Cost Control" onchange="updateMS('ms-seccion');syncChampionMS()"><label>OH Cost Control</label></div>
+                <div class="ms-option"><input type="checkbox" value="Resourcing" onchange="updateMS('ms-seccion');syncChampionMS()"><label>Resourcing</label></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- CHAMPION multi-select -->
+        <div>
+          <label class="field-label">Champion</label>
+          <div class="multi-select-wrap" id="ms-champion">
+            <div class="multi-select-trigger" onclick="toggleMS('ms-champion')">
+              <span class="trigger-text" id="ms-champion-label">Todos los Champions</span>
+              <span class="arrow">▼</span>
+            </div>
+            <div class="multi-select-tags" id="ms-champion-tags"></div>
+            <div class="multi-select-dropdown" id="ms-champion-drop">
+              <div class="ms-options" id="ms-champion-opts">
+                <div class="ms-option ms-all">
+                  <input type="checkbox" id="ms-champion-all" onchange="toggleAllMS('ms-champion')">
+                  <label for="ms-champion-all">Todos</label>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- FECHA RANGO -->
+        <div>
+          <label class="field-label">Rango de fechas de calificación</label>
+          <div class="date-range-row">
+            <div>
+              <label class="field-label" style="margin-top:0">📅 Fecha inicio</label>
+              <input type="date" id="adminFechaInicio" onchange="renderTabla();updateActiveFiltersBar()">
+            </div>
+            <div>
+              <label class="field-label" style="margin-top:0">📅 Fecha cierre</label>
+              <input type="date" id="adminFechaFin" onchange="renderTabla();updateActiveFiltersBar()">
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Chips de filtros activos -->
+      <div class="active-filters-bar" id="activeFiltersBar" style="display:none">
+        <div class="active-filters-label">Filtros activos:</div>
+        <div class="filter-chips" id="activeFilterChips"></div>
+      </div>
+    </div>
+
+    <!-- HISTORIAL SEMANAL -->
+    <div class="card" style="margin-bottom:16px">
+      <h3>📈 Progreso Semanal por Proyecto</h3>
+      <p style="font-size:12px;color:var(--text-muted);margin-bottom:10px">Los proyectos respetan los filtros activos. Selecciona uno para ver su avance.</p>
+      <div class="hist-tabs" id="histTabs"></div>
+      <canvas id="grafHistorial" style="max-height:260px"></canvas>
+    </div>
+
+    <!-- TABLA -->
+    <div class="card" style="margin-bottom:16px">
+      <h3>Proyectos (<span id="count-proyectos">0</span>)</h3>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Estado</th><th>Proyecto</th><th>Champion</th>
+              <th>Sponsor</th><th>Owner</th>
+              <th>KPI</th><th>GANTT</th><th>PDCA</th><th></th>
+            </tr>
+          </thead>
+          <tbody id="tablaBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- HISTORIAL COMPLETO -->
+    <div class="card" style="margin-bottom:16px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+        <h3 style="margin:0">📋 Historial de Evaluaciones (Todos los usuarios)</h3>
+        <button class="btn-sm btn-secondary" onclick="exportarProyectos()" style="margin-right:6px">📋 Exportar Proyectos</button>
+        <button class="btn-sm btn-blue" onclick="exportarHistorialCompleto()">📥 Exportar Historial</button>
+      </div>
+      <div class="form-grid" style="margin-bottom:10px">
+        <div><label class="field-label">Filtrar proyecto</label>
+          <select id="histFiltroProyecto" onchange="renderTablaHistorial()"><option value="">Todos los proyectos</option></select>
+        </div>
+        <div><label class="field-label">Filtrar usuario</label>
+          <select id="histFiltroUsuario" onchange="renderTablaHistorial()"><option value="">Todos los usuarios</option></select>
+        </div>
+      </div>
+      <div class="hist-table-wrap">
+        <table>
+          <thead>
+            <tr style="background:var(--primary);color:#fff">
+              <th>Fecha</th><th>Hora</th><th>Semana</th><th>Proyecto</th><th>Champion</th>
+              <th>Usuario</th><th>KPI%</th><th>GANTT%</th><th>PDCA%</th><th>General%</th>
+            </tr>
+          </thead>
+          <tbody id="tablaHistorialBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ==================== USER ==================== -->
+<div id="vista-user" style="display:none">
+
+  <div class="header">
+    <h2>📋 Evaluación de Proyectos</h2>
+    <div class="header-right">
+      <button class="btn-sm btn-secondary" onclick="logout()">Salir</button>
+    </div>
+  </div>
+
+  <div class="container">
+    <div style="max-width:640px;margin:auto">
+
+      <div class="card" style="margin-bottom:12px">
+        <h3>Filtrar proyectos</h3>
+        <div class="filtro-group" id="filtroTier">
+          <button class="filtro-btn active" onclick="setFiltroUser('tier','',this)">Todos</button>
+          <button class="filtro-btn" onclick="setFiltroUser('tier','Tier 1',this)">Tier 1</button>
+          <button class="filtro-btn" onclick="setFiltroUser('tier','Tier 2',this)">Tier 2</button>
+          <button class="filtro-btn" onclick="setFiltroUser('tier','Tier 3',this)">Tier 3</button>
+          <button class="filtro-btn" onclick="setFiltroUser('tier','Tier 4',this)">Tier 4</button>
+          <button class="filtro-btn" onclick="setFiltroUser('tier','Tier 5',this)">Tier 5</button>
+          <button class="filtro-btn" onclick="setFiltroUser('tier','Tier 6',this)">Tier 6</button>
+        </div>
+        <div class="filtro-group" id="filtroSeccion">
+          <button class="filtro-btn active" onclick="setFiltroUser('seccion','',this);poblarChampionFiltros('')">Todas</button>
+          <button class="filtro-btn" onclick="setFiltroUser('seccion','Buy to Make',this);poblarChampionFiltros('Buy to Make')">Buy to Make</button>
+          <button class="filtro-btn" onclick="setFiltroUser('seccion','DTC',this);poblarChampionFiltros('DTC')">DTC</button>
+          <button class="filtro-btn" onclick="setFiltroUser('seccion','Material Optimization',this);poblarChampionFiltros('Material Optimization')">Mat. Opt.</button>
+          <button class="filtro-btn" onclick="setFiltroUser('seccion','OH Cost Control',this);poblarChampionFiltros('OH Cost Control')">OH Cost</button>
+          <button class="filtro-btn" onclick="setFiltroUser('seccion','Resourcing',this);poblarChampionFiltros('Resourcing')">Resourcing</button>
+        </div>
+        <div class="filtro-group" id="filtroChampion">
+          <button class="filtro-btn active" onclick="setFiltroUser('champion','',this)">Todos</button>
+        </div>
+      </div>
+
+      <div class="card" style="margin-bottom:12px">
+        <label class="field-label">Proyecto activo</label>
+        <select id="selectProyectoUser" onchange="seleccionarProyecto(this.value)"></select>
+        <div style="margin-top:10px;display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:13px">
+          <div><b>Champion:</b> <span id="infoChampion">-</span></div>
+          <div><b>Sponsor:</b> <span id="infoSponsor">-</span></div>
+          <div><b>Owner:</b> <span id="infoOwner">-</span></div>
+          <div><b>Sección:</b> <span id="infoSeccion">-</span></div>
+        </div>
+      </div>
+
+      <div class="card gauge-wrap" style="margin-bottom:12px;padding:20px">
+        <h3 style="font-size:15px">Estado actual del proyecto</h3>
+        <p style="font-size:12px;color:var(--text-muted);margin-bottom:8px">Última calificación registrada</p>
+        <canvas id="gaugeGeneral" style="max-height:200px"></canvas>
+        <div id="porc-general" class="gauge-pct">0%</div>
+      </div>
+
+      <div class="card" style="margin-bottom:12px">
+        <div class="resumen-semaforos">
+          <div class="sem-item">KPI<div id="sem-kpi" class="luz" style="background:#808080"></div><div id="porc-kpi" class="pct">0%</div></div>
+          <div class="sem-item">GANTT<div id="sem-plan" class="luz" style="background:#808080"></div><div id="porc-gantt" class="pct">0%</div></div>
+          <div class="sem-item">PDCA<div id="sem-pdca" class="luz" style="background:#808080"></div><div id="porc-pdca" class="pct">0%</div></div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-bottom:70px">
+        <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:10px;padding:10px 14px;margin-bottom:14px;font-size:12px;color:#92400e">
+          ℹ️ El formulario inicia en blanco para cada nueva evaluación. Las gráficas muestran la última evaluación guardada del proyecto.
+        </div>
+
+        <p class="check-section-title">KPI</p>
+        <div class="check-opciones">
+          <label><input type="radio" name="kpi" value="en_tiempo" onchange="setValor('kpi','en_tiempo')"><span>KPI current vs target comply (100%)</span></label>
+          <label><input type="radio" name="kpi" value="cumple" onchange="setValor('kpi','cumple')"><span>KPI current vs target 80% – 75%</span></label>
+          <label><input type="radio" name="kpi" value="mitigado" onchange="setValor('kpi','mitigado')"><span>KPI current vs target 70% – 50%</span></label>
+          <label><input type="radio" name="kpi" value="retraso_kpi" onchange="setValor('kpi','retraso_kpi')"><span>KPI current vs target menos del 49%</span></label>
+          <label><input type="radio" name="kpi" value="na" onchange="setValor('kpi','na')"><span>No presentó</span></label>
+        </div>
+        <label class="field-label">Comentario KPI</label>
+        <textarea id="comentarioKPI" placeholder="Detalle o justificación..."></textarea>
+
+        <p class="check-section-title">GANTT</p>
+        <div class="check-opciones">
+          <label><input type="radio" name="gantt" value="valor" onchange="setValor('gantt','valor')"><span>GANTT sin retrasos (100%)</span></label>
+          <label><input type="radio" name="gantt" value="retraso_gantt" onchange="setValor('gantt','retraso_gantt')"><span>GANTT con 2 acciones retrasadas</span></label>
+          <label><input type="radio" name="gantt" value="r2" onchange="setValor('gantt','r2')"><span>GANTT con más de 3 acciones retrasadas</span></label>
+          <label><input type="radio" name="gantt" value="r3" onchange="setValor('gantt','r3')"><span>GANTT con más de 4 acciones retrasadas</span></label>
+          <label><input type="radio" name="gantt" value="na" onchange="setValor('gantt','na')"><span>No presentó</span></label>
+        </div>
+        <label class="field-label">Comentario GANTT</label>
+        <textarea id="comentarioGANTT" placeholder="Avances o retrasos..."></textarea>
+
+        <p class="check-section-title">PDCA</p>
+        <div class="check-opciones">
+          <label><input type="checkbox" value="6pack" onchange="togglePDCA(this)"><span>6-pack disponible</span></label>
+          <label><input type="checkbox" value="kpi" onchange="togglePDCA(this)"><span>KPI presentado y actualizado</span></label>
+          <label><input type="checkbox" value="gantt" onchange="togglePDCA(this)"><span>GANTT presentado y actualizado</span></label>
+          <label><input type="checkbox" value="psr" onchange="togglePDCA(this)"><span>PSR presentado y actualizado</span></label>
+          <label><input type="checkbox" value="iplayers" onchange="togglePDCA(this)"><span>Tiene IP mejorado (+25%)</span></label>
+        </div>
+        <label class="field-label">Comentario PDCA</label>
+        <textarea id="comentarioPDCA" placeholder="Notas de implementación..."></textarea>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="save-bar">
+    <button class="btn" id="btnGuardar" onclick="guardar()">💾 Guardar Evaluación</button>
+  </div>
+</div>
+
+<script>
+firebase.initializeApp({
+  apiKey: "AIzaSyAoVH8wQ2ofolAaJYdFnu1COcwI-xvaNnM",
+  authDomain: "panel-proyectos-f119f.firebaseapp.com",
+  projectId: "panel-proyectos-f119f"
+});
+const db = firebase.firestore();
+
+const STATE = {
+  rol: "", uid: "", proyectos: [], historial: [], mapaUsuarios: {},
+  proyectoActual: null, proyectoActualId: null, evalTemp: null,
+  filtrosUser: { tier: "", seccion: "", champion: "" },
+  filtrosAdmin: { tiers: [], secciones: [], champions: [], fechaInicio: "", fechaFin: "" },
+  gaugeUser: null, gaugesAdmin: {}, chartHistorial: null, histTabActivo: null
+};
+
+const CHAMPIONS = {
+  "Buy to Make":           ["Antonio Aguilar"],
+  "DTC":                   ["Jaime Castro"],
+  "Material Optimization": ["Fabian Perez", "Jorge Millan"],
+  "Resourcing":            ["Gerardo Loredo"],
+  "OH Cost Control":       ["Carlos Perez"]
+};
+
+/* ============================================================
+   MULTI-SELECT ENGINE
+============================================================ */
+document.addEventListener("click", (e) => {
+  document.querySelectorAll(".multi-select-wrap").forEach(wrap => {
+    if (!wrap.contains(e.target)) closeMS(wrap.id);
+  });
+});
+
+function toggleMS(id) {
+  const drop    = document.getElementById(id + "-drop");
+  const trigger = document.querySelector(`#${id} .multi-select-trigger`);
+  const isOpen  = drop.classList.contains("open");
+  document.querySelectorAll(".multi-select-dropdown").forEach(d => d.classList.remove("open"));
+  document.querySelectorAll(".multi-select-trigger").forEach(t => t.classList.remove("open"));
+  if (!isOpen) { drop.classList.add("open"); trigger.classList.add("open"); }
+}
+
+function closeMS(id) {
+  const drop    = document.getElementById(id + "-drop");
+  const trigger = document.querySelector(`#${id} .multi-select-trigger`);
+  if (drop)    drop.classList.remove("open");
+  if (trigger) trigger.classList.remove("open");
+}
+
+function getSelectedMS(id) {
+  return [...document.querySelectorAll(`#${id}-opts input[type=checkbox]:not(#${id}-all):checked`)]
+    .map(cb => cb.value);
+}
+
+function updateMS(id) {
+  const selected = getSelectedMS(id);
+  const allCb   = document.getElementById(`${id}-all`);
+  const allOpts = [...document.querySelectorAll(`#${id}-opts input[type=checkbox]:not(#${id}-all)`)];
+  if (allCb) allCb.checked = selected.length === allOpts.length && allOpts.length > 0;
+
+  const labelMap = { "ms-tier": "Todos los Tiers", "ms-seccion": "Todas las Secciones", "ms-champion": "Todos los Champions" };
+  document.getElementById(`${id}-label`).textContent =
+    selected.length === 0 ? (labelMap[id] || "Todos") :
+    selected.length === 1 ? selected[0] : `${selected.length} seleccionados`;
+
+  const tagsContainer = document.getElementById(`${id}-tags`);
+  tagsContainer.innerHTML = "";
+  selected.forEach(val => {
+    const tag = document.createElement("span");
+    tag.className = "ms-tag";
+    tag.innerHTML = `${val} <span class="rm" onclick="removeTagMS('${id}','${val}')">✕</span>`;
+    tagsContainer.appendChild(tag);
+  });
+
+  if (id === "ms-tier")     STATE.filtrosAdmin.tiers     = selected;
+  if (id === "ms-seccion")  STATE.filtrosAdmin.secciones = selected;
+  if (id === "ms-champion") STATE.filtrosAdmin.champions = selected;
+
+  updateActiveFiltersBar();
+  renderTabla();
+}
+
+function removeTagMS(id, val) {
+  const cb = [...document.querySelectorAll(`#${id}-opts input[type=checkbox]:not(#${id}-all)`)]
+    .find(c => c.value === val);
+  if (cb) { cb.checked = false; updateMS(id); }
+  if (id === "ms-seccion") syncChampionMS();
+}
+
+function toggleAllMS(id) {
+  const allCb = document.getElementById(`${id}-all`);
+  [...document.querySelectorAll(`#${id}-opts input[type=checkbox]:not(#${id}-all)`)].forEach(cb => cb.checked = allCb.checked);
+  updateMS(id);
+  if (id === "ms-seccion") syncChampionMS();
+}
+
+function syncChampionMS() {
+  const secciones     = STATE.filtrosAdmin.secciones;
+  const optsContainer = document.getElementById("ms-champion-opts");
+  const todosRow      = optsContainer.querySelector(".ms-all");
+  optsContainer.innerHTML = "";
+  optsContainer.appendChild(todosRow);
+
+  const champSet = new Set();
+  if (!secciones.length) { Object.values(CHAMPIONS).flat().forEach(c => champSet.add(c)); }
+  else { secciones.forEach(s => (CHAMPIONS[s] || []).forEach(c => champSet.add(c))); }
+
+  STATE.filtrosAdmin.champions = [];
+  document.getElementById("ms-champion-tags").innerHTML = "";
+  document.getElementById("ms-champion-label").textContent = "Todos los Champions";
+
+  [...champSet].sort().forEach(ch => {
+    const div = document.createElement("div");
+    div.className = "ms-option";
+    div.innerHTML = `<input type="checkbox" value="${ch}" onchange="updateMS('ms-champion')"><label>${ch}</label>`;
+    optsContainer.appendChild(div);
+  });
+}
+
+function limpiarFiltrosAdmin() {
+  ["ms-tier", "ms-seccion", "ms-champion"].forEach(id => {
+    document.querySelectorAll(`#${id}-opts input[type=checkbox]`).forEach(cb => cb.checked = false);
+    updateMS(id);
+  });
+  document.getElementById("adminFechaInicio").value = "";
+  document.getElementById("adminFechaFin").value    = "";
+  STATE.filtrosAdmin = { tiers: [], secciones: [], champions: [], fechaInicio: "", fechaFin: "" };
+  updateActiveFiltersBar();
+  renderTabla();
+}
+
+function updateActiveFiltersBar() {
+  const bar  = document.getElementById("activeFiltersBar");
+  const cont = document.getElementById("activeFilterChips");
+  const chips = [];
+
+  STATE.filtrosAdmin.tiers.forEach(t =>
+    chips.push({ label: t, remove: () => removeTagMS("ms-tier", t) }));
+  STATE.filtrosAdmin.secciones.forEach(s =>
+    chips.push({ label: s, remove: () => { removeTagMS("ms-seccion", s); syncChampionMS(); } }));
+  STATE.filtrosAdmin.champions.forEach(c =>
+    chips.push({ label: c, remove: () => removeTagMS("ms-champion", c) }));
+
+  const fi = document.getElementById("adminFechaInicio").value;
+  const ff = document.getElementById("adminFechaFin").value;
+  if (fi || ff) {
+    const lbl = fi && ff ? `📅 ${fi} → ${ff}` : fi ? `📅 Desde ${fi}` : `📅 Hasta ${ff}`;
+    chips.push({ label: lbl, remove: () => {
+      document.getElementById("adminFechaInicio").value = "";
+      document.getElementById("adminFechaFin").value    = "";
+      renderTabla(); updateActiveFiltersBar();
+    }});
+  }
+
+  if (!chips.length) { bar.style.display = "none"; return; }
+  bar.style.display = "block";
+  cont.innerHTML = "";
+  chips.forEach(ch => {
+    const el = document.createElement("span");
+    el.className = "filter-chip";
+    el.innerHTML = `${ch.label} <span class="rm" title="Quitar">✕</span>`;
+    el.querySelector(".rm").onclick = ch.remove;
+    cont.appendChild(el);
+  });
+}
+
+/* ============================================================
+   HELPERS
+============================================================ */
+function calcKPI(v)   { return ({en_tiempo:100,cumple:75,mitigado:50,retraso_kpi:0,na:0}[v] ?? 0); }
+function calcGANTT(v) { return ({valor:100,retraso_gantt:75,r2:50,r3:0,na:0}[v] ?? 0); }
+function calcPDCA(ev) {
+  if (!Array.isArray(ev?.pdca)) return 0;
+  const n = ev.pdca.filter(x => x !== "iplayers").length;
+  return Math.min(n * 25 + (ev.pdca.includes("iplayers") ? 25 : 0), 100);
+}
+function calcGeneral(ev) { return (calcKPI(ev.kpi) + calcGANTT(ev.gantt) + calcPDCA(ev)) / 3; }
+
+function colorSemaforo(tipo, v) {
+  if (!v || (Array.isArray(v) && !v.length)) return "#9ca3af";
+  if (tipo === "kpi")   return {en_tiempo:"#16a34a",cumple:"#86efac",mitigado:"#fbbf24",retraso_kpi:"#f97316"}[v] || "#9ca3af";
+  if (tipo === "gantt") return {valor:"#16a34a",retraso_gantt:"#fbbf24",r2:"#f97316",r3:"#ef4444"}[v] || "#9ca3af";
+  if (tipo === "pdca") {
+    const p = calcPDCA({pdca:v});
+    if (p>=100) return "#16a34a"; if (p>=75) return "#86efac";
+    if (p>=50)  return "#fbbf24"; if (p>=25) return "#f97316"; return "#ef4444";
+  }
+  return "#9ca3af";
+}
+function gaugeColor(v) { return v >= 75 ? "#10b981" : v >= 50 ? "#f59e0b" : "#ef4444"; }
+function getSemana(fecha) {
+  const d = new Date(fecha), ini = new Date(d.getFullYear(),0,1);
+  return Math.ceil(((d-ini)/86400000 + ini.getDay()+1)/7);
+}
+function fechaISO(ts) {
+  if (!ts) return null;
+  const d = ts.toDate ? ts.toDate() : new Date(ts);
+  return d.toISOString().slice(0,10);
+}
+function notif(msg, error=false) {
+  const el = document.getElementById("notif");
+  el.textContent = msg; el.style.background = error ? "#ef4444" : "#1f2937";
+  el.classList.add("show"); setTimeout(()=>el.classList.remove("show"), 2500);
+}
+function setLoading(show, msg="Cargando...") {
+  document.getElementById("loading-msg").textContent = msg;
+  document.getElementById("loading-overlay").style.display = show ? "flex" : "none";
+}
+
+/* ============================================================
+   INIT
+============================================================ */
+async function init() {
+  setLoading(true, "Verificando sesión...");
+  firebase.auth().onAuthStateChanged(async (user) => {
+    if (!user) { window.location.href = "index.html"; return; }
+    try {
+      const userDoc = await db.collection("users").doc(user.uid).get();
+      if (!userDoc.exists) {
+        notif("Usuario sin acceso configurado", true);
+        await firebase.auth().signOut();
+        window.location.href = "index.html"; return;
+      }
+      const userData = userDoc.data();
+      STATE.uid    = user.uid;
+      STATE.rol    = (userData.rol || "user").toLowerCase().trim();
+      STATE.nombre = userData.nombre || user.email;
+
+      const [snapP, snapH] = await Promise.all([
+        db.collection("proyectos").limit(200).get(),
+        db.collection("historial").orderBy("fecha","desc").limit(1000).get()
+      ]);
+      STATE.proyectos = snapP.docs.map(d => ({ id: d.id, ...d.data(), evaluacion: d.data().evaluacion || { kpi:"", gantt:"", pdca:[] } }));
+      STATE.historial = snapH.docs.map(d => ({ id: d.id, ...d.data() }));
+
+      if (STATE.rol === "admin") {
+        document.getElementById("vista-admin").style.display = "block";
+        document.getElementById("badge-rol").textContent = "Admin";
+        syncChampionMS();
+        renderTabla();
+        poblarFiltrosHistorial();
+      } else {
+        document.getElementById("vista-user").style.display = "block";
+        poblarSelectUser();
+      }
+    } catch(err) { console.error(err); notif("Error al cargar: " + err.message, true); }
+    finally { setLoading(false); }
+  });
+}
+
+/* ============================================================
+   ADMIN – PROYECTOS
+============================================================ */
+function toggleForm() {
+  const f = document.getElementById("formNuevo");
+  f.style.display = f.style.display === "none" ? "block" : "none";
+}
+
+async function crearProyecto() {
+
+  const nombre   = document.getElementById("nombreProyecto").value.trim();
+  const tier     = document.getElementById("tierProyecto").value;
+  const seccion  = document.getElementById("seccionProyecto").value;
+  const champion = document.getElementById("championProyecto").value;
+  const sponsor  = document.getElementById("sponsorProyecto").value.trim();
+  const owner    = document.getElementById("ownerProyecto").value.trim();
+
+  if (!nombre || !tier || !seccion || !champion || !sponsor || !owner) {
+    return notif("Completa los campos principales", true);
+  }
+
+  const extras = getCamposExtraProyecto();
+
+  setLoading(true, "Creando proyecto...");
+
+  try {
+
+    const dataProyecto = {
+
+      nombre,
+      tier,
+      seccion,
+      champion,
+      sponsor,
+      owner,
+
+      ...extras,
+
+      estado: "activo",
+
+      createdAt: new Date(),
+
+      evaluacion: {
+        kpi: "",
+        gantt: "",
+        pdca: [],
+        comentarios: {
+          kpi: "",
+          gantt: "",
+          pdca: ""
+        }
+      }
+    };
+
+    const ref = await db.collection("proyectos").add(dataProyecto);
+
+    STATE.proyectos.push({
+      id: ref.id,
+      ...dataProyecto
+    });
+
+    const camposLimpiar = [
+
+      "nombreProyecto",
+      "sponsorProyecto",
+      "ownerProyecto",
+
+      "priorityLevel",
+      "l1Coding",
+      "nivel1",
+      "l1KPI",
+      "primaryLeadL1",
+      "supportLead",
+      "l2Coding",
+      "nivel2",
+      "primaryLeadL2",
+      "type2",
+      "nivel3",
+      "l3Code",
+      "primaryLeadL3",
+      "type",
+      "frontAxis",
+      "concatenate",
+      "presented",
+      "target",
+      "dateProject",
+      "forum",
+      "projectStatus"
+
+    ];
+
+    camposLimpiar.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.value = "";
+    });
+
+    document.getElementById("tierProyecto").value = "";
+    document.getElementById("seccionProyecto").value = "";
+
+    document.getElementById("championProyecto").innerHTML =
+      '<option value="">Primero elige sección</option>';
+
+    renderTabla();
+    poblarFiltrosHistorial();
+
+    notif("Proyecto creado correctamente ✅");
+
+  } catch(err) {
+
+    console.error(err);
+    notif("Error: " + err.message, true);
+
+  } finally {
+
+    setLoading(false);
+
+  }
+}
+
+
+function onSeccionChange() {
+  const sec = document.getElementById("seccionProyecto").value;
+  const sel = document.getElementById("championProyecto");
+  sel.innerHTML = '<option value="">Selecciona Champion</option>';
+  (CHAMPIONS[sec]||[]).forEach(ch => { const o=document.createElement("option"); o.value=o.textContent=ch; sel.appendChild(o); });
+}
+
+/* ============================================================
+   ADMIN – FILTROS & TABLA
+============================================================ */
+function getProyectosFiltrados() {
+  const { tiers, secciones, champions } = STATE.filtrosAdmin;
+  const fechaInicio = document.getElementById("adminFechaInicio").value;
+  const fechaFin    = document.getElementById("adminFechaFin").value;
+
+  let lista = [...STATE.proyectos];
+  if (tiers.length)     lista = lista.filter(p => tiers.includes(p.tier));
+  if (secciones.length) lista = lista.filter(p => secciones.includes(p.seccion));
+  if (champions.length) lista = lista.filter(p => champions.includes(p.champion));
+
+  if (fechaInicio || fechaFin) {
+    const mapaFechas = {};
+    STATE.historial.forEach(h => {
+      if (!h.proyectoId || !h.fecha) return;
+      const f = fechaISO(h.fecha);
+      if (!mapaFechas[h.proyectoId]) mapaFechas[h.proyectoId] = [];
+      mapaFechas[h.proyectoId].push(f);
+    });
+    lista = lista.filter(p => {
+      const fechas = mapaFechas[p.id] || [];
+      return fechas.some(f => {
+        if (fechaInicio && f < fechaInicio) return false;
+        if (fechaFin    && f > fechaFin)   return false;
+        return true;
+      });
+    });
+  }
+  return lista;
+}
+
+function renderTabla() {
+  const lista = getProyectosFiltrados();
+  document.getElementById("count-proyectos").textContent = lista.length;
+  const tbody = document.getElementById("tablaBody");
+  const frag  = document.createDocumentFragment();
+  tbody.innerHTML = "";
+  lista.forEach(p => {
+    const ev  = p.evaluacion||{};
+    const tr  = document.createElement("tr");
+    const act = p.estado !== "espera";
+    tr.innerHTML = `
+      <td><span class="estado-badge ${act?'estado-activo':'estado-espera'}" onclick="toggleEstado('${p.id}')">
+        ${act?"🟢 Activo":"🟡 Espera"}</span></td>
+      <td><b>${p.nombre||"–"}</b><br><small style="color:var(--text-muted)">${p.tier||""} · ${p.seccion||""}</small></td>
+      <td>${p.champion||"–"}</td><td>${p.sponsor||"–"}</td><td>${p.owner||"–"}</td>
+      <td><div class="semaforo" style="background:${colorSemaforo('kpi',ev.kpi)}" title="${calcKPI(ev.kpi)}%"></div></td>
+      <td><div class="semaforo" style="background:${colorSemaforo('gantt',ev.gantt)}" title="${calcGANTT(ev.gantt)}%"></div></td>
+      <td><div class="semaforo" style="background:${colorSemaforo('pdca',ev.pdca)}" title="${calcPDCA(ev)}%"></div></td>
+      <td><button class="btn-sm btn-danger" onclick="eliminarProyecto('${p.id}')">🗑</button></td>`;
+    frag.appendChild(tr);
+  });
+  tbody.appendChild(frag);
+  actualizarGraficasAdmin(lista);
+  actualizarHistTabs(lista);
+}
+
+async function toggleEstado(id) {
+  const p = STATE.proyectos.find(x=>x.id===id);
+  if (!p) return;
+  const nuevo = p.estado==="activo" ? "espera" : "activo";
+  try { await db.collection("proyectos").doc(id).update({estado:nuevo}); p.estado=nuevo; renderTabla(); }
+  catch(err) { notif("Error: "+err.message,true); }
+}
+
+async function eliminarProyecto(id) {
+  if (!confirm("¿Eliminar este proyecto?")) return;
+  try {
+    await db.collection("proyectos").doc(id).delete();
+    STATE.proyectos = STATE.proyectos.filter(p=>p.id!==id);
+    renderTabla(); poblarFiltrosHistorial(); notif("Eliminado");
+  } catch(err) { notif("Error: "+err.message,true); }
+}
+
+/* ============================================================
+   ADMIN – GRÁFICAS
+============================================================ */
+function actualizarGraficasAdmin(lista) {
+  const act = lista.filter(p=>p.estado!=="espera");
+  const n   = act.length || 1;
+  let sK=0,sG=0,sP=0,sGen=0;
+  act.forEach(p=>{ const ev=p.evaluacion||{}; sK+=calcKPI(ev.kpi); sG+=calcGANTT(ev.gantt); sP+=calcPDCA(ev); sGen+=calcGeneral(ev); });
+  renderGaugeAdmin("grafGENERAL", sGen/n, "pct-admin-general");
+  renderGaugeAdmin("grafKPI",     sK/n,   "pct-admin-kpi");
+  renderGaugeAdmin("grafGANTT",   sG/n,   "pct-admin-gantt");
+  renderGaugeAdmin("grafPDCA",    sP/n,   "pct-admin-pdca");
+}
+
+function renderGaugeAdmin(cid, valor, pctId) {
+  const v = Math.round(valor*10)/10, col = gaugeColor(v);
+  if (STATE.gaugesAdmin[cid]) {
+    const c = STATE.gaugesAdmin[cid];
+    c.data.datasets[0].data = [v, 100-v];
+    c.data.datasets[0].backgroundColor[0] = col;
+    c.update("none");
+  } else {
+    const canvas = document.getElementById(cid); if (!canvas) return;
+    STATE.gaugesAdmin[cid] = new Chart(canvas.getContext("2d"), {
+      type:"doughnut",
+      data:{ datasets:[{data:[v,100-v],backgroundColor:[col,"#e5e7eb"],borderWidth:0,cutout:"75%"}] },
+      options:{ animation:false,responsive:true,rotation:-90,circumference:180,plugins:{legend:{display:false},tooltip:{enabled:false}} }
+    });
+  }
+  if (pctId) document.getElementById(pctId).textContent = v.toFixed(1)+"%";
+}
+
+/* ============================================================
+   HISTORIAL SEMANAL
+============================================================ */
+function actualizarHistTabs(proyectosFiltrados) {
+  const cont = document.getElementById("histTabs");
+  cont.innerHTML = "";
+  if (!proyectosFiltrados.length) {
+    cont.innerHTML = '<span style="font-size:12px;color:var(--text-muted)">No hay proyectos con los filtros actuales</span>';
+    if (STATE.chartHistorial) { STATE.chartHistorial.data.labels=[]; STATE.chartHistorial.data.datasets[0].data=[]; STATE.chartHistorial.update("none"); }
+    return;
+  }
+  proyectosFiltrados.slice(0,20).forEach((p, i) => {
+    const btn = document.createElement("button");
+    btn.className = "hist-tab" + (i===0?" active":"");
+    btn.textContent = p.nombre; btn.dataset.id = p.id;
+    btn.onclick = function() {
+      document.querySelectorAll(".hist-tab").forEach(b=>b.classList.remove("active"));
+      this.classList.add("active"); STATE.histTabActivo = p.id; renderHistorial(p.id);
+    };
+    cont.appendChild(btn);
+  });
+  STATE.histTabActivo = proyectosFiltrados[0].id;
+  renderHistorial(proyectosFiltrados[0].id);
+}
+
+function renderHistorial(proyectoId) {
+  if (!proyectoId) return;
+  const fechaInicio = document.getElementById("adminFechaInicio").value;
+  const fechaFin    = document.getElementById("adminFechaFin").value;
+
+  const hist = STATE.historial.filter(h => {
+    if (h.proyectoId !== proyectoId) return false;
+    const f = fechaISO(h.fecha);
+    if (fechaInicio && f < fechaInicio) return false;
+    if (fechaFin    && f > fechaFin)   return false;
+    return true;
+  }).sort((a,b) => {
+    const fa = a.fecha?.toDate ? a.fecha.toDate() : new Date(a.fecha||0);
+    const fb = b.fecha?.toDate ? b.fecha.toDate() : new Date(b.fecha||0);
+    return fa - fb;
+  }).slice(0,50);
+
+  const porSemana = {};
+  hist.forEach(h => {
+    const k   = h.semana || getSemana(h.fecha?.toDate ? h.fecha.toDate() : new Date(h.fecha||0));
+    const uid = h.usuario || "?";
+    const fa  = h.fecha?.toDate ? h.fecha.toDate() : new Date(h.fecha||0);
+    if (!porSemana[k]) porSemana[k] = {};
+    if (!porSemana[k][uid] || fa > (porSemana[k][uid]._fa||0)) porSemana[k][uid] = { ...h, _fa: fa };
+  });
+
+  const semanas = Object.keys(porSemana).sort((a,b)=>+a-+b);
+  const labels  = semanas.map(s => "Sem "+s);
+  const data    = semanas.map(s => {
+    const vals = Object.values(porSemana[s]).map(e => e.general||0);
+    return +(vals.reduce((a,b)=>a+b,0)/vals.length).toFixed(1);
+  });
+
+  const canvas = document.getElementById("grafHistorial"); if (!canvas) return;
+  if (STATE.chartHistorial) {
+    STATE.chartHistorial.data.labels = labels;
+    STATE.chartHistorial.data.datasets[0].data = data;
+    STATE.chartHistorial.update("none"); return;
+  }
+  STATE.chartHistorial = new Chart(canvas.getContext("2d"), {
+    type:"line",
+    data:{ labels, datasets:[{ label:"General % (promedio evaluadores)", data, tension:0.35,
+      borderColor:"#10b981", backgroundColor:"rgba(16,185,129,0.08)", fill:true, pointRadius:5 }]},
+    options:{ animation:false, responsive:true, scales:{ y:{min:0,max:100} }, plugins:{ legend:{display:true} } }
+  });
+}
+
+/* ============================================================
+   HISTORIAL COMPLETO
+============================================================ */
+function poblarFiltrosHistorial() {
+  const selP = document.getElementById("histFiltroProyecto");
+  const selU = document.getElementById("histFiltroUsuario");
+  selP.innerHTML = '<option value="">Todos los proyectos</option>';
+  selU.innerHTML = '<option value="">Todos los usuarios</option>';
+  const proySet = new Set(), userSet = new Set();
+  STATE.historial.forEach(h => {
+    if (h.proyectoId && h.proyectoNombre) proySet.add(JSON.stringify({id:h.proyectoId,nombre:h.proyectoNombre}));
+    if (h.usuarioNombre) userSet.add(h.usuarioNombre);
+  });
+  [...proySet].forEach(s => { const {id,nombre}=JSON.parse(s); const o=document.createElement("option"); o.value=id; o.textContent=nombre; selP.appendChild(o); });
+  [...userSet].forEach(u => { const o=document.createElement("option"); o.value=u; o.textContent=u; selU.appendChild(o); });
+  renderTablaHistorial();
+}
+
+function renderTablaHistorial() {
+  const filP = document.getElementById("histFiltroProyecto").value;
+  const filU = document.getElementById("histFiltroUsuario").value;
+  let lista  = [...STATE.historial];
+  if (filP) lista = lista.filter(h=>h.proyectoId===filP);
+  if (filU) lista = lista.filter(h=>h.usuarioNombre===filU);
+  lista.sort((a,b) => {
+    const fa = a.fecha?.toDate ? a.fecha.toDate() : new Date(a.fecha||0);
+    const fb = b.fecha?.toDate ? b.fecha.toDate() : new Date(b.fecha||0);
+    return fb-fa;
+  });
+  const tbody = document.getElementById("tablaHistorialBody");
+  const frag  = document.createDocumentFragment();
+  tbody.innerHTML = "";
+  lista.slice(0,200).forEach(h => {
+    const fo = h.fecha?.toDate ? h.fecha.toDate() : new Date(h.fecha||0);
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${fo.toLocaleDateString()}</td><td>${fo.toLocaleTimeString()}</td>
+      <td>Sem ${h.semana||"–"}</td><td>${h.proyectoNombre||"–"}</td><td>${h.champion||"–"}</td>
+      <td>${h.usuarioNombre||h.usuario||"–"}</td>
+      <td>${h.kpi??0}%</td><td>${h.gantt??0}%</td><td>${h.pdca??0}%</td>
+      <td><b>${(h.general||0).toFixed(1)}%</b></td>`;
+    frag.appendChild(tr);
+  });
+  tbody.appendChild(frag);
+}
+function getCamposExtraProyecto() {
+  return {
+    priorityLevel: document.getElementById("priorityLevel")?.value.trim() || "",
+    l1Coding: document.getElementById("l1Coding")?.value.trim() || "",
+    nivel1: document.getElementById("nivel1")?.value.trim() || "",
+    l1KPI: document.getElementById("l1KPI")?.value.trim() || "",
+    primaryLeadL1: document.getElementById("primaryLeadL1")?.value.trim() || "",
+    supportLead: document.getElementById("supportLead")?.value.trim() || "",
+    l2Coding: document.getElementById("l2Coding")?.value.trim() || "",
+    nivel2: document.getElementById("nivel2")?.value.trim() || "",
+    primaryLeadL2: document.getElementById("primaryLeadL2")?.value.trim() || "",
+    type2: document.getElementById("type2")?.value.trim() || "",
+    nivel3: document.getElementById("nivel3")?.value.trim() || "",
+    l3Code: document.getElementById("l3Code")?.value.trim() || "",
+    primaryLeadL3: document.getElementById("primaryLeadL3")?.value.trim() || "",
+    type: document.getElementById("type")?.value.trim() || "",
+    frontAxis: document.getElementById("frontAxis")?.value.trim() || "",
+    concatenate: document.getElementById("concatenate")?.value.trim() || "",
+    presented: document.getElementById("presented")?.value.trim() || "",
+    target: document.getElementById("target")?.value.trim() || "",
+    dateProject: document.getElementById("dateProject")?.value || "",
+    forum: document.getElementById("forum")?.value.trim() || "",
+    projectStatus: document.getElementById("projectStatus")?.value.trim() || ""
+  };
+}
+/* ============================================================
+   EXPORTAR
+============================================================ */
+function exportarExcel() {
+  if (!STATE.proyectos.length) return notif("No hay proyectos", true);
+
+  const headers = [
+    "#",
+    "Priority Level",
+    "L1 Coding",
+    "Nivel 1",
+    "L1 KPI",
+    "Primary Lead Site L1",
+    "Support Lead Site L1",
+    "L2 Coding",
+    "Nivel 2",
+    "Primary Lead L2",
+    "Type 2",
+    "Nivel 3",
+    "L3 CODE",
+    "Primary Lead L3",
+    "Type",
+    "FRONT AXIS",
+    "Concatenate",
+    "PRESENTED",
+    "Score Presentation",
+    "Score Schedule",
+    "Score KPI",
+    "Overall SCORE",
+    "TARGET",
+    "Fecha",
+    "FORUM",
+    "STATUS"
+  ];
+
+const data = STATE.proyectos.map(p => {
+    const ev = p.evaluacion || { kpi: "", gantt: "", pdca: [] };
+
+    const scoreKPI          = ev.kpi                        ? calcKPI(ev.kpi)    : "";
+    const scoreSchedule     = ev.gantt                      ? calcGANTT(ev.gantt): "";
+    const scorePresentation = (ev.pdca && ev.pdca.length)   ? calcPDCA(ev)       : "";
+    const overallScore      = (scoreKPI !== "" || scoreSchedule !== "" || scorePresentation !== "")
+                              ? +calcGeneral(ev).toFixed(2) : "";
+
+    return [
+      p.numeroProyecto  || "",
+      p.priorityLevel   || "",
+      p.l1Coding        || "",
+      p.nivel1          || "",
+      p.l1KPI           || "",
+      p.primaryLeadL1   || p.champion || "",   // Primary Lead Site L1 = Champion
+      p.supportLead     || p.sponsor  || "",   // Support Lead Site L1 = Sponsor
+      p.l2Coding        || "",
+      p.nivel2          || "",
+      p.primaryLeadL2   || "",
+      p.type2           || "",
+      p.nivel3          || p.nombre   || "",   // Nivel 3 = Nombre proyecto
+      p.l3Code          || "",
+      p.primaryLeadL3   || p.owner    || "",   // Primary Lead L3 = Owner
+      p.type            || "",
+      p.frontAxis       || "",
+      p.concatenate     || "",
+      p.presented       || "",
+      scorePresentation,                        // Score Presentation = PDCA%
+      scoreSchedule,                            // Score Schedule = GANTT%
+      scoreKPI,                                 // Score KPI = KPI%
+      overallScore,                             // Overall SCORE = General%
+      p.target          || "",
+      p.fechaCalificacion ? (p.fechaCalificacion.toDate ? p.fechaCalificacion.toDate() : new Date(p.fechaCalificacion)).toLocaleDateString() : (p.dateProject || ""),
+      p.forum           || p.tier     || "",   // FORUM = Tier
+      p.projectStatus   || "2026"
+    ];
+  });
+
+  const ws = XLSX.utils.aoa_to_sheet([headers, ...data]);
+
+  ws["!cols"] = [
+    {wch:8},{wch:18},{wch:18},{wch:30},{wch:18},{wch:25},
+    {wch:25},{wch:18},{wch:35},{wch:25},{wch:15},{wch:35},
+    {wch:18},{wch:25},{wch:15},{wch:20},{wch:30},{wch:15},
+    {wch:20},{wch:18},{wch:15},{wch:18},{wch:15},{wch:15},
+    {wch:15},{wch:15}
+  ];
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Proyectos");
+
+  XLSX.writeFile(wb, `Proyectos_Formato_${new Date().toISOString().slice(0,10)}.xlsx`);
+
+  notif("Excel exportado correctamente ✅");
+}
+function exportarHistorialCompleto() {
+  const rows = STATE.historial.map(h => {
+    const fo = h.fecha?.toDate ? h.fecha.toDate() : new Date(h.fecha||0);
+    return {
+      Fecha:`${String(fo.getMonth()+1).padStart(2,'0')}/${String(fo.getDate()).padStart(2,'0')}/${fo.getFullYear()}`,
+      Hora:fo.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}), Semana:h.semana,
+      Proyecto:h.proyectoNombre||"–", Champion:h.champion||"–", Seccion:h.seccion||"–", Tier:h.tier||"–",
+      Usuario:STATE.mapaUsuarios[h.usuario]||h.usuarioNombre||h.usuario||"–",
+      KPI:h.kpi??0, GANTT:h.gantt??0, PDCA:h.pdca??0, General:+(h.general||0).toFixed(2),
+      Comentario_KPI:h.comentariosKPI||"", Comentario_GANTT:h.comentariosGANTT||"", Comentario_PDCA:h.comentariosPDCA||""
+    };
+  });
+  rows.sort((a,b)=>b.Fecha-a.Fecha);
+  const ws = XLSX.utils.json_to_sheet(rows,{cellDates:true});
+  ws['!cols']=[{wch:14},{wch:10},{wch:8},{wch:30},{wch:20},{wch:22},{wch:8},{wch:25},{wch:8},{wch:8},{wch:8},{wch:10},{wch:35},{wch:35},{wch:35}];
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,"Historial_Completo");
+  XLSX.writeFile(wb,`Historial_${new Date().toISOString().slice(0,10)}.xlsx`);
+  notif("Historial exportado ✅");
+}
+
+function exportarProyectos() {
+  if (!STATE.proyectos.length) return notif("Sin proyectos para exportar", true);
+  const rows = STATE.proyectos.map(p => ({
+    Nombre:   p.nombre   || "–",
+    Tier:     p.tier     || "–",
+    Seccion:  p.seccion  || "–",
+    Champion: p.champion || "–",
+    Sponsor:  p.sponsor  || "–",
+    Owner:    p.owner    || "–",
+    Estado:   p.estado   || "activo"
+  }));
+  rows.sort((a, b) => a.Seccion.localeCompare(b.Seccion) || a.Nombre.localeCompare(b.Nombre));
+  const ws = XLSX.utils.json_to_sheet(rows);
+  ws['!cols'] = [
+    { wch: 35 }, // Nombre
+    { wch: 10 }, // Tier
+    { wch: 25 }, // Seccion
+    { wch: 22 }, // Champion
+    { wch: 22 }, // Sponsor
+    { wch: 22 }, // Owner
+    { wch: 10 }  // Estado
+  ];
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Proyectos");
+  XLSX.writeFile(wb, `Proyectos_${new Date().toISOString().slice(0, 10)}.xlsx`);
+  notif("Proyectos exportados ✅");
+}
+  
+/* ============================================================
+   EXCEL MASIVO
+============================================================ */
+async function cargarExcel() {
+  const file = document.getElementById("inputExcel").files[0];
+  if (!file) return notif("Selecciona un archivo Excel", true);
+
+  if (!confirm("Esto borrará TODOS los proyectos actuales y cargará los nuevos. ¿Continuar?")) return;
+
+  setLoading(true, "Borrando proyectos actuales...");
+
+  try {
+    const snap = await db.collection("proyectos").get();
+    const batchDelete = db.batch();
+
+    snap.docs.forEach(doc => {
+      batchDelete.delete(doc.ref);
+    });
+
+    await batchDelete.commit();
+
+    setLoading(true, "Leyendo archivo Excel...");
+
+    const data = await file.arrayBuffer();
+    const workbook = XLSX.read(data);
+    const sheet = workbook.Sheets[workbook.SheetNames[0]];
+    const rows = XLSX.utils.sheet_to_json(sheet);
+
+    if (!rows.length) {
+      setLoading(false);
+      return notif("El archivo está vacío", true);
+    }
+
+    setLoading(true, "Cargando nuevos proyectos...");
+
+    const batch = db.batch();
+
+    rows.forEach(row => {
+      const ref = db.collection("proyectos").doc();
+
+      const nombreFinal =
+        row["Nivel 3"] ||
+        row["Nivel 2"] ||
+        row["Nivel 1"] ||
+        "";
+
+      const proyecto = {
+        numeroProyecto: row["#"] || "",
+
+        nombre: nombreFinal,
+        tier: row["FORUM"] || "",
+        seccion: row["FRONT AXIS"] || "",
+        champion: row["Primary Lead Site L1"] || row["Primary Lead L1"] || "",
+        sponsor: row["Support Lead Site L1"] || row["Support Lead"] || "",
+        owner: row["Primary Lead L3"] || "",
+
+        priorityLevel: row["Priority Level"] || "",
+        l1Coding: row["L1 Coding"] || "",
+        nivel1: row["Nivel 1"] || "",
+        l1KPI: row["L1 KPI"] || "",
+        primaryLeadL1: row["Primary Lead Site L1"] || row["Primary Lead L1"] || "",
+        supportLead: row["Support Lead Site L1"] || row["Support Lead"] || "",
+
+        l2Coding: row["L2 Coding"] || "",
+        nivel2: row["Nivel 2"] || "",
+        primaryLeadL2: row["Primary Lead L2"] || "",
+
+        type2: row["Type 2"] || "",
+        nivel3: row["Nivel 3"] || "",
+        l3Code: row["L3 CODE"] || "",
+        primaryLeadL3: row["Primary Lead L3"] || "",
+
+        type: row["Type"] || "",
+        frontAxis: row["FRONT AXIS"] || "",
+        concatenate: row["Concatenate"] || "",
+        presented: row["PRESENTED"] || "",
+
+        target: row["TARGET"] || "",
+        dateProject: row["DATE"] || row["Fecha"] || "",
+        forum: row["FORUM"] || "",
+        projectStatus: row["STATUS"] || "2026",
+
+        estado: "activo",
+        createdAt: new Date(),
+
+        evaluacion: {
+          kpi: "",
+          gantt: "",
+          pdca: [],
+          comentarios: {
+            kpi: "",
+            gantt: "",
+            pdca: ""
+          }
+        }
+      };
+
+      batch.set(ref, proyecto);
+    });
+
+    await batch.commit();
+
+    const snapNuevo = await db.collection("proyectos").limit(500).get();
+
+    STATE.proyectos = snapNuevo.docs.map(d => ({
+      id: d.id,
+      ...d.data(),
+      evaluacion: d.data().evaluacion || {
+        kpi: "",
+        gantt: "",
+        pdca: []
+      }
+    }));
+
+    renderTabla();
+    poblarFiltrosHistorial();
+
+    notif("Proyectos cargados correctamente ✅");
+
+  } catch (err) {
+    console.error(err);
+    notif("Error: " + err.message, true);
+  } finally {
+    setLoading(false);
+  }
+}
+
+async function guardarMasivo(rows) {
+  const TIERS=["Tier 1","Tier 2","Tier 3","Tier 4","Tier 5","Tier 6"], SECS=Object.keys(CHAMPIONS);
+  let ok=0,err=0;
+  setLoading(true,"Cargando proyectos...");
+  for (const row of rows) {
+    const {nombre,tier,seccion,champion,sponsor,owner}=row;
+    if (!nombre||!tier||!seccion||!champion||!sponsor||!owner||!TIERS.includes(tier)||!SECS.includes(seccion)){err++;continue;}
+    try {
+      const ref = await db.collection("proyectos").add({
+        nombre,tier,seccion,champion,sponsor,owner,estado:"activo",createdAt:new Date(),
+        evaluacion:{kpi:"",gantt:"",pdca:[],comentarios:{kpi:"",gantt:"",pdca:""}}
+      });
+      STATE.proyectos.push({id:ref.id,nombre,tier,seccion,champion,sponsor,owner,estado:"activo",evaluacion:{kpi:"",gantt:"",pdca:[]}});
+      ok++;
+    } catch{err++;}
+  }
+  setLoading(false); renderTabla(); poblarFiltrosHistorial();
+  notif(`${ok} proyectos cargados · ${err} errores`);
+}
+
+function descargarPlantilla() {
+
+  const plantilla = [
+    {
+      "#": "",
+      "Priority Level": "",
+      "L1 Coding": "",
+      "Nivel 1": "",
+      "L1 KPI": "",
+      "Primary Lead L1": "",
+      "Support Lead": "",
+      "L2 Coding": "",
+      "Nivel 2": "",
+      "Primary Lead L2": "",
+      "Type 2": "",
+      "Nivel 3": "",
+      "L3 CODE": "",
+      "Primary Lead L3": "",
+      "Type": "",
+      "FRONT AXIS": "",
+      "Concatenate": "",
+      "PRESENTED": "",
+      "TARGET": "",
+      "DATE": "",
+      "FORUM": "",
+      "STATUS": ""
+    }
+  ];
+
+  const ws = XLSX.utils.json_to_sheet(plantilla);
+
+  ws["!cols"] = [
+    {wch:8},
+    {wch:18},
+    {wch:18},
+    {wch:18},
+    {wch:18},
+    {wch:25},
+    {wch:25},
+    {wch:18},
+    {wch:18},
+    {wch:25},
+    {wch:18},
+    {wch:25},
+    {wch:18},
+    {wch:25},
+    {wch:18},
+    {wch:18},
+    {wch:25},
+    {wch:18},
+    {wch:18},
+    {wch:18},
+    {wch:18},
+    {wch:18}
+  ];
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Plantilla_Proyectos");
+
+  XLSX.writeFile(wb, "Plantilla_Proyectos_Completa.xlsx");
+
+  notif("Plantilla descargada ✅");
+}
+/* ============================================================
+   USER
+============================================================ */
+function poblarSelectUser() { renderSelectUser(); }
+
+function setFiltroUser(tipo, valor, el) {
+  STATE.filtrosUser[tipo] = valor;
+  const cont = document.getElementById(`filtro${tipo.charAt(0).toUpperCase()+tipo.slice(1)}`);
+  if (cont) cont.querySelectorAll(".filtro-btn").forEach(b=>b.classList.remove("active"));
+  if (el) el.classList.add("active");
+  renderSelectUser();
+}
+
+function poblarChampionFiltros(seccion) {
+  const cont = document.getElementById("filtroChampion");
+  cont.innerHTML = `<button class="filtro-btn active" onclick="setFiltroUser('champion','',this)">Todos</button>`;
+  const champs = seccion ? (CHAMPIONS[seccion]||[]) : [...new Set(STATE.proyectos.map(p=>p.champion).filter(Boolean))];
+  champs.forEach(ch => {
+    const btn = document.createElement("button");
+    btn.className="filtro-btn"; btn.textContent=ch;
+    btn.onclick = function(){ setFiltroUser("champion",ch,this); };
+    cont.appendChild(btn);
+  });
+}
+
+function renderSelectUser() {
+  const {tier,seccion,champion} = STATE.filtrosUser;
+  let lista = STATE.proyectos.filter(p=>p.estado!=="espera");
+  if (tier)     lista = lista.filter(p=>p.tier===tier);
+  if (seccion)  lista = lista.filter(p=>p.seccion===seccion);
+  if (champion) lista = lista.filter(p=>p.champion===champion);
+  const sel = document.getElementById("selectProyectoUser");
+  sel.innerHTML = "";
+  if (!lista.length) {
+    sel.innerHTML='<option value="">Sin proyectos</option>';
+    ["infoChampion","infoSponsor","infoOwner","infoSeccion"].forEach(id=>document.getElementById(id).textContent="–");
+    return;
+  }
+  lista.forEach(p => { const o=document.createElement("option"); o.value=p.id; o.textContent=p.nombre; sel.appendChild(o); });
+  seleccionarProyecto(lista[0].id);
+}
+
+function seleccionarProyecto(id) {
+  const p = STATE.proyectos.find(x=>x.id===id);
+  if (!p) return;
+  STATE.proyectoActualId = id; STATE.proyectoActual = p;
+  document.getElementById("infoChampion").textContent = p.champion||"–";
+  document.getElementById("infoSponsor").textContent  = p.sponsor ||"–";
+  document.getElementById("infoOwner").textContent    = p.owner   ||"–";
+  document.getElementById("infoSeccion").textContent  = p.seccion ||"–";
+  STATE.evalTemp = { kpi:"", gantt:"", pdca:[] };
+  limpiarFormulario();
+  renderSemaforosDesdeProyecto(p.evaluacion);
+}
+
+function limpiarFormulario() {
+  document.querySelectorAll('input[name="kpi"], input[name="gantt"]').forEach(r=>r.checked=false);
+  document.querySelectorAll('.check-opciones input[type="checkbox"]').forEach(c=>c.checked=false);
+  ["comentarioKPI","comentarioGANTT","comentarioPDCA"].forEach(id=>document.getElementById(id).value="");
+}
+
+function renderSemaforosDesdeProyecto(ev) {
+  if (!ev) return;
+  document.getElementById("sem-kpi").style.background  = colorSemaforo("kpi",  ev.kpi);
+  document.getElementById("sem-plan").style.background = colorSemaforo("gantt",ev.gantt);
+  document.getElementById("sem-pdca").style.background = colorSemaforo("pdca", ev.pdca);
+  document.getElementById("porc-kpi").textContent   = calcKPI(ev.kpi)+"%";
+  document.getElementById("porc-gantt").textContent = calcGANTT(ev.gantt)+"%";
+  document.getElementById("porc-pdca").textContent  = calcPDCA(ev)+"%";
+  const gen = calcGeneral(ev);
+  document.getElementById("porc-general").textContent = Math.round(gen)+"%";
+  renderGaugeUser(gen);
+}
+
+function setValor(tipo, valor) {
+  if (!STATE.evalTemp) return;
+  STATE.evalTemp[tipo] = valor;
+  renderSemaforosDesdeProyecto(STATE.evalTemp);
+}
+
+function togglePDCA(checkbox) {
+  if (!STATE.evalTemp) return;
+  if (!Array.isArray(STATE.evalTemp.pdca)) STATE.evalTemp.pdca=[];
+  if (checkbox.checked) { if (!STATE.evalTemp.pdca.includes(checkbox.value)) STATE.evalTemp.pdca.push(checkbox.value); }
+  else { STATE.evalTemp.pdca = STATE.evalTemp.pdca.filter(v=>v!==checkbox.value); }
+  renderSemaforosDesdeProyecto(STATE.evalTemp);
+}
+
+function renderGaugeUser(valor) {
+  const v = Math.round(valor*10)/10, col = gaugeColor(v);
+  const canvas = document.getElementById("gaugeGeneral"); if (!canvas) return;
+  if (STATE.gaugeUser) {
+    STATE.gaugeUser.data.datasets[0].data=[v,100-v];
+    STATE.gaugeUser.data.datasets[0].backgroundColor[0]=col;
+    STATE.gaugeUser.update("none"); return;
+  }
+  STATE.gaugeUser = new Chart(canvas.getContext("2d"),{
+    type:"doughnut",
+    data:{datasets:[{data:[v,100-v],backgroundColor:[col,"#e5e7eb"],borderWidth:0,cutout:"78%"}]},
+    options:{animation:false,responsive:true,rotation:-90,circumference:180,plugins:{legend:{display:false},tooltip:{enabled:false}}}
+  });
+}
+
+async function guardar() {
+  if (!STATE.proyectoActualId||!STATE.evalTemp) return notif("Selecciona un proyecto",true);
+  if (!STATE.evalTemp.kpi && !STATE.evalTemp.gantt && !STATE.evalTemp.pdca.length)
+    return notif("Completa al menos un campo antes de guardar",true);
+  const btn = document.getElementById("btnGuardar");
+  btn.disabled=true; btn.textContent="Guardando...";
+  const ev = { ...STATE.evalTemp, comentarios:{
+    kpi:   document.getElementById("comentarioKPI").value,
+    gantt: document.getElementById("comentarioGANTT").value,
+    pdca:  document.getElementById("comentarioPDCA").value
+  }};
+  try {
+    const now = new Date();
+    await db.collection("proyectos").doc(STATE.proyectoActualId).update({
+      evaluacion:        ev,
+      fechaCalificacion: now,
+      scoreKPI:          calcKPI(ev.kpi),
+      scoreSchedule:     calcGANTT(ev.gantt),
+      scorePresentation: calcPDCA(ev),
+      overallScore:      +calcGeneral(ev).toFixed(2)
+    });
+    const histEntry = {
+      proyectoId:STATE.proyectoActualId, proyectoNombre:STATE.proyectoActual.nombre,
+      champion:STATE.proyectoActual.champion||"–", seccion:STATE.proyectoActual.seccion||"–", tier:STATE.proyectoActual.tier||"–",
+      usuario:STATE.uid,
+      usuarioNombre:STATE.mapaUsuarios[STATE.uid]||firebase.auth().currentUser?.displayName||firebase.auth().currentUser?.email||"–",
+      fecha:now, semana:getSemana(now),
+      kpi:calcKPI(ev.kpi), gantt:calcGANTT(ev.gantt), pdca:calcPDCA(ev), general:calcGeneral(ev),
+      comentariosKPI:ev.comentarios.kpi, comentariosGANTT:ev.comentarios.gantt, comentariosPDCA:ev.comentarios.pdca
+    };
+    await db.collection("historial").add(histEntry);
+    const idx = STATE.proyectos.findIndex(p=>p.id===STATE.proyectoActualId);
+      if (idx !== -1) {
+        STATE.proyectos[idx].evaluacion      = JSON.parse(JSON.stringify(ev));
+        STATE.proyectos[idx].fechaCalificacion = now;
+        STATE.proyectos[idx].scoreKPI          = calcKPI(ev.kpi);
+        STATE.proyectos[idx].scoreSchedule     = calcGANTT(ev.gantt);
+        STATE.proyectos[idx].scorePresentation = calcPDCA(ev);
+        STATE.proyectos[idx].overallScore      = +calcGeneral(ev).toFixed(2);
+      }
+    STATE.historial.unshift({...histEntry, _fecha:now});
+    renderSemaforosDesdeProyecto(ev);
+    notif("Evaluación guardada ✅");
+    STATE.evalTemp = { kpi:"", gantt:"", pdca:[] };
+    limpiarFormulario();
+  } catch(err) { console.error(err); notif("Error: "+err.message,true); }
+  finally { btn.disabled=false; btn.textContent="💾 Guardar Evaluación"; }
+}
+
+function logout() {
+  firebase.auth().signOut().then(() => { window.location.href = "index.html"; });
+}
+
+init();
+</script>
+</body>
+</html>
