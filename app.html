@@ -1670,7 +1670,14 @@ async function guardar() {
   }};
   try {
     const now = new Date();
-    await db.collection("proyectos").doc(STATE.proyectoActualId).update({ evaluacion:ev, fechaCalificacion:now });
+    await db.collection("proyectos").doc(STATE.proyectoActualId).update({
+      evaluacion:        ev,
+      fechaCalificacion: now,
+      scoreKPI:          calcKPI(ev.kpi),
+      scoreSchedule:     calcGANTT(ev.gantt),
+      scorePresentation: calcPDCA(ev),
+      overallScore:      +calcGeneral(ev).toFixed(2)
+    });
     const histEntry = {
       proyectoId:STATE.proyectoActualId, proyectoNombre:STATE.proyectoActual.nombre,
       champion:STATE.proyectoActual.champion||"–", seccion:STATE.proyectoActual.seccion||"–", tier:STATE.proyectoActual.tier||"–",
