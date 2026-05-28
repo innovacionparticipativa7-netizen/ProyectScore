@@ -225,7 +225,9 @@ canvas { max-height: 240px; }
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
         <h3 style="margin:0">Gestión de Proyectos</h3>
         <div style="display:flex;gap:8px;flex-wrap:wrap">
+          
           <button class="btn-sm btn-secondary" onclick="toggleForm()">＋ Nuevo</button>
+          <button class="btn-sm btn-danger" onclick="eliminarDuplicados()">🧹 Eliminar Duplicados</button>
           <button class="btn-sm btn-blue" onclick="exportarExcel()">📥 Exportar Consolidado</button>
           <button class="btn-sm btn-secondary" onclick="exportarHistorialCompleto()">📋 Exportar Historial</button>
         </div>
@@ -1699,6 +1701,125 @@ async function guardar() {
   finally { btn.disabled=false; btn.textContent="💾 Guardar Evaluación"; }
 }
 
+async function eliminarDuplicados() {
+  if (!confirm("¿Buscar y eliminar proyectos duplicados? Se concervara el ultimo registro.")) return;
+
+  setLoading(true, "Buscando duplicados...");
+
+  try {
+    const snap = await db.collection("proyectos").get();
+    const todos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+    // Agrupar por nombre normalizado
+    const grupos = {};
+    todos.forEach(p => {
+      const clave = (p.nombre || "").trim().toLowerCase();
+      if (!clave) return;
+      if (!grupos[clave]) grupos[clave] = [];
+      grupos[clave].push(p);
+    });
+
+    const aEliminar = [];
+    let totalDuplicados = 0;
+
+    Object.entries(grupos).forEach(([clave, lista]) => {
+      if (lista.length <= 1) return;
+
+      // Verificar si un proyecto tiene calificación real
+      const tieneCalificacion = (p) => {
+        const ev = p.evaluacion || {};
+        return !!(ev.kpi || ev.gantt || (Array.isArray(ev.pdca) && ev.pdca.length > 0));
+      };
+
+      // Obtener fecha de calificación como Date
+      const getFechaCalif = (p) => {
+        if (p.fechaCalificacion?.toDate) return p.fechaCalificacion.toDate();
+        if (p.fechaCalificacion) return new Date(p.fechaCalificacion);
+        return new Date(0);
+      };
+
+      // Obtener fecha de creación como Date
+      const getFechaCreacion = (p) => {
+        if (p.createdAt?.toDate) return p.createdAt.toDate();
+        if (p.createdAt) return new Date(p.createdAt);
+        return new Date(0);
+      };
+
+      // Separar los que tienen calificación y los que no
+      const conCalif  = lista.filter(p => tieneCalificacion(p));
+      const sinCalif  = lista.filter(p => !tieneCalificacion(p));
+
+      let conservar = null;
+
+      if (conCalif.length === 0) {
+        // Ninguno tiene calificación → conservar el más reciente por createdAt
+        lista.sort((a, b) => getFechaCreacion(b) - getFechaCreacion(a));
+        conservar = lista[0];
+
+      } else if (conCalif.length === 1) {
+        // Solo uno tiene calificación → conservar ese
+        conservar = conCalif[0];
+
+      } else {
+        // Varios tienen calificación → conservar el de calificación más reciente
+        conCalif.sort((a, b) => getFechaCalif(b) - getFechaCalif(a));
+        conservar = conCalif[0];
+      }
+
+      // Todo lo que no sea el conservado va a eliminarse
+      lista.forEach(p => {
+        if (p.id !== conservar.id) {
+          aEliminar.push(p.id);
+          totalDuplicados++;
+        }
+      });
+    });
+
+    if (!aEliminar.length) {
+      setLoading(false);
+      return notif("✅ No se encontraron duplicados");
+    }
+
+    // Mostrar resumen antes de eliminar
+    const gruposDuplicados = Object.values(grupos).filter(g => g.length > 1);
+    const resumen = gruposDuplicados.map(lista => {
+      const nombre = lista[0].nombre || "Sin nombre";
+      return `• ${nombre} (${lista.length} copias)`;
+    }).join("\n");
+
+    if (!confirm(`Se eliminarán ${totalDuplicados} duplicados:\n\n${resumen}\n\n¿Confirmar?`)) {
+      setLoading(false);
+      return;
+    }
+
+    // Eliminar en lotes de 500
+    const LOTE = 500;
+    for (let i = 0; i < aEliminar.length; i += LOTE) {
+      const batch = db.batch();
+      aEliminar.slice(i, i + LOTE).forEach(id => {
+        batch.delete(db.collection("proyectos").doc(id));
+      });
+      await batch.commit();
+    }
+
+    // Recargar proyectos
+    const snapFinal = await db.collection("proyectos").limit(500).get();
+    STATE.proyectos = snapFinal.docs.map(d => ({
+      id: d.id, ...d.data(),
+      evaluacion: d.data().evaluacion || { kpi: "", gantt: "", pdca: [] }
+    }));
+
+    renderTabla();
+    poblarFiltrosHistorial();
+    notif(`🧹 ${totalDuplicados} duplicados eliminados ✅`);
+
+  } catch (err) {
+    console.error(err);
+    notif("Error: " + err.message, true);
+  } finally {
+    setLoading(false);
+  }
+}
 function logout() {
   firebase.auth().signOut().then(() => { window.location.href = "index.html"; });
 }
