@@ -248,6 +248,66 @@ canvas { max-height: 240px; }
 .modal-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 14px; }
 .modal-grid .full { grid-column: 1 / -1; }
 @media (max-width: 520px) { .modal-grid { grid-template-columns: 1fr; } }
+
+  /* ===== COMENTARIOS ===== */
+.coment-card {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 12px; padding: 14px 16px; margin-bottom: 10px;
+  transition: box-shadow .15s;
+}
+.coment-card:hover { box-shadow: var(--shadow); }
+.coment-header {
+  display: flex; align-items: center; justify-content: space-between;
+  flex-wrap: wrap; gap: 6px; margin-bottom: 10px;
+}
+.coment-proyecto {
+  font-weight: 700; font-size: 13px; color: var(--text);
+}
+.coment-meta {
+  display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+}
+.coment-fecha {
+  font-size: 11px; color: var(--text-muted);
+  background: var(--surface); border: 1px solid var(--border);
+  padding: 2px 8px; border-radius: 20px;
+}
+.coment-usuario {
+  font-size: 11px; font-weight: 600; color: #1e40af;
+  background: #eff6ff; border: 1px solid #bfdbfe;
+  padding: 2px 8px; border-radius: 20px;
+}
+.coment-semana {
+  font-size: 11px; color: var(--text-muted);
+  background: var(--surface); border: 1px solid var(--border);
+  padding: 2px 8px; border-radius: 20px;
+}
+.coment-bloques { display: flex; flex-direction: column; gap: 6px; }
+.coment-bloque {
+  display: flex; gap: 10px; align-items: flex-start;
+  background: var(--surface); border-radius: 8px;
+  padding: 8px 12px; border-left: 3px solid var(--border);
+}
+.coment-bloque.tipo-kpi   { border-left-color: #10b981; }
+.coment-bloque.tipo-gantt { border-left-color: #3b82f6; }
+.coment-bloque.tipo-pdca  { border-left-color: #f59e0b; }
+.coment-tipo-badge {
+  font-size: 10px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .5px; padding: 2px 7px; border-radius: 20px;
+  flex-shrink: 0; margin-top: 1px;
+}
+.badge-kpi   { background: #d1fae5; color: #065f46; }
+.badge-gantt { background: #dbeafe; color: #1e40af; }
+.badge-pdca  { background: #fef3c7; color: #92400e; }
+.coment-texto { font-size: 13px; color: var(--text); line-height: 1.5; }
+.coment-score {
+  font-size: 11px; font-weight: 700; color: var(--text-muted);
+  margin-left: auto; flex-shrink: 0; padding-top: 2px;
+}
+.coment-empty {
+  text-align: center; padding: 32px; color: var(--text-muted);
+  font-size: 13px;
+}
+.coment-empty .icon { font-size: 32px; margin-bottom: 8px; }
 </style>
 </head>
 <body>
@@ -480,7 +540,33 @@ canvas { max-height: 240px; }
         </table>
       </div>
     </div>
-
+      <!-- COMENTARIOS POR PROYECTO -->
+      <div class="card" style="margin-bottom:16px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+          <h3 style="margin:0">💬 Comentarios por Proyecto</h3>
+          <button class="btn-sm btn-blue" onclick="exportarComentarios()">📥 Exportar Comentarios</button>
+        </div>
+      
+        <div class="form-grid" style="margin-bottom:12px">
+          <div>
+            <label class="field-label">Proyecto</label>
+            <select id="comentFiltroProyecto" onchange="renderComentarios()">
+              <option value="">Todos los proyectos</option>
+            </select>
+          </div>
+          <div>
+            <label class="field-label">Tipo de comentario</label>
+            <select id="comentFiltroTipo" onchange="renderComentarios()">
+              <option value="">Todos</option>
+              <option value="kpi">KPI</option>
+              <option value="gantt">GANTT</option>
+              <option value="pdca">PDCA</option>
+            </select>
+          </div>
+        </div>
+      
+        <div id="comentariosContainer"></div>
+      </div>
     <!-- HISTORIAL COMPLETO -->
     <div class="card" style="margin-bottom:16px">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
@@ -1282,6 +1368,7 @@ function poblarFiltrosHistorial() {
   [...proySet].forEach(s => { const {id,nombre}=JSON.parse(s); const o=document.createElement("option"); o.value=id; o.textContent=nombre; selP.appendChild(o); });
   [...userSet].forEach(u => { const o=document.createElement("option"); o.value=u; o.textContent=u; selU.appendChild(o); });
   renderTablaHistorial();
+  poblarFiltroComentarios();
 }
 
 function renderTablaHistorial() {
@@ -2134,7 +2221,218 @@ async function guardarEdicionProyecto() {
   }
 }
 
+/* ============================================================
+   COMENTARIOS
+============================================================ */
+function poblarFiltroComentarios() {
+  const sel = document.getElementById("comentFiltroProyecto");
+  if (!sel) return;
+  sel.innerHTML = '<option value="">Todos los proyectos</option>';
+  const set = new Set();
+  STATE.historial.forEach(h => {
+    const tieneComent =
+      (h.comentariosKPI   && h.comentariosKPI.trim())   ||
+      (h.comentariosGANTT && h.comentariosGANTT.trim()) ||
+      (h.comentariosPDCA  && h.comentariosPDCA.trim());
+    if (tieneComent && h.proyectoId && h.proyectoNombre)
+      set.add(JSON.stringify({ id: h.proyectoId, nombre: h.proyectoNombre }));
+  });
+  [...set].sort((a,b) => {
+    const na = JSON.parse(a).nombre, nb = JSON.parse(b).nombre;
+    return na.localeCompare(nb);
+  }).forEach(s => {
+    const { id, nombre } = JSON.parse(s);
+    const o = document.createElement("option");
+    o.value = id; o.textContent = nombre;
+    sel.appendChild(o);
+  });
+  renderComentarios();
+}
 
+function renderComentarios() {
+  const filP  = document.getElementById("comentFiltroProyecto").value;
+  const filT  = document.getElementById("comentFiltroTipo").value;
+  const cont  = document.getElementById("comentariosContainer");
+  if (!cont) return;
+
+  // Filtrar historial con al menos un comentario
+  let lista = STATE.historial.filter(h => {
+    const tieneComent =
+      (h.comentariosKPI   && h.comentariosKPI.trim())   ||
+      (h.comentariosGANTT && h.comentariosGANTT.trim()) ||
+      (h.comentariosPDCA  && h.comentariosPDCA.trim());
+    if (!tieneComent) return false;
+    if (filP && h.proyectoId !== filP) return false;
+
+    // Filtro por tipo: solo incluir registros que tengan ese tipo de comentario
+    if (filT === "kpi"   && !(h.comentariosKPI   && h.comentariosKPI.trim()))   return false;
+    if (filT === "gantt" && !(h.comentariosGANTT && h.comentariosGANTT.trim())) return false;
+    if (filT === "pdca"  && !(h.comentariosPDCA  && h.comentariosPDCA.trim()))  return false;
+    return true;
+  });
+
+  // Ordenar por fecha descendente
+  lista.sort((a, b) => {
+    const fa = a.fecha?.toDate ? a.fecha.toDate() : new Date(a.fecha || 0);
+    const fb = b.fecha?.toDate ? b.fecha.toDate() : new Date(b.fecha || 0);
+    return fb - fa;
+  });
+
+  if (!lista.length) {
+    cont.innerHTML = `
+      <div class="coment-empty">
+        <div class="icon">💬</div>
+        No hay comentarios con los filtros seleccionados
+      </div>`;
+    return;
+  }
+
+  const frag = document.createDocumentFragment();
+
+  lista.slice(0, 150).forEach(h => {
+    const fo = h.fecha?.toDate ? h.fecha.toDate() : new Date(h.fecha || 0);
+    const fechaStr = fo.toLocaleDateString("es-MX", { day:"2-digit", month:"short", year:"numeric" });
+    const horaStr  = fo.toLocaleTimeString("es-MX", { hour:"2-digit", minute:"2-digit" });
+
+    const card = document.createElement("div");
+    card.className = "coment-card";
+
+    // Construir bloques de comentario según tipo filtrado
+    const bloques = [];
+
+    const mostrarKPI   = !filT || filT === "kpi";
+    const mostrarGANTT = !filT || filT === "gantt";
+    const mostrarPDCA  = !filT || filT === "pdca";
+
+    if (mostrarKPI && h.comentariosKPI && h.comentariosKPI.trim()) {
+      bloques.push({
+        tipo: "kpi", badge: "badge-kpi", label: "KPI",
+        texto: h.comentariosKPI.trim(),
+        score: h.kpi != null ? `${h.kpi}%` : ""
+      });
+    }
+    if (mostrarGANTT && h.comentariosGANTT && h.comentariosGANTT.trim()) {
+      bloques.push({
+        tipo: "gantt", badge: "badge-gantt", label: "GANTT",
+        texto: h.comentariosGANTT.trim(),
+        score: h.gantt != null ? `${h.gantt}%` : ""
+      });
+    }
+    if (mostrarPDCA && h.comentariosPDCA && h.comentariosPDCA.trim()) {
+      bloques.push({
+        tipo: "pdca", badge: "badge-pdca", label: "PDCA",
+        texto: h.comentariosPDCA.trim(),
+        score: h.pdca != null ? `${h.pdca}%` : ""
+      });
+    }
+
+    if (!bloques.length) return;
+
+    const bloquesHTML = bloques.map(b => `
+      <div class="coment-bloque tipo-${b.tipo}">
+        <span class="coment-tipo-badge ${b.badge}">${b.label}</span>
+        <span class="coment-texto">${escapeHTML(b.texto)}</span>
+        ${b.score ? `<span class="coment-score">${b.score}</span>` : ""}
+      </div>
+    `).join("");
+
+    card.innerHTML = `
+      <div class="coment-header">
+        <span class="coment-proyecto">📁 ${escapeHTML(h.proyectoNombre || "–")}</span>
+        <div class="coment-meta">
+          <span class="coment-usuario">👤 ${escapeHTML(h.usuarioNombre || h.usuario || "–")}</span>
+          <span class="coment-fecha">📅 ${fechaStr} ${horaStr}</span>
+          <span class="coment-semana">Sem ${h.semana || "–"}</span>
+          ${h.general != null
+            ? `<span class="coment-fecha" style="font-weight:700;color:${h.general>=75?'#065f46':h.general>=50?'#92400e':'#991b1b'}">
+                ⭐ ${Number(h.general).toFixed(1)}%
+              </span>`
+            : ""}
+        </div>
+      </div>
+      <div class="coment-bloques">${bloquesHTML}</div>
+    `;
+
+    frag.appendChild(card);
+  });
+
+  cont.innerHTML = "";
+  cont.appendChild(frag);
+}
+
+function escapeHTML(str) {
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+function exportarComentarios() {
+  const filP = document.getElementById("comentFiltroProyecto").value;
+  const filT = document.getElementById("comentFiltroTipo").value;
+
+  let lista = STATE.historial.filter(h => {
+    const tieneComent =
+      (h.comentariosKPI   && h.comentariosKPI.trim())   ||
+      (h.comentariosGANTT && h.comentariosGANTT.trim()) ||
+      (h.comentariosPDCA  && h.comentariosPDCA.trim());
+    if (!tieneComent) return false;
+    if (filP && h.proyectoId !== filP) return false;
+    if (filT === "kpi"   && !(h.comentariosKPI   && h.comentariosKPI.trim()))   return false;
+    if (filT === "gantt" && !(h.comentariosGANTT && h.comentariosGANTT.trim())) return false;
+    if (filT === "pdca"  && !(h.comentariosPDCA  && h.comentariosPDCA.trim()))  return false;
+    return true;
+  });
+
+  lista.sort((a, b) => {
+    const fa = a.fecha?.toDate ? a.fecha.toDate() : new Date(a.fecha || 0);
+    const fb = b.fecha?.toDate ? b.fecha.toDate() : new Date(b.fecha || 0);
+    return fb - fa;
+  });
+
+  const rows = [];
+  lista.forEach(h => {
+    const fo = h.fecha?.toDate ? h.fecha.toDate() : new Date(h.fecha || 0);
+    const fechaStr = fo.toLocaleDateString();
+    const horaStr  = fo.toLocaleTimeString([], { hour:"2-digit", minute:"2-digit" });
+    const base = {
+      Fecha:    fechaStr,
+      Hora:     horaStr,
+      Semana:   h.semana || "",
+      Proyecto: h.proyectoNombre || "–",
+      Champion: h.champion || "–",
+      Usuario:  h.usuarioNombre || h.usuario || "–",
+      "KPI%":   h.kpi   ?? "",
+      "GANTT%": h.gantt ?? "",
+      "PDCA%":  h.pdca  ?? "",
+      "General%": h.general != null ? +Number(h.general).toFixed(2) : "",
+    };
+
+    const mostrarKPI   = !filT || filT === "kpi";
+    const mostrarGANTT = !filT || filT === "gantt";
+    const mostrarPDCA  = !filT || filT === "pdca";
+
+    if (mostrarKPI && h.comentariosKPI && h.comentariosKPI.trim())
+      rows.push({ ...base, Tipo: "KPI",   Comentario: h.comentariosKPI.trim() });
+    if (mostrarGANTT && h.comentariosGANTT && h.comentariosGANTT.trim())
+      rows.push({ ...base, Tipo: "GANTT", Comentario: h.comentariosGANTT.trim() });
+    if (mostrarPDCA && h.comentariosPDCA && h.comentariosPDCA.trim())
+      rows.push({ ...base, Tipo: "PDCA",  Comentario: h.comentariosPDCA.trim() });
+  });
+
+  if (!rows.length) return notif("No hay comentarios para exportar", true);
+
+  const ws = XLSX.utils.json_to_sheet(rows);
+  ws["!cols"] = [
+    {wch:12},{wch:8},{wch:8},{wch:30},{wch:20},{wch:25},
+    {wch:8},{wch:8},{wch:8},{wch:10},{wch:10},{wch:60}
+  ];
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Comentarios");
+  XLSX.writeFile(wb, `Comentarios_${new Date().toISOString().slice(0,10)}.xlsx`);
+  notif("Comentarios exportados ✅");
+}
 
 
   
