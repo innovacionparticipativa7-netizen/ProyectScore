@@ -540,33 +540,6 @@ canvas { max-height: 240px; }
         </table>
       </div>
     </div>
-      <!-- COMENTARIOS POR PROYECTO -->
-      <div class="card" style="margin-bottom:16px">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-          <h3 style="margin:0">💬 Comentarios por Proyecto</h3>
-          <button class="btn-sm btn-blue" onclick="exportarComentarios()">📥 Exportar Comentarios</button>
-        </div>
-      
-        <div class="form-grid" style="margin-bottom:12px">
-          <div>
-            <label class="field-label">Proyecto</label>
-            <select id="comentFiltroProyecto" onchange="renderComentarios()">
-              <option value="">Todos los proyectos</option>
-            </select>
-          </div>
-          <div>
-            <label class="field-label">Tipo de comentario</label>
-            <select id="comentFiltroTipo" onchange="renderComentarios()">
-              <option value="">Todos</option>
-              <option value="kpi">KPI</option>
-              <option value="gantt">GANTT</option>
-              <option value="pdca">PDCA</option>
-            </select>
-          </div>
-        </div>
-      
-        <div id="comentariosContainer"></div>
-      </div>
     <!-- HISTORIAL COMPLETO -->
     <div class="card" style="margin-bottom:16px">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
@@ -594,6 +567,34 @@ canvas { max-height: 240px; }
         </table>
       </div>
     </div>
+
+          <!-- COMENTARIOS POR PROYECTO -->
+      <div class="card" style="margin-bottom:16px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+          <h3 style="margin:0">💬 Comentarios por Proyecto</h3>
+          <button class="btn-sm btn-blue" onclick="exportarComentarios()">📥 Exportar Comentarios</button>
+        </div>
+      
+        <div class="form-grid" style="margin-bottom:12px">
+          <div>
+            <label class="field-label">Proyecto</label>
+            <select id="comentFiltroProyecto" onchange="renderComentarios()">
+              <option value="">Todos los proyectos</option>
+            </select>
+          </div>
+          <div>
+            <label class="field-label">Tipo de comentario</label>
+            <select id="comentFiltroTipo" onchange="renderComentarios()">
+              <option value="">Todos</option>
+              <option value="kpi">KPI</option>
+              <option value="gantt">GANTT</option>
+              <option value="pdca">PDCA</option>
+            </select>
+          </div>
+        </div>
+      
+        <div id="comentariosContainer"></div>
+      </div>
 
   </div>
 </div>
