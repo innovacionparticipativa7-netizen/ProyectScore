@@ -198,6 +198,56 @@ canvas { max-height: 240px; }
   .filter-grid { grid-template-columns: 1fr; }
   .date-range-row { grid-template-columns: 1fr; }
 }
+  /* ===== MODAL EDITAR PROYECTO ===== */
+.modal-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 5000; padding: 16px; opacity: 0; pointer-events: none;
+  transition: opacity .2s;
+}
+.modal-overlay.open { opacity: 1; pointer-events: all; }
+
+.modal-box {
+  background: var(--surface); border-radius: var(--radius);
+  box-shadow: var(--shadow-lg); width: 100%; max-width: 720px;
+  max-height: 90vh; display: flex; flex-direction: column;
+  transform: translateY(20px); transition: transform .2s;
+}
+.modal-overlay.open .modal-box { transform: translateY(0); }
+
+.modal-header {
+  padding: 16px 20px; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+  flex-shrink: 0;
+}
+.modal-header h3 { font-size: 15px; font-weight: 700; }
+.modal-close {
+  width: 30px; height: 30px; border-radius: 50%; border: 1px solid var(--border);
+  background: var(--surface2); font-size: 16px; display: flex;
+  align-items: center; justify-content: center; cursor: pointer;
+  line-height: 1; padding: 0;
+}
+.modal-close:hover { background: #fee2e2; border-color: var(--danger); }
+
+.modal-body {
+  padding: 20px; overflow-y: auto; flex: 1;
+}
+.modal-footer {
+  padding: 14px 20px; border-top: 1px solid var(--border);
+  display: flex; gap: 8px; justify-content: flex-end; flex-shrink: 0;
+}
+
+.modal-section-title {
+  font-size: 11px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .6px; color: var(--text-muted);
+  margin: 18px 0 8px; padding-bottom: 6px;
+  border-bottom: 1px solid var(--border);
+}
+.modal-section-title:first-child { margin-top: 0; }
+
+.modal-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 14px; }
+.modal-grid .full { grid-column: 1 / -1; }
+@media (max-width: 520px) { .modal-grid { grid-template-columns: 1fr; } }
 </style>
 </head>
 <body>
@@ -461,7 +511,91 @@ canvas { max-height: 240px; }
 
   </div>
 </div>
+  
+<!-- ===== MODAL EDITAR PROYECTO ===== -->
+  
+<div class="modal-overlay" id="modalEditarOverlay" onclick="cerrarModalEditar(event)">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3>✏️ Editar Proyecto</h3>
+      <button class="modal-close" onclick="cerrarModalEditar()">✕</button>
+    </div>
+    <div class="modal-body">
 
+      <div class="modal-section-title">Datos principales</div>
+      <div class="modal-grid">
+        <div class="full"><label class="field-label">Nombre</label><input id="edit-nombre"></div>
+        <div><label class="field-label">Tier / FORUM</label>
+          <select id="edit-tier">
+            <option value="">Sin Tier</option>
+            <option>Tier 1</option><option>Tier 2</option><option>Tier 3</option>
+            <option>Tier 4</option><option>Tier 5</option><option>Tier 6</option>
+          </select>
+        </div>
+        <div><label class="field-label">Sección / FRONT AXIS</label>
+          <select id="edit-seccion" onchange="onEditSeccionChange()">
+            <option value="">Sin Sección</option>
+            <option>Buy to Make</option><option>DTC</option>
+            <option>Material Optimization</option><option>OH Cost Control</option><option>Resourcing</option>
+          </select>
+        </div>
+        <div><label class="field-label">Champion</label>
+          <select id="edit-champion"><option value="">Selecciona primero sección</option></select>
+        </div>
+        <div><label class="field-label">Sponsor</label><input id="edit-sponsor"></div>
+        <div><label class="field-label">Owner</label><input id="edit-owner"></div>
+        <div><label class="field-label">Estado</label>
+          <select id="edit-estado">
+            <option value="activo">🟢 Activo</option>
+            <option value="espera">🟡 En Espera</option>
+          </select>
+        </div>
+        <div><label class="field-label">#</label><input id="edit-numeroProyecto"></div>
+      </div>
+
+      <div class="modal-section-title">Nivel 1</div>
+      <div class="modal-grid">
+        <div><label class="field-label">Priority Level</label><input id="edit-priorityLevel"></div>
+        <div><label class="field-label">L1 Coding</label><input id="edit-l1Coding"></div>
+        <div class="full"><label class="field-label">Nivel 1</label><input id="edit-nivel1"></div>
+        <div><label class="field-label">L1 KPI</label><input id="edit-l1KPI"></div>
+        <div><label class="field-label">Primary Lead L1</label><input id="edit-primaryLeadL1"></div>
+        <div><label class="field-label">Support Lead</label><input id="edit-supportLead"></div>
+      </div>
+
+      <div class="modal-section-title">Nivel 2</div>
+      <div class="modal-grid">
+        <div><label class="field-label">L2 Coding</label><input id="edit-l2Coding"></div>
+        <div><label class="field-label">Type 2</label><input id="edit-type2"></div>
+        <div class="full"><label class="field-label">Nivel 2</label><input id="edit-nivel2"></div>
+        <div><label class="field-label">Primary Lead L2</label><input id="edit-primaryLeadL2"></div>
+      </div>
+
+      <div class="modal-section-title">Nivel 3</div>
+      <div class="modal-grid">
+        <div><label class="field-label">L3 CODE</label><input id="edit-l3Code"></div>
+        <div><label class="field-label">Type</label><input id="edit-type"></div>
+        <div class="full"><label class="field-label">Nivel 3</label><input id="edit-nivel3"></div>
+        <div><label class="field-label">Primary Lead L3</label><input id="edit-primaryLeadL3"></div>
+      </div>
+
+      <div class="modal-section-title">Información adicional</div>
+      <div class="modal-grid">
+        <div><label class="field-label">Concatenate</label><input id="edit-concatenate"></div>
+        <div><label class="field-label">PRESENTED</label><input id="edit-presented"></div>
+        <div><label class="field-label">TARGET</label><input id="edit-target"></div>
+        <div><label class="field-label">DATE</label><input id="edit-dateProject" type="date"></div>
+        <div><label class="field-label">FORUM</label><input id="edit-forum"></div>
+        <div><label class="field-label">STATUS</label><input id="edit-projectStatus"></div>
+      </div>
+
+    </div>
+    <div class="modal-footer">
+      <button class="btn-sm btn-secondary" onclick="cerrarModalEditar()">Cancelar</button>
+      <button class="btn-sm btn-blue" onclick="guardarEdicionProyecto()" id="btnGuardarEdicion">💾 Guardar cambios</button>
+    </div>
+  </div>
+</div>
 <!-- ==================== USER ==================== -->
 <div id="vista-user" style="display:none">
 
@@ -1000,7 +1134,10 @@ function renderTabla() {
       <td><div class="semaforo" style="background:${colorSemaforo('kpi',ev.kpi)}" title="${calcKPI(ev.kpi)}%"></div></td>
       <td><div class="semaforo" style="background:${colorSemaforo('gantt',ev.gantt)}" title="${calcGANTT(ev.gantt)}%"></div></td>
       <td><div class="semaforo" style="background:${colorSemaforo('pdca',ev.pdca)}" title="${calcPDCA(ev)}%"></div></td>
-      <td><button class="btn-sm btn-danger" onclick="eliminarProyecto('${p.id}')">🗑</button></td>`;
+      <td style="display:flex;gap:6px;align-items:center">
+      <button class="btn-sm btn-blue" onclick="abrirModalEditar('${p.id}')">✏️</button>
+      <button class="btn-sm btn-danger" onclick="eliminarProyecto('${p.id}')">🗑</button>
+      </td>`;
     frag.appendChild(tr);
   });
   tbody.appendChild(frag);
@@ -1845,6 +1982,162 @@ async function eliminarDuplicados() {
     setLoading(false);
   }
 }
+
+/* ============================================================
+   MODAL EDITAR PROYECTO
+============================================================ */
+let _editandoId = null;
+
+function abrirModalEditar(id) {
+  const p = STATE.proyectos.find(x => x.id === id);
+  if (!p) return;
+  _editandoId = id;
+
+  // Campos principales
+  document.getElementById("edit-nombre").value          = p.nombre          || "";
+  document.getElementById("edit-tier").value            = p.tier            || "";
+  document.getElementById("edit-seccion").value         = p.seccion         || "";
+  document.getElementById("edit-sponsor").value         = p.sponsor         || "";
+  document.getElementById("edit-owner").value           = p.owner           || "";
+  document.getElementById("edit-estado").value          = p.estado          || "activo";
+  document.getElementById("edit-numeroProyecto").value  = p.numeroProyecto  || "";
+
+  // Poblar champion según sección y seleccionar el actual
+  onEditSeccionChange(p.champion);
+
+  // Nivel 1
+  document.getElementById("edit-priorityLevel").value   = p.priorityLevel   || "";
+  document.getElementById("edit-l1Coding").value        = p.l1Coding        || "";
+  document.getElementById("edit-nivel1").value          = p.nivel1          || "";
+  document.getElementById("edit-l1KPI").value           = p.l1KPI           || "";
+  document.getElementById("edit-primaryLeadL1").value   = p.primaryLeadL1   || "";
+  document.getElementById("edit-supportLead").value     = p.supportLead     || "";
+
+  // Nivel 2
+  document.getElementById("edit-l2Coding").value        = p.l2Coding        || "";
+  document.getElementById("edit-nivel2").value          = p.nivel2          || "";
+  document.getElementById("edit-primaryLeadL2").value   = p.primaryLeadL2   || "";
+  document.getElementById("edit-type2").value           = p.type2           || "";
+
+  // Nivel 3
+  document.getElementById("edit-nivel3").value          = p.nivel3          || "";
+  document.getElementById("edit-l3Code").value          = p.l3Code          || "";
+  document.getElementById("edit-primaryLeadL3").value   = p.primaryLeadL3   || "";
+  document.getElementById("edit-type").value            = p.type            || "";
+
+  // Adicionales
+  document.getElementById("edit-concatenate").value     = p.concatenate     || "";
+  document.getElementById("edit-presented").value       = p.presented       || "";
+  document.getElementById("edit-target").value          = p.target          || "";
+  document.getElementById("edit-forum").value           = p.forum           || "";
+  document.getElementById("edit-projectStatus").value   = p.projectStatus   || "";
+
+  // Fecha: convertir a formato YYYY-MM-DD para input[type=date]
+  let fechaVal = "";
+  if (p.dateProject && typeof p.dateProject === "string" && p.dateProject.includes("-")) {
+    fechaVal = p.dateProject;
+  } else if (p.dateProject) {
+    fechaVal = String(p.dateProject);
+  }
+  document.getElementById("edit-dateProject").value = fechaVal;
+
+  // Abrir modal
+  document.getElementById("modalEditarOverlay").classList.add("open");
+  document.body.style.overflow = "hidden";
+}
+
+function onEditSeccionChange(championActual) {
+  const sec = document.getElementById("edit-seccion").value;
+  const sel = document.getElementById("edit-champion");
+  sel.innerHTML = '<option value="">Sin Champion</option>';
+  const lista = sec ? (CHAMPIONS[sec] || []) : [...new Set(Object.values(CHAMPIONS).flat())];
+  lista.forEach(ch => {
+    const o = document.createElement("option");
+    o.value = o.textContent = ch;
+    sel.appendChild(o);
+  });
+  // Seleccionar el champion actual si se pasó
+  if (championActual !== undefined) sel.value = championActual || "";
+}
+
+function cerrarModalEditar(e) {
+  // Si se hizo click en el overlay (fondo), cerrar
+  if (e && e.target !== document.getElementById("modalEditarOverlay")) return;
+  document.getElementById("modalEditarOverlay").classList.remove("open");
+  document.body.style.overflow = "";
+  _editandoId = null;
+}
+
+async function guardarEdicionProyecto() {
+  if (!_editandoId) return;
+
+  const btn = document.getElementById("btnGuardarEdicion");
+  btn.disabled = true;
+  btn.textContent = "Guardando...";
+
+  try {
+    const datos = {
+      nombre:         document.getElementById("edit-nombre").value.trim(),
+      tier:           document.getElementById("edit-tier").value,
+      seccion:        document.getElementById("edit-seccion").value,
+      champion:       document.getElementById("edit-champion").value,
+      sponsor:        document.getElementById("edit-sponsor").value.trim(),
+      owner:          document.getElementById("edit-owner").value.trim(),
+      estado:         document.getElementById("edit-estado").value,
+      numeroProyecto: document.getElementById("edit-numeroProyecto").value.trim(),
+
+      priorityLevel:  document.getElementById("edit-priorityLevel").value.trim(),
+      l1Coding:       document.getElementById("edit-l1Coding").value.trim(),
+      nivel1:         document.getElementById("edit-nivel1").value.trim(),
+      l1KPI:          document.getElementById("edit-l1KPI").value.trim(),
+      primaryLeadL1:  document.getElementById("edit-primaryLeadL1").value.trim(),
+      supportLead:    document.getElementById("edit-supportLead").value.trim(),
+
+      l2Coding:       document.getElementById("edit-l2Coding").value.trim(),
+      nivel2:         document.getElementById("edit-nivel2").value.trim(),
+      primaryLeadL2:  document.getElementById("edit-primaryLeadL2").value.trim(),
+      type2:          document.getElementById("edit-type2").value.trim(),
+
+      nivel3:         document.getElementById("edit-nivel3").value.trim(),
+      l3Code:         document.getElementById("edit-l3Code").value.trim(),
+      primaryLeadL3:  document.getElementById("edit-primaryLeadL3").value.trim(),
+      type:           document.getElementById("edit-type").value.trim(),
+
+      concatenate:    document.getElementById("edit-concatenate").value.trim(),
+      presented:      document.getElementById("edit-presented").value.trim(),
+      target:         document.getElementById("edit-target").value.trim(),
+      dateProject:    document.getElementById("edit-dateProject").value,
+      forum:          document.getElementById("edit-forum").value.trim(),
+      projectStatus:  document.getElementById("edit-projectStatus").value.trim(),
+    };
+
+    if (!datos.nombre) return notif("El nombre es obligatorio", true);
+
+    // Actualizar en Firestore
+    await db.collection("proyectos").doc(_editandoId).update(datos);
+
+    // Actualizar en STATE local
+    const idx = STATE.proyectos.findIndex(p => p.id === _editandoId);
+    if (idx !== -1) STATE.proyectos[idx] = { ...STATE.proyectos[idx], ...datos };
+
+    renderTabla();
+    poblarFiltrosHistorial();
+    cerrarModalEditar();
+    notif("Proyecto actualizado ✅");
+
+  } catch (err) {
+    console.error(err);
+    notif("Error: " + err.message, true);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "💾 Guardar cambios";
+  }
+}
+
+
+
+
+  
 function logout() {
   firebase.auth().signOut().then(() => { window.location.href = "index.html"; });
 }
