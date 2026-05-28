@@ -1234,42 +1234,69 @@ function exportarExcel() {
     "STATUS"
   ];
 
-const data = STATE.proyectos.map(p => {
+  const data = STATE.proyectos.map(p => {
     const ev = p.evaluacion || { kpi: "", gantt: "", pdca: [] };
 
-    const scoreKPI          = ev.kpi                        ? calcKPI(ev.kpi)    : "";
-    const scoreSchedule     = ev.gantt                      ? calcGANTT(ev.gantt): "";
-    const scorePresentation = (ev.pdca && ev.pdca.length)   ? calcPDCA(ev)       : "";
+    const scoreKPI          = ev.kpi                      ? calcKPI(ev.kpi)    : "";
+    const scoreSchedule     = ev.gantt                    ? calcGANTT(ev.gantt): "";
+    const scorePresentation = (ev.pdca && ev.pdca.length) ? calcPDCA(ev)       : "";
     const overallScore      = (scoreKPI !== "" || scoreSchedule !== "" || scorePresentation !== "")
                               ? +calcGeneral(ev).toFixed(2) : "";
 
+    // Fecha de calificación limpia
+    let fechaLimpia = "";
+    if (p.fechaCalificacion) {
+      const d = p.fechaCalificacion.toDate ? p.fechaCalificacion.toDate() : new Date(p.fechaCalificacion);
+      if (!isNaN(d)) fechaLimpia = d.toLocaleDateString();
+    } else if (p.dateProject && typeof p.dateProject === "string" && p.dateProject.includes("-")) {
+      fechaLimpia = p.dateProject;
+    }
+
+    // TARGET: solo si es string con contenido real
+    const targetLimpio = (typeof p.target === "string" && p.target.trim()) ? p.target.trim() : "";
+
+    // FORUM: solo Tier válido
+    const forumLimpio = (typeof p.forum === "string" && p.forum.trim())
+      ? p.forum.trim()
+      : (typeof p.tier === "string" && p.tier.trim() ? p.tier.trim() : "");
+
+    // STATUS: solo string "2026" o similar, nunca número
+    const statusLimpio = (typeof p.projectStatus === "string" && p.projectStatus.trim())
+      ? p.projectStatus.trim()
+      : "2026";
+
+    // PRESENTED: solo YES/NO o texto
+    const presentedLimpio = (typeof p.presented === "string" && p.presented.trim())
+      ? p.presented.trim()
+      : "";
+
     return [
-      p.numeroProyecto  || "",
-      p.priorityLevel   || "",
-      p.l1Coding        || "",
-      p.nivel1          || "",
-      p.l1KPI           || "",
-      p.primaryLeadL1   || p.champion || "",   // Primary Lead Site L1 = Champion
-      p.supportLead     || p.sponsor  || "",   // Support Lead Site L1 = Sponsor
-      p.l2Coding        || "",
-      p.nivel2          || "",
-      p.primaryLeadL2   || "",
-      p.type2           || "",
-      p.nivel3          || p.nombre   || "",   // Nivel 3 = Nombre proyecto
-      p.l3Code          || "",
-      p.primaryLeadL3   || p.owner    || "",   // Primary Lead L3 = Owner
-      p.type            || "",
-      p.frontAxis       || "",
-      p.concatenate     || "",
-      p.presented       || "",
-      scorePresentation,                        // Score Presentation = PDCA%
-      scoreSchedule,                            // Score Schedule = GANTT%
-      scoreKPI,                                 // Score KPI = KPI%
-      overallScore,                             // Overall SCORE = General%
-      p.target          || "",
-      p.fechaCalificacion ? (p.fechaCalificacion.toDate ? p.fechaCalificacion.toDate() : new Date(p.fechaCalificacion)).toLocaleDateString() : (p.dateProject || ""),
-      p.forum           || p.tier     || "",   // FORUM = Tier
-      p.projectStatus   || "2026"
+      typeof p.numeroProyecto === "string" || typeof p.numeroProyecto === "number" ? p.numeroProyecto : "",
+      typeof p.priorityLevel  === "string" ? p.priorityLevel.trim()  : "",
+      typeof p.l1Coding       === "string" ? p.l1Coding.trim()       : "",
+      typeof p.nivel1         === "string" ? p.nivel1.trim()         : "",
+      typeof p.l1KPI          === "string" ? p.l1KPI.trim()          : "",
+      typeof p.primaryLeadL1  === "string" ? p.primaryLeadL1.trim()  : (typeof p.champion === "string" ? p.champion.trim() : ""),
+      typeof p.supportLead    === "string" ? p.supportLead.trim()    : (typeof p.sponsor  === "string" ? p.sponsor.trim()  : ""),
+      typeof p.l2Coding       === "string" ? p.l2Coding.trim()       : "",
+      typeof p.nivel2         === "string" ? p.nivel2.trim()         : "",
+      typeof p.primaryLeadL2  === "string" ? p.primaryLeadL2.trim()  : "",
+      typeof p.type2          === "string" ? p.type2.trim()          : "",
+      typeof p.nivel3         === "string" ? p.nivel3.trim()         : (typeof p.nombre === "string" ? p.nombre.trim() : ""),
+      typeof p.l3Code         === "string" ? p.l3Code.trim()         : "",
+      typeof p.primaryLeadL3  === "string" ? p.primaryLeadL3.trim()  : (typeof p.owner === "string" ? p.owner.trim() : ""),
+      typeof p.type           === "string" ? p.type.trim()           : "",
+      typeof p.frontAxis      === "string" ? p.frontAxis.trim()      : "",
+      typeof p.concatenate    === "string" ? p.concatenate.trim()    : "",
+      presentedLimpio,
+      scorePresentation,
+      scoreSchedule,
+      scoreKPI,
+      overallScore,
+      targetLimpio,
+      fechaLimpia,
+      forumLimpio,
+      statusLimpio
     ];
   });
 
@@ -1285,9 +1312,7 @@ const data = STATE.proyectos.map(p => {
 
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, "Proyectos");
-
   XLSX.writeFile(wb, `Proyectos_Formato_${new Date().toISOString().slice(0,10)}.xlsx`);
-
   notif("Excel exportado correctamente ✅");
 }
 function exportarHistorialCompleto() {
