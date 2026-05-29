@@ -491,16 +491,7 @@ canvas { max-height: 240px; }
             </div>
           </div>
         </div>
-        <!-- BUSCAR POR TEXTO -->
-        <div style="margin-top:8px">
-          <input 
-            type="text" 
-            id="busquedaGeneral" 
-            placeholder="🔍 Buscar por nombre, champion, owner, sponsor..." 
-            oninput="renderSelectUser()"
-            style="font-size:13px"
-          >
-        </div>
+        
         <!-- FECHA RANGO -->
         <div>
           <label class="field-label">Rango de fechas de calificación</label>
@@ -726,6 +717,16 @@ canvas { max-height: 240px; }
         </div>
         <div class="filtro-group" id="filtroChampion">
           <button class="filtro-btn active" onclick="setFiltroUser('champion','',this)">Todos</button>
+        </div>
+        <!-- BUSCAR POR TEXTO -->
+        <div style="margin-top:8px">
+          <input 
+            type="text" 
+            id="busquedaGeneral" 
+            placeholder="🔍 Buscar por nombre, champion, owner, sponsor..." 
+            oninput="renderSelectUser()"
+            style="font-size:13px"
+          >
         </div>
       </div>
 
