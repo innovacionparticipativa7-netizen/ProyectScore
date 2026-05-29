@@ -491,7 +491,16 @@ canvas { max-height: 240px; }
             </div>
           </div>
         </div>
-
+        <!-- BUSCAR POR TEXTO -->
+        <div style="margin-top:8px">
+          <input 
+            type="text" 
+            id="busquedaGeneral" 
+            placeholder="🔍 Buscar por nombre, champion, owner, sponsor..." 
+            oninput="renderSelectUser()"
+            style="font-size:13px"
+          >
+        </div>
         <!-- FECHA RANGO -->
         <div>
           <label class="field-label">Rango de fechas de calificación</label>
@@ -1825,19 +1834,38 @@ function poblarChampionFiltros(seccion) {
 }
 
 function renderSelectUser() {
-  const {tier,seccion,champion} = STATE.filtrosUser;
-  let lista = STATE.proyectos.filter(p=>p.estado!=="espera");
-  if (tier)     lista = lista.filter(p=>p.tier===tier);
-  if (seccion)  lista = lista.filter(p=>p.seccion===seccion);
-  if (champion) lista = lista.filter(p=>p.champion===champion);
+  const {tier, seccion, champion} = STATE.filtrosUser;
+  const busqueda = (document.getElementById("busquedaGeneral")?.value || "").trim().toLowerCase();
+
+  let lista = STATE.proyectos.filter(p => p.estado !== "espera");
+  if (tier)     lista = lista.filter(p => p.tier === tier);
+  if (seccion)  lista = lista.filter(p => p.seccion === seccion);
+  if (champion) lista = lista.filter(p => p.champion === champion);
+
+  // Filtro de búsqueda general
+  if (busqueda) {
+    lista = lista.filter(p => {
+      const campos = [p.nombre, p.champion, p.owner, p.sponsor, p.seccion, p.tier].map(c => (c || "").toLowerCase());
+      return campos.some(c => c.includes(busqueda));
+    });
+  }
+
   const sel = document.getElementById("selectProyectoUser");
   sel.innerHTML = "";
+
   if (!lista.length) {
-    sel.innerHTML='<option value="">Sin proyectos</option>';
-    ["infoChampion","infoSponsor","infoOwner","infoSeccion"].forEach(id=>document.getElementById(id).textContent="–");
+    sel.innerHTML = '<option value="">Sin resultados</option>';
+    ["infoChampion","infoSponsor","infoOwner","infoSeccion"].forEach(id => document.getElementById(id).textContent = "–");
     return;
   }
-  lista.forEach(p => { const o=document.createElement("option"); o.value=p.id; o.textContent=p.nombre; sel.appendChild(o); });
+
+  lista.forEach(p => {
+    const o = document.createElement("option");
+    o.value = p.id;
+    o.textContent = p.nombre;
+    sel.appendChild(o);
+  });
+
   seleccionarProyecto(lista[0].id);
 }
 
