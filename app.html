@@ -1466,7 +1466,10 @@ function exportarExcel() {
     "TARGET",
     "Fecha",
     "FORUM",
-    "STATUS"
+    "STATUS",
+    "Comentario KPI",
+    "Comentario GANTT",
+    "Comentario PDCA"
   ];
 
   const data = STATE.proyectos.map(p => {
@@ -1531,7 +1534,10 @@ function exportarExcel() {
       targetLimpio,
       fechaLimpia,
       forumLimpio,
-      statusLimpio
+      statusLimpio,
+      ev.comentarios?.kpi || "",
+      ev.comentarios?.gantt || "",
+      ev.comentarios?.pdca || ""
     ];
   });
 
@@ -1542,7 +1548,7 @@ function exportarExcel() {
     {wch:25},{wch:18},{wch:35},{wch:25},{wch:15},{wch:35},
     {wch:18},{wch:25},{wch:15},{wch:20},{wch:30},{wch:15},
     {wch:20},{wch:18},{wch:15},{wch:18},{wch:15},{wch:15},
-    {wch:15},{wch:15}
+    {wch:15},{wch:15},{wch:40},{wch:40},{wch:40}
   ];
 
   const wb = XLSX.utils.book_new();
