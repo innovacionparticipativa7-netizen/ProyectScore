@@ -845,35 +845,136 @@ function exportarConsolidado() {
 }
 
 // ── Carga masiva Excel ───────────────────────────────────────
-async function cargarExcel(){
-  const file=document.getElementById("inputExcel").files[0];
-  if (!file) return notif("Selecciona un archivo",true);
+async function cargarExcel() {
+  const file = document.getElementById("inputExcel").files[0];
+  if (!file) return notif("Selecciona un archivo", true);
   if (!confirm("Esto borrará TODOS los proyectos de Chihuahua. ¿Continuar?")) return;
-  setLoading(true,"Borrando proyectos actuales...");
+
+  setLoading(true, "Borrando proyectos actuales...");
   try {
-    const snap=await db.collection(COL_PROYECTOS).get();
-    const batchDelete=db.batch(); snap.docs.forEach(doc=>batchDelete.delete(doc.ref)); await batchDelete.commit();
-    setLoading(true,"Leyendo Excel...");
-    const data=await file.arrayBuffer(), workbook=XLSX.read(data), sheet=workbook.Sheets[workbook.SheetNames[0]], rows=XLSX.utils.sheet_to_json(sheet);
-    if (!rows.length){ setLoading(false); return notif("Archivo vacío",true); }
-    setLoading(true,"Cargando proyectos...");
-    const batch=db.batch();
-    rows.forEach(row=>{
-      const ref=db.collection(COL_PROYECTOS).doc();
-      batch.set(ref,{ nombre:row["nombre"]||row["Nombre"]||"", tier:row["tier"]||row["Tier"]||"", seccion:row["seccion"]||row["Seccion"]||"", champion:row["champion"]||row["Champion"]||"", sponsor:row["sponsor"]||row["Sponsor"]||"", owner:row["owner"]||row["Owner"]||"", estado:"activo",createdAt:new Date(),evaluacion:{kpi:"",gantt:"",pdca:[],comentarios:{kpi:"",gantt:"",pdca:""}} });
+    const snap = await db.collection(COL_PROYECTOS).get();
+    const batchDel = db.batch();
+    snap.docs.forEach(doc => batchDel.delete(doc.ref));
+    await batchDel.commit();
+
+    setLoading(true, "Leyendo Excel...");
+    const data     = await file.arrayBuffer();
+    const workbook = XLSX.read(data);
+    const sheet    = workbook.Sheets[workbook.SheetNames[0]];
+    const filas    = XLSX.utils.sheet_to_json(sheet);
+    if (!filas.length) { setLoading(false); return notif("Archivo vacío", true); }
+
+    setLoading(true, `Cargando ${filas.length} proyectos...`);
+    const batch = db.batch();
+
+    filas.forEach(row => {
+      const ref = db.collection(COL_PROYECTOS).doc();
+
+      // Helper para leer celda como string limpio
+      const r = (...keys) => {
+        for (const k of keys) {
+          const v = row[k];
+          if (v != null && String(v).trim() !== "") return String(v).trim();
+        }
+        return "";
+      };
+
+      batch.set(ref, {
+        // ── Campos principales (mapeados desde el nuevo formato) ──
+        nombre:        r("HK3", "HK2", "HK1", "DIRECTIVE", "MAIN PROGRAM"),
+        tier:          r("TIER", "tier", "Tier"),
+        seccion:       r("SITE", "FRAMEWORK", "seccion", "Seccion"),
+        champion:      r("CHAMPION", "champion", "Champion"),
+        sponsor:       r("SPONSOR", "sponsor", "Sponsor"),
+        owner:         r("OWNER", "owner", "Owner"),
+
+        // ── Campos del nuevo formato ──
+        numeroProyecto: r("#"),
+        nivel1:         r("HK1", "DIRECTIVE"),
+        nivel2:         r("HK2", "MAIN PROGRAM"),
+        nivel3:         r("HK3"),
+        l1Coding:       r("HK1 Coding"),
+        l1KPI:          r("HK1 KPI"),
+        l2Coding:       r("HK2 Coding"),
+        l3Code:         r("HK3 Coding", "CODE", "CODE0"),
+        primaryLeadL1:  r("CHAMPION"),
+        supportLead:    r("SPONSOR"),
+        primaryLeadL3:  r("OWNER"),
+        frontAxis:      r("FRAMEWORK", "SITE"),
+        concatenate:    r("CODE0"),
+        presented:      r("STATUS"),
+        target:         r("TARGET", "SAVINGS"),
+        projectStatus:  r("YEAR") || "2026",
+        forum:          r("TIER"),
+        dateProject:    r("DATE"),
+        type:           r("FRAME"),
+
+        // ── Metadatos ──
+        estado:    "activo",
+        createdAt: new Date(),
+        evaluacion: {
+          kpi: "", gantt: "", pdca: [],
+          comentarios: { kpi: "", gantt: "", pdca: "" }
+        }
+      });
     });
+
     await batch.commit();
-    const snapNuevo=await db.collection(COL_PROYECTOS).limit(500).get();
-    STATE.proyectos=snapNuevo.docs.map(d=>({id:d.id,...d.data(),evaluacion:d.data().evaluacion||{kpi:"",gantt:"",pdca:[]}}));
-    sincronizarFiltrosDinamicos(); renderTabla(); poblarFiltrosHistorial(); notif("Proyectos cargados ✅");
-  } catch(err){ console.error(err); notif("Error: "+err.message,true); }
-  finally { setLoading(false); }
+
+    const snapNuevo = await db.collection(COL_PROYECTOS).limit(500).get();
+    STATE.proyectos = snapNuevo.docs.map(d => ({
+      id: d.id, ...d.data(),
+      evaluacion: d.data().evaluacion || { kpi: "", gantt: "", pdca: [] }
+    }));
+
+    sincronizarFiltrosDinamicos();
+    renderTabla();
+    poblarFiltrosHistorial();
+    notif(`${filas.length} proyectos cargados ✅`);
+
+  } catch(err) {
+    console.error(err);
+    notif("Error: " + err.message, true);
+  } finally {
+    setLoading(false);
+  }
 }
 
-function descargarPlantilla(){
-  const wb=XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet([{nombre:"Proyecto ejemplo",tier:"Tier 1",seccion:"Mi Sección",champion:"Nombre Champion",sponsor:"Nombre Sponsor",owner:"Nombre Owner"}]),"Plantilla");
-  XLSX.writeFile(wb,"Plantilla_Proyectos_Chihuahua.xlsx"); notif("Plantilla descargada ✅");
+function descargarPlantilla() {
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet([{
+    "DATE":         "",
+    "#":            "",
+    "SITE":         "",
+    "TIER":         "",
+    "DIRECTIVE":    "",
+    "MAIN PROGRAM": "",
+    "HK1 Coding":   "",
+    "HK1":          "",
+    "HK1 KPI":      "",
+    "CHAMPION":     "",
+    "SPONSOR":      "",
+    "HK2 Coding":   "",
+    "HK2":          "",
+    "OWNER":        "",
+    "FRAMEWORK":    "",
+    "HK3":          "",
+    "HK3 Coding":   "",
+    "FRAME":        "",
+    "SAVINGS":      "",
+    "YEAR":         "2026",
+    "STATUS":       "",
+    "CODE0":        "",
+    "KPI":          "",
+    "GANTT":        "",
+    "PDCA":         "",
+    "TARGET":       "",
+    "SCORE":        "",
+    "CODE":         ""
+  }]), "Plantilla");
+
+  XLSX.writeFile(wb, "Plantilla_Proyectos_Chihuahua.xlsx");
+  notif("Plantilla descargada ✅");
 }
 
 // ── User – filtros dinámicos ─────────────────────────────────
