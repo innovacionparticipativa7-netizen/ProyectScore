@@ -152,7 +152,7 @@ canvas { max-height: 240px; }
         <div style="display:flex;gap:8px;flex-wrap:wrap">
           <button class="btn-sm btn-secondary" onclick="toggleForm()">＋ Nuevo</button>
           <button class="btn-sm btn-blue" onclick="exportarHistorialCompleto()">📥 Exportar Historial</button>
-          <button class="btn-sm btn-secondary" onclick="exportarProyectos()">📋 Exportar Proyectos</button>
+          <button class="btn-sm btn-blue" onclick="exportarConsolidado()">📥 Exportar Consolidado</button>
         </div>
       </div>
       <div id="formNuevo" style="display:none;margin-top:12px;border-top:1px solid var(--border);padding-top:12px">
@@ -720,14 +720,128 @@ function exportarHistorialCompleto(){
   notif("Historial exportado ✅");
 }
 
-function exportarProyectos(){
-  if (!STATE.proyectos.length) return notif("Sin proyectos",true);
-  const rows=STATE.proyectos.map(p=>({Nombre:p.nombre||"–",Tier:p.tier||"–",Seccion:p.seccion||"–",Champion:p.champion||"–",Sponsor:p.sponsor||"–",Owner:p.owner||"–",Estado:p.estado||"activo"}));
-  rows.sort((a,b)=>a.Seccion.localeCompare(b.Seccion)||a.Nombre.localeCompare(b.Nombre));
-  const ws=XLSX.utils.json_to_sheet(rows); ws['!cols']=[{wch:35},{wch:10},{wch:25},{wch:22},{wch:22},{wch:22},{wch:10}];
-  const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,"Proyectos_Ch");
-  XLSX.writeFile(wb,`Proyectos_Chihuahua_${new Date().toISOString().slice(0,10)}.xlsx`);
-  notif("Proyectos exportados ✅");
+// ── Exportar Consolidado (formato nuevo) ─────────────────────
+function exportarConsolidado() {
+  if (!STATE.proyectos.length) return notif("Sin proyectos para exportar", true);
+
+  const headers = [
+    "DATE",
+    "#",
+    "SITE",
+    "TIER",
+    "DIRECTIVE",
+    "MAIN PROGRAM",
+    "HK1 Coding",
+    "HK1",
+    "HK1 KPI",
+    "CHAMPION",
+    "SPONSOR",
+    "HK2 Coding",
+    "HK2",
+    "OWNER",
+    "FRAMEWORK",
+    "HK3",
+    "HK3 Coding",
+    "FRAME",
+    "SAVINGS",
+    "YEAR",
+    "STATUS",
+    "CODE0",
+    "KPI",
+    "GANTT",
+    "PDCA",
+    "TARGET",
+    "SCORE",
+    "CODE"
+  ];
+
+  const str = v => (typeof v === "string" ? v.trim() : (v != null ? String(v) : ""));
+
+  const rows = STATE.proyectos.map(p => {
+    const ev = p.evaluacion || { kpi: "", gantt: "", pdca: [] };
+
+    const scoreKPI   = ev.kpi                      ? calcKPI(ev.kpi)     : "";
+    const scoreGANTT = ev.gantt                    ? calcGANTT(ev.gantt) : "";
+    const scorePDCA  = (ev.pdca && ev.pdca.length) ? calcPDCA(ev)        : "";
+    const scoreGEN   = (scoreKPI !== "" || scoreGANTT !== "" || scorePDCA !== "")
+                       ? +calcGeneral(ev).toFixed(2) : "";
+
+    let fecha = "";
+    if (p.fechaCalificacion) {
+      const d = p.fechaCalificacion.toDate ? p.fechaCalificacion.toDate() : new Date(p.fechaCalificacion);
+      if (!isNaN(d)) fecha = d.toLocaleDateString();
+    } else if (p.dateProject && str(p.dateProject)) {
+      fecha = str(p.dateProject);
+    }
+
+    return [
+      fecha,                                    // DATE
+      str(p.numeroProyecto),                    // #
+      str(p.frontAxis)   || str(p.seccion),     // SITE
+      str(p.forum)       || str(p.tier),        // TIER
+      str(p.nivel1)      || str(p.nombre),      // DIRECTIVE
+      str(p.nivel2),                            // MAIN PROGRAM
+      str(p.l1Coding),                          // HK1 Coding
+      str(p.nivel1),                            // HK1
+      str(p.l1KPI),                             // HK1 KPI
+      str(p.primaryLeadL1) || str(p.champion),  // CHAMPION
+      str(p.supportLead)   || str(p.sponsor),   // SPONSOR
+      str(p.l2Coding),                          // HK2 Coding
+      str(p.nivel2),                            // HK2
+      str(p.primaryLeadL3) || str(p.owner),     // OWNER
+      str(p.frontAxis)     || str(p.seccion),   // FRAMEWORK
+      str(p.nivel3)        || str(p.nombre),    // HK3
+      str(p.l3Code),                            // HK3 Coding
+      str(p.type),                              // FRAME
+      str(p.target),                            // SAVINGS
+      str(p.projectStatus) || "2026",           // YEAR
+      str(p.presented),                         // STATUS
+      str(p.concatenate),                       // CODE0
+      scoreKPI,                                 // KPI
+      scoreGANTT,                               // GANTT
+      scorePDCA,                                // PDCA
+      str(p.target),                            // TARGET
+      scoreGEN,                                 // SCORE
+      str(p.l3Code) || str(p.concatenate)       // CODE
+    ];
+  });
+
+  const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
+  ws["!cols"] = [
+    {wch:14}, // DATE
+    {wch: 8}, // #
+    {wch:22}, // SITE
+    {wch:12}, // TIER
+    {wch:30}, // DIRECTIVE
+    {wch:30}, // MAIN PROGRAM
+    {wch:15}, // HK1 Coding
+    {wch:30}, // HK1
+    {wch:15}, // HK1 KPI
+    {wch:22}, // CHAMPION
+    {wch:22}, // SPONSOR
+    {wch:15}, // HK2 Coding
+    {wch:30}, // HK2
+    {wch:22}, // OWNER
+    {wch:20}, // FRAMEWORK
+    {wch:30}, // HK3
+    {wch:15}, // HK3 Coding
+    {wch:15}, // FRAME
+    {wch:18}, // SAVINGS
+    {wch:10}, // YEAR
+    {wch:12}, // STATUS
+    {wch:18}, // CODE0
+    {wch:10}, // KPI
+    {wch:10}, // GANTT
+    {wch:10}, // PDCA
+    {wch:15}, // TARGET
+    {wch:10}, // SCORE
+    {wch:18}  // CODE
+  ];
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Consolidado_Chihuahua");
+  XLSX.writeFile(wb, `Consolidado_Chihuahua_${new Date().toISOString().slice(0,10)}.xlsx`);
+  notif("Consolidado exportado ✅");
 }
 
 // ── Carga masiva Excel ───────────────────────────────────────
