@@ -627,7 +627,7 @@ function renderTabla() {
     const fd = toDate(p.DATE);
     const fechaStr = fd ? fd.toLocaleDateString() : "–";
     tr.innerHTML=`<td><span class="estado-badge ${act?'estado-activo':'estado-espera'}" onclick="toggleEstado('${p.id}')">${act?"🟢 Activo":"🟡 Espera"}</span></td>
-      <td><b>${p.HK3||"–"}</b><br><small style="color:var(--text-muted)">${p.TIER||""} · ${p.SITE||""} · ${fechaStr}</small></td>
+      <td><b>${p.nombre||p.HK3||p.HK2||p.HK1||"–"}</b><br><small style="color:var(--text-muted)">${p.TIER||""} · ${p.SITE||""} · ${fechaStr}</small></td>
       <td>${p.CHAMPION||"–"}</td><td>${p.SPONSOR||"–"}</td><td>${p.OWNER||"–"}</td>
       <td><div class="semaforo" style="background:${colorSemaforo('kpi',ev.kpi)}"></div></td>
       <td><div class="semaforo" style="background:${colorSemaforo('gantt',ev.gantt)}"></div></td>
@@ -897,7 +897,7 @@ async function cargarExcel() {
         // ── Campos internos de la app ──
         // nombre/tier/seccion/champion/sponsor/owner son alias para
         // compatibilidad con filtros y semaforos
-        nombre:   r("HK3"),
+        nombre:   r("HK3") || r("HK2") || r("HK1"),
         tier:     r("TIER"),
         seccion:  r("SITE"),
         champion: r("CHAMPION"),
@@ -982,7 +982,7 @@ function renderSelectUser(){
   if (champion) lista=lista.filter(p=>(p.CHAMPION||p.champion)===champion);
   const sel=document.getElementById("selectProyectoUser"); sel.innerHTML="";
   if (!lista.length){ sel.innerHTML='<option value="">Sin proyectos</option>'; ["infoChampion","infoSponsor","infoOwner","infoSeccion"].forEach(id=>document.getElementById(id).textContent="–"); return; }
-  lista.forEach(p=>{ const o=document.createElement("option"); o.value=p.id; o.textContent=p.HK3||p.nombre||p.id; sel.appendChild(o); });
+  lista.forEach(p=>{ const o=document.createElement("option"); o.value=p.id; o.textContent = p.nombre || p.HK3 || p.HK2 || p.HK1 || p.id; sel.appendChild(o); });
   seleccionarProyecto(lista[0].id);
 }
 function seleccionarProyecto(id){
