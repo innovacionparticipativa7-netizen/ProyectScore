@@ -1475,11 +1475,11 @@ function exportarExcel() {
   const data = STATE.proyectos.map(p => {
     const ev = p.evaluacion || { kpi: "", gantt: "", pdca: [] };
 
-    const scoreKPI          = ev.kpi                      ? calcKPI(ev.kpi)    : "";
-    const scoreSchedule     = ev.gantt                    ? calcGANTT(ev.gantt): "";
-    const scorePresentation = (ev.pdca && ev.pdca.length) ? calcPDCA(ev)       : "";
-    const overallScore      = (scoreKPI !== "" || scoreSchedule !== "" || scorePresentation !== "")
-                              ? +calcGeneral(ev).toFixed(2) : "";
+const scoreKPI          = ev.kpi                      ? +(calcKPI(ev.kpi)    / 100).toFixed(2) : "";
+const scoreSchedule     = ev.gantt                    ? +(calcGANTT(ev.gantt)/ 100).toFixed(2) : "";
+const scorePresentation = (ev.pdca && ev.pdca.length) ? +(calcPDCA(ev)       / 100).toFixed(2) : "";
+const overallScore      = (scoreKPI !== "" || scoreSchedule !== "" || scorePresentation !== "")
+                          ? +(calcGeneral(ev) / 100).toFixed(4) : "";
 
     // Fecha de calificación limpia
     let fechaLimpia = "";
@@ -1564,7 +1564,10 @@ function exportarHistorialCompleto() {
       Hora:fo.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}), Semana:h.semana,
       Proyecto:h.proyectoNombre||"–", Champion:h.champion||"–", Seccion:h.seccion||"–", Tier:h.tier||"–",
       Usuario:STATE.mapaUsuarios[h.usuario]||h.usuarioNombre||h.usuario||"–",
-      KPI:h.kpi??0, GANTT:h.gantt??0, PDCA:h.pdca??0, General:+(h.general||0).toFixed(2),
+      KPI:  h.kpi   != null ? +((h.kpi)  /100).toFixed(2) : 0,
+GANTT:h.gantt  != null ? +((h.gantt)/100).toFixed(2) : 0,
+PDCA: h.pdca   != null ? +((h.pdca) /100).toFixed(2) : 0,
+General: +(( h.general||0)/100).toFixed(4),
       Comentario_KPI:h.comentariosKPI||"", Comentario_GANTT:h.comentariosGANTT||"", Comentario_PDCA:h.comentariosPDCA||""
     };
   });
@@ -2439,10 +2442,10 @@ function exportarComentarios() {
       Proyecto: h.proyectoNombre || "–",
       Champion: h.champion || "–",
       Usuario:  h.usuarioNombre || h.usuario || "–",
-      "KPI%":   h.kpi   ?? "",
-      "GANTT%": h.gantt ?? "",
-      "PDCA%":  h.pdca  ?? "",
-      "General%": h.general != null ? +Number(h.general).toFixed(2) : "",
+      "KPI%":     h.kpi   != null ? +((h.kpi)  /100).toFixed(2) : "",
+      "GANTT%":   h.gantt != null ? +((h.gantt)/100).toFixed(2) : "",
+      "PDCA%":    h.pdca  != null ? +((h.pdca) /100).toFixed(2) : "",
+      "General%": h.general != null ? +(h.general/100).toFixed(4) : "",
     };
 
     const mostrarKPI   = !filT || filT === "kpi";
