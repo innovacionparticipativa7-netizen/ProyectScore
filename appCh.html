@@ -777,32 +777,32 @@ function exportarConsolidado() {
     return [
       fecha,                                    // DATE
       str(p.numeroProyecto),                    // #
-      str(p.frontAxis)   || str(p.seccion),     // SITE
-      str(p.forum)       || str(p.tier),        // TIER
-      str(p.nivel1)      || str(p.nombre),      // DIRECTIVE
-      str(p.nivel2),                            // MAIN PROGRAM
-      str(p.l1Coding),                          // HK1 Coding
-      str(p.nivel1),                            // HK1
-      str(p.l1KPI),                             // HK1 KPI
-      str(p.primaryLeadL1) || str(p.champion),  // CHAMPION
-      str(p.supportLead)   || str(p.sponsor),   // SPONSOR
-      str(p.l2Coding),                          // HK2 Coding
-      str(p.nivel2),                            // HK2
-      str(p.primaryLeadL3) || str(p.owner),     // OWNER
-      str(p.frontAxis)     || str(p.seccion),   // FRAMEWORK
-      str(p.nivel3)        || str(p.nombre),    // HK3
-      str(p.l3Code),                            // HK3 Coding
-      str(p.type),                              // FRAME
+      str(p.site)                         ,     // SITE
+      str(p.tier),                              // TIER
+      str(p.directive),                         // DIRECTIVE
+      str(p.mainProgram),                       // MAIN PROGRAM
+      str(p.hk1Coding),                         // HK1 Coding
+      str(p.hk1),                               // HK1
+      str(p.kp1kpi),                            // HK1 KPI
+      str(p.champion),                          // CHAMPION
+      str(p.sponsor),   // SPONSOR
+      str(p.hk2Coding),                          // HK2 Coding
+      str(p.hk2),                            // HK2
+      str(p.owner),     // OWNER
+      str(p.framework),   // FRAMEWORK
+      str(p.hk3),    // HK3
+      str(p.hk3Coding),                            // HK3 Coding
+      str(p.frame),                              // FRAME
       str(p.savings),                            // SAVINGS
-      str(p.projectStatus) || "2026",           // YEAR
-      str(p.presented),                         // STATUS
-      str(p.concatenate),                       // CODE0
+      "2026",           // YEAR
+      str(p.status),                         // STATUS
+      str(p.code0),                       // CODE0
       scoreKPI,                                 // KPI
       scoreGANTT,                               // GANTT
       scorePDCA,                                // PDCA
       str(p.target),                            // TARGET
       scoreGEN,                                 // SCORE
-      str(p.l3Code) || str(p.concatenate)       // CODE
+      str(p.Code)       // CODE
     ];
   });
 
