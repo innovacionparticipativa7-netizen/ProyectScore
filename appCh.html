@@ -793,7 +793,7 @@ function exportarConsolidado() {
       str(p.nivel3)        || str(p.nombre),    // HK3
       str(p.l3Code),                            // HK3 Coding
       str(p.type),                              // FRAME
-      str(p.target),                            // SAVINGS
+      str(p.savings),                            // SAVINGS
       str(p.projectStatus) || "2026",           // YEAR
       str(p.presented),                         // STATUS
       str(p.concatenate),                       // CODE0
@@ -901,9 +901,10 @@ async function cargarExcel() {
         supportLead:    r("SPONSOR"),
         primaryLeadL3:  r("OWNER"),
         frontAxis:      r("FRAMEWORK", "SITE"),
+        savings:        r("SAVINGS"),
         concatenate:    r("CODE0"),
         presented:      r("STATUS"),
-        target:         r("TARGET", "SAVINGS"),
+        target:         r("TARGET"),
         projectStatus:  r("YEAR") || "2026",
         forum:          r("TIER"),
         dateProject:    r("DATE"),
