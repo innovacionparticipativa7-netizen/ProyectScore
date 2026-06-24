@@ -1552,7 +1552,7 @@ const overallScore      = (scoreKPI !== "" || scoreSchedule !== "" || scorePrese
 
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, "Proyectos");
-  XLSX.writeFile(wb, `Proyectos_Formato_${new Date().toISOString().slice(0,10)}.xlsx`);
+  XLSX.writeFile(wb, `Proyectos_Consolidado`);
   notif("Excel exportado correctamente ✅");
 }
 function exportarHistorialCompleto() {
