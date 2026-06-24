@@ -1474,7 +1474,6 @@ function exportarExcel() {
 
   const data = STATE.proyectos.map(p => {
     const ev = p.evaluacion || { kpi: "", gantt: "", pdca: [] };
-
 const scoreKPI          = ev.kpi                      ? +(calcKPI(ev.kpi)    / 100).toFixed(2) : "";
 const scoreSchedule     = ev.gantt                    ? +(calcGANTT(ev.gantt)/ 100).toFixed(2) : "";
 const scorePresentation = (ev.pdca && ev.pdca.length) ? +(calcPDCA(ev)       / 100).toFixed(2) : "";
