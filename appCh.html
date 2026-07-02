@@ -535,7 +535,7 @@ function colorSemaforo(tipo,v){
   if (tipo==="pdca"){ const p=calcPDCA({pdca:v}); if(p>=100) return "#16a34a"; if(p>=75) return "#86efac"; if(p>=50) return "#fbbf24"; if(p>=25) return "#f97316"; return "#ef4444"; }
   return "#9ca3af";
 }
-function gaugeColor(v){ return v>=75?"#3b82f6":v>=50?"#f59e0b":"#ef4444"; }
+function gaugeColor(v){ return v>=75?"#16a34a":v>=50?"#f59e0b":"#ef4444"; }
 function getSemana(fecha){ const d=new Date(fecha),ini=new Date(d.getFullYear(),0,1); return Math.ceil(((d-ini)/86400000+ini.getDay()+1)/7); }
 function fechaISO(ts){ if(!ts) return null; const d=ts.toDate?ts.toDate():new Date(ts); return d.toISOString().slice(0,10); }
 function notif(msg,error=false){ const el=document.getElementById("notif"); el.textContent=msg; el.style.background=error?"#ef4444":"#1e3a5f"; el.classList.add("show"); setTimeout(()=>el.classList.remove("show"),2500); }
