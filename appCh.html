@@ -998,6 +998,11 @@ function renderSelectUser(){
   if (tier)     lista=lista.filter(p=>(p.TIER||p.tier)===tier);
   if (champion) lista=lista.filter(p=>(p.CHAMPION||p.champion)===champion);
   if (directive) lista=lista.filter(p=>p.DIRECTIVE===directive);
+  const sel=document.getElementById("selectProyectoUser"); sel.innerHTML="";
+  if (!lista.length){ sel.innerHTML='<option value="">Sin proyectos</option>'; ["infoChampion","infoSponsor","infoOwner","infoSeccion"].forEach(id=>document.getElementById(id).textContent="–"); return; }
+  lista.forEach(p=>{ const o=document.createElement("option"); o.value=p.id; o.textContent = p.nombre || p.HK3 || p.HK2 || p.HK1 || p.id; sel.appendChild(o); });
+  seleccionarProyecto(lista[0].id);
+}
 function seleccionarProyecto(id){
   const p=STATE.proyectos.find(x=>x.id===id); if (!p) return;
   STATE.proyectoActualId=id; STATE.proyectoActual=p;
