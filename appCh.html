@@ -767,11 +767,13 @@ function exportarConsolidado() {
     "CODE0","KPI","GANTT","PDCA","TARGET","SCORE","CODE"
   ];
 
-  const proyectosOrdenados = [...STATE.proyectos].sort((a, b) => {
-    const na = parseFloat(a["#"]) || 0;
-    const nb = parseFloat(b["#"]) || 0;
-    return na - nb;
-  });
+  const proyectosOrdenados = STATE.proyectos
+    .filter(p => p.fechaCalificacion)
+    .sort((a, b) => {
+      const fa = toDate(a.fechaCalificacion) || new Date(0);
+      const fb = toDate(b.fechaCalificacion) || new Date(0);
+      return fa - fb;
+    });
 
   const rows = proyectosOrdenados.map(p => {
     const ev = p.evaluacion || { kpi:"", gantt:"", pdca:[] };
