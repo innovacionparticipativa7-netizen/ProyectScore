@@ -989,7 +989,7 @@ function setFiltroUser(tipo,valor,el){
   });
 }
 function renderSelectUser(){
-  const {tier,seccion,champion}=STATE.filtrosUser;
+  const {tier,seccion,champion,directive}=STATE.filtrosUser;
   let lista=STATE.proyectos.filter(p=>p.estado!=="espera");
   if (tier)     lista=lista.filter(p=>(p.TIER||p.tier)===tier);
   if (seccion)  lista=lista.filter(p=>(p.SITE||p.seccion)===seccion);
