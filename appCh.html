@@ -303,6 +303,7 @@ canvas { max-height: 240px; }
       <div class="card" style="margin-bottom:12px">
         <h3>Filtrar proyectos</h3>
         <div class="filtro-group" id="filtroTier"><button class="filtro-btn active" onclick="setFiltroUser('tier','',this)">Todos</button></div>
+        <div class="filtro-group" id="filtroDirective"><button class="filtro-btn active" onclick="setFiltroUser('directive','',this)">Todas</button></div>
         <div class="filtro-group" id="filtroSeccion"><button class="filtro-btn active" onclick="setFiltroUser('seccion','',this);poblarChampionFiltros('')">Todas</button></div>
         <div class="filtro-group" id="filtroChampion"><button class="filtro-btn active" onclick="setFiltroUser('champion','',this)">Todos</button></div>
       </div>
@@ -384,7 +385,7 @@ const COL_HISTORIAL = "historial_ch";
 const STATE = {
   rol:"", uid:"", proyectos:[], historial:[], mapaUsuarios:{},
   proyectoActual:null, proyectoActualId:null, evalTemp:null,
-  filtrosUser:{ tier:"", seccion:"", champion:"" },
+  filtrosUser:{ tier:"", seccion:"", champion:"", directive:"" },
   filtrosAdmin:{ tiers:[], secciones:[], champions:[], fechaInicio:"", fechaFin:"" },
   gaugeUser:null, gaugesAdmin:{}, chartHistorial:null, histTabActivo:null
 };
@@ -518,7 +519,13 @@ function updateActiveFiltersBar() {
   bar.style.display="block"; cont.innerHTML="";
   chips.forEach(ch=>{ const el=document.createElement("span"); el.className="filter-chip"; el.innerHTML=`${ch.label} <span class="rm" title="Quitar">✕</span>`; el.querySelector(".rm").onclick=ch.remove; cont.appendChild(el); });
 }
-
+function poblarDirectivaFiltrosUser(){
+  const cont=document.getElementById("filtroDirective"); cont.innerHTML=`<button class="filtro-btn active" onclick="setFiltroUser('directive','',this)">Todas</button>`;
+  [...new Set(STATE.proyectos.map(p=>p.DIRECTIVE).filter(Boolean))].sort().forEach(dir=>{
+    const btn=document.createElement("button"); btn.className="filtro-btn"; btn.textContent=dir;
+    btn.onclick=function(){ setFiltroUser("directive",dir,this); }; cont.appendChild(btn);
+  });
+}
 // ── Helpers de cálculo ────────────────────────────────────────
 function calcKPI(v)   { return ({en_tiempo:100,cumple:75,mitigado:50,retraso_kpi:0,na:0}[v]??0); }
 function calcGANTT(v) { return ({valor:100,retraso_gantt:75,r2:50,r3:0,na:0}[v]??0); }
@@ -563,7 +570,7 @@ async function init() {
         sincronizarFiltrosDinamicos(); renderTabla(); poblarFiltrosHistorial();
       } else {
         document.getElementById("vista-user").style.display="block";
-        poblarTierFiltrosUser(); poblarSeccionesFiltrosUser(); poblarChampionFiltros(""); poblarSelectUser();
+        poblarTierFiltrosUser(); poblarSeccionesFiltrosUser(); poblarChampionFiltros(""); poblarDirectivaFiltrosUser(); poblarSelectUser();
       }
     } catch(err){ console.error(err); notif("Error: "+err.message,true); }
     finally { setLoading(false); }
@@ -986,6 +993,7 @@ function renderSelectUser(){
   if (tier)     lista=lista.filter(p=>(p.TIER||p.tier)===tier);
   if (seccion)  lista=lista.filter(p=>(p.SITE||p.seccion)===seccion);
   if (champion) lista=lista.filter(p=>(p.CHAMPION||p.champion)===champion);
+  if (directive) lista=lista.filter(p=>p.DIRECTIVE===directive);
   const sel=document.getElementById("selectProyectoUser"); sel.innerHTML="";
   if (!lista.length){ sel.innerHTML='<option value="">Sin proyectos</option>'; ["infoChampion","infoSponsor","infoOwner","infoSeccion"].forEach(id=>document.getElementById(id).textContent="–"); return; }
   lista.forEach(p=>{ const o=document.createElement("option"); o.value=p.id; o.textContent = p.nombre || p.HK3 || p.HK2 || p.HK1 || p.id; sel.appendChild(o); });
