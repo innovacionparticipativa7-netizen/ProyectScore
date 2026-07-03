@@ -815,7 +815,7 @@ function exportarConsolidado() {
       toDecimal(scoreKPI),      // KPI   → decimal
       toDecimal(scoreGANTT),    // GANTT → decimal
       toDecimal(scorePDCA),     // PDCA  → decimal
-      str(p.TARGET),            // TARGET ← campo propio separado
+      (p.TARGET !== "" && p.TARGET != null && !isNaN(p.TARGET)) ? Number(p.TARGET) : 1,   // TARGET ← como número, default 1
       toDecimal(scoreGEN),      // SCORE → decimal
       str(p.CODE),              // CODE
       str(p.evaluacion?.comentarios?.kpi),    // Comentarios KPI
