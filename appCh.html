@@ -304,7 +304,6 @@ canvas { max-height: 240px; }
         <h3>Filtrar proyectos</h3>
         <div class="filtro-group" id="filtroTier"><button class="filtro-btn active" onclick="setFiltroUser('tier','',this)">Todos</button></div>
         <div class="filtro-group" id="filtroDirective"><button class="filtro-btn active" onclick="setFiltroUser('directive','',this)">Todas</button></div>
-        <div class="filtro-group" id="filtroSeccion"><button class="filtro-btn active" onclick="setFiltroUser('seccion','',this)">Todas</button></div>
         <div class="filtro-group" id="filtroChampion"><button class="filtro-btn active" onclick="setFiltroUser('champion','',this)">Todos</button></div>
       </div>
       <div class="card" style="margin-bottom:12px">
@@ -385,7 +384,7 @@ const COL_HISTORIAL = "historial_ch";
 const STATE = {
   rol:"", uid:"", proyectos:[], historial:[], mapaUsuarios:{},
   proyectoActual:null, proyectoActualId:null, evalTemp:null,
-  filtrosUser:{ tier:"", seccion:"", champion:"", directive:"" },
+  filtrosUser:{ tier:"", champion:"", directive:"" },
   filtrosAdmin:{ tiers:[], secciones:[], champions:[], fechaInicio:"", fechaFin:"" },
   gaugeUser:null, gaugesAdmin:{}, chartHistorial:null, histTabActivo:null
 };
@@ -563,7 +562,7 @@ async function init() {
         sincronizarFiltrosDinamicos(); renderTabla(); poblarFiltrosHistorial();
       } else {
         document.getElementById("vista-user").style.display="block";
-        poblarTierFiltrosUser(); poblarSeccionesFiltrosUser(); poblarDirectivaFiltrosUser(); poblarChampionFiltros(); poblarSelectUser();
+        poblarTierFiltrosUser(); poblarDirectivaFiltrosUser(); poblarChampionFiltros(); poblarSelectUser();
       }
     } catch(err){ console.error(err); notif("Error: "+err.message,true); }
     finally { setLoading(false); }
@@ -964,18 +963,11 @@ function poblarTierFiltrosUser(){
     btn.onclick=function(){ setFiltroUser("tier",t,this); }; cont.appendChild(btn);
   });
 }
-function poblarSeccionesFiltrosUser(){
-  const cont=document.getElementById("filtroSeccion"); cont.innerHTML=`<button class="filtro-btn active" onclick="setFiltroUser('seccion','',this);poblarChampionFiltros('')">Todas</button>`;
-  [...new Set(STATE.proyectos.map(p=>p.SITE||p.seccion).filter(Boolean))].sort().forEach(sec=>{
-    const btn=document.createElement("button"); btn.className="filtro-btn"; btn.textContent=sec;
-    btn.onclick=function(){ setFiltroUser("seccion",sec,this); }; cont.appendChild(btn);
-  });
-}
+
 function poblarChampionFiltros(){
-  const {seccion,directive}=STATE.filtrosUser;
+  const {directive}=STATE.filtrosUser;
   const cont=document.getElementById("filtroChampion"); cont.innerHTML=`<button class="filtro-btn active" onclick="setFiltroUser('champion','',this)">Todos</button>`;
   let base=STATE.proyectos;
-  if (seccion)   base=base.filter(p=>(p.SITE||p.seccion)===seccion);
   if (directive) base=base.filter(p=>p.DIRECTIVE===directive);
   const champs=[...new Set(base.map(p=>p.CHAMPION||p.champion).filter(Boolean))].sort();
   champs.forEach(ch=>{
@@ -1001,17 +993,11 @@ function setFiltroUser(tipo,valor,el){
   });
 }
 function renderSelectUser(){
-  const {tier,seccion,champion,directive}=STATE.filtrosUser;
+  const {tier,champion,directive}=STATE.filtrosUser;
   let lista=STATE.proyectos.filter(p=>p.estado!=="espera");
   if (tier)     lista=lista.filter(p=>(p.TIER||p.tier)===tier);
-  if (seccion)  lista=lista.filter(p=>(p.SITE||p.seccion)===seccion);
   if (champion) lista=lista.filter(p=>(p.CHAMPION||p.champion)===champion);
   if (directive) lista=lista.filter(p=>p.DIRECTIVE===directive);
-  const sel=document.getElementById("selectProyectoUser"); sel.innerHTML="";
-  if (!lista.length){ sel.innerHTML='<option value="">Sin proyectos</option>'; ["infoChampion","infoSponsor","infoOwner","infoSeccion"].forEach(id=>document.getElementById(id).textContent="–"); return; }
-  lista.forEach(p=>{ const o=document.createElement("option"); o.value=p.id; o.textContent = p.nombre || p.HK3 || p.HK2 || p.HK1 || p.id; sel.appendChild(o); });
-  seleccionarProyecto(lista[0].id);
-}
 function seleccionarProyecto(id){
   const p=STATE.proyectos.find(x=>x.id===id); if (!p) return;
   STATE.proyectoActualId=id; STATE.proyectoActual=p;
