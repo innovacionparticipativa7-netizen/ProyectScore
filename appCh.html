@@ -156,18 +156,35 @@ canvas { max-height: 240px; }
       </div>
       <div id="formNuevo" style="display:none;margin-top:12px;border-top:1px solid var(--border);padding-top:12px">
         <div class="form-grid">
-          <div><label class="field-label">Nombre</label><input id="nombreProyecto" placeholder="Nombre del proyecto"></div>
-          <div><label class="field-label">Tier</label>
+          <div><label class="field-label">#</label><input id="numProyecto" placeholder="1" type="number"></div>
+          <div><label class="field-label">TIER</label>
             <select id="tierProyecto">
               <option value="">Selecciona Tier</option>
               <option>Tier 1</option><option>Tier 2</option><option>Tier 3</option>
               <option>Tier 4</option><option>Tier 5</option><option>Tier 6</option>
             </select>
           </div>
-          <div><label class="field-label">Sección</label><input id="seccionProyecto" placeholder="Sección / Directiva"></div>
-          <div><label class="field-label">Champion</label><input id="championProyecto" placeholder="Nombre del Champion"></div>
-          <div><label class="field-label">Sponsor</label><input id="sponsorProyecto" placeholder="Sponsor"></div>
-          <div><label class="field-label">Owner</label><input id="ownerProyecto" placeholder="Owner"></div>
+          <div><label class="field-label">SITE</label><input id="seccionProyecto" placeholder="Sección / Site"></div>
+          <div><label class="field-label">DIRECTIVE</label><input id="directiveProyecto" placeholder="Directiva"></div>
+          <div><label class="field-label">MAIN PROGRAM</label><input id="mainProgramProyecto" placeholder="Main Program"></div>
+          <div><label class="field-label">HK1</label><input id="hk1Proyecto" placeholder="HK1"></div>
+          <div><label class="field-label">HK1 Coding</label><input id="hk1CodingProyecto" placeholder="HK1 Coding"></div>
+          <div><label class="field-label">HK1 KPI</label><input id="hk1KpiProyecto" placeholder="HK1 KPI"></div>
+          <div><label class="field-label">HK2</label><input id="hk2Proyecto" placeholder="HK2"></div>
+          <div><label class="field-label">HK2 Coding</label><input id="hk2CodingProyecto" placeholder="HK2 Coding"></div>
+          <div><label class="field-label">HK3</label><input id="hk3Proyecto" placeholder="HK3"></div>
+          <div><label class="field-label">HK3 Coding (nombre visible)</label><input id="hk3CodingProyecto" placeholder="HK3 Coding"></div>
+          <div><label class="field-label">FRAMEWORK</label><input id="frameworkProyecto" placeholder="Framework"></div>
+          <div><label class="field-label">FRAME</label><input id="frameProyecto" placeholder="Frame"></div>
+          <div><label class="field-label">CHAMPION</label><input id="championProyecto" placeholder="Nombre del Champion"></div>
+          <div><label class="field-label">SPONSOR</label><input id="sponsorProyecto" placeholder="Sponsor"></div>
+          <div><label class="field-label">OWNER</label><input id="ownerProyecto" placeholder="Owner"></div>
+          <div><label class="field-label">SAVINGS</label><input id="savingsProyecto" placeholder="Savings"></div>
+          <div><label class="field-label">YEAR</label><input id="yearProyecto" placeholder="2026" value="2026"></div>
+          <div><label class="field-label">STATUS</label><input id="statusProyecto" placeholder="Status"></div>
+          <div><label class="field-label">CODE0</label><input id="code0Proyecto" placeholder="Code0"></div>
+          <div><label class="field-label">TARGET</label><input id="targetProyecto" placeholder="1" type="number"></div>
+          <div><label class="field-label">CODE</label><input id="codeProyecto" placeholder="Code"></div>
         </div>
         <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
           <button class="btn" onclick="crearProyecto()" style="flex:1;min-width:120px">Crear Proyecto</button>
@@ -573,27 +590,74 @@ async function init() {
 function toggleForm(){ const f=document.getElementById("formNuevo"); f.style.display=f.style.display==="none"?"block":"none"; }
 
 async function crearProyecto() {
-  const nombre=document.getElementById("nombreProyecto").value.trim();
-  const tier=document.getElementById("tierProyecto").value;
-  const seccion=document.getElementById("seccionProyecto").value.trim();
-  const champion=document.getElementById("championProyecto").value.trim();
-  const sponsor=document.getElementById("sponsorProyecto").value.trim();
-  const owner=document.getElementById("ownerProyecto").value.trim();
-  if (!nombre||!tier||!seccion||!champion||!sponsor||!owner) return notif("Completa todos los campos",true);
+  const g = id => document.getElementById(id).value.trim();
+
+  const tier      = g("tierProyecto");
+  const seccion   = g("seccionProyecto");
+  const champion  = g("championProyecto");
+  const sponsor   = g("sponsorProyecto");
+  const owner     = g("ownerProyecto");
+  const hk3Coding = g("hk3CodingProyecto");
+
+  if (!tier||!seccion||!champion||!sponsor||!owner||!hk3Coding) return notif("Completa al menos: Tier, Site, Champion, Sponsor, Owner y HK3 Coding",true);
+
   setLoading(true,"Creando...");
   try {
     const now = new Date();
-    const ref=await db.collection(COL_PROYECTOS).add({
-      HK3:nombre, TIER:tier, SITE:seccion, CHAMPION:champion, SPONSOR:sponsor, OWNER:owner,
-      "#":"", DATE:now, DIRECTIVE:"", "MAIN PROGRAM":"", "HK1 Coding":"", HK1:"", "HK1 KPI":"",
-      "HK2 Coding":"", HK2:"", FRAMEWORK:seccion, "HK3 Coding":"", FRAME:"",
-      SAVINGS:"", YEAR:"2026", STATUS:"", CODE0:"", TARGET:"", CODE:"",
+    const numVal    = g("numProyecto");
+    const targetVal = g("targetProyecto");
+
+    const datos = {
+      "#":            numVal !== "" ? Number(numVal) : 1,
+      DATE:           now,
+      SITE:           seccion,
+      TIER:           tier,
+      DIRECTIVE:      g("directiveProyecto"),
+      "MAIN PROGRAM": g("mainProgramProyecto"),
+      "HK1 Coding":   g("hk1CodingProyecto"),
+      HK1:            g("hk1Proyecto"),
+      "HK1 KPI":      g("hk1KpiProyecto"),
+      CHAMPION:       champion,
+      SPONSOR:        sponsor,
+      "HK2 Coding":   g("hk2CodingProyecto"),
+      HK2:            g("hk2Proyecto"),
+      OWNER:          owner,
+      FRAMEWORK:      g("frameworkProyecto") || seccion,
+      HK3:            g("hk3Proyecto"),
+      "HK3 Coding":   hk3Coding,
+      FRAME:          g("frameProyecto"),
+      SAVINGS:        g("savingsProyecto"),
+      YEAR:           g("yearProyecto") || "2026",
+      STATUS:         g("statusProyecto"),
+      CODE0:          g("code0Proyecto"),
+      TARGET:         targetVal !== "" && !isNaN(targetVal) ? Number(targetVal) : 1,
+      CODE:           g("codeProyecto"),
+
+      // alias internos para filtros/semáforos
+      nombre:   hk3Coding,
+      tier:     tier,
+      seccion:  seccion,
+      champion: champion,
+      sponsor:  sponsor,
+      owner:    owner,
+
       estado:"activo", createdAt:now,
       evaluacion:{kpi:"",gantt:"",pdca:[],comentarios:{kpi:"",gantt:"",pdca:""}}
-    });
-    STATE.proyectos.push({id:ref.id,HK3:nombre,TIER:tier,SITE:seccion,CHAMPION:champion,SPONSOR:sponsor,OWNER:owner,DATE:now,estado:"activo",evaluacion:{kpi:"",gantt:"",pdca:[]}});
-    ["nombreProyecto","seccionProyecto","championProyecto","sponsorProyecto","ownerProyecto"].forEach(id=>document.getElementById(id).value="");
+    };
+
+    const ref=await db.collection(COL_PROYECTOS).add(datos);
+    STATE.proyectos.push({id:ref.id,...datos});
+
+    [
+      "numProyecto","seccionProyecto","directiveProyecto","mainProgramProyecto",
+      "hk1Proyecto","hk1CodingProyecto","hk1KpiProyecto","hk2Proyecto","hk2CodingProyecto",
+      "hk3Proyecto","hk3CodingProyecto","frameworkProyecto","frameProyecto",
+      "championProyecto","sponsorProyecto","ownerProyecto","savingsProyecto",
+      "statusProyecto","code0Proyecto","targetProyecto","codeProyecto"
+    ].forEach(id=>document.getElementById(id).value="");
     document.getElementById("tierProyecto").value="";
+    document.getElementById("yearProyecto").value="2026";
+
     sincronizarFiltrosDinamicos(); renderTabla(); poblarFiltrosHistorial(); notif("Proyecto creado ✅");
   } catch(err){ notif("Error: "+err.message,true); }
   finally { setLoading(false); }
