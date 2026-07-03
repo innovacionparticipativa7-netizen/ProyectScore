@@ -626,7 +626,7 @@ function renderTabla() {
     const fd = toDate(p.DATE);
     const fechaStr = fd ? fd.toLocaleDateString() : "–";
     tr.innerHTML=`<td><span class="estado-badge ${act?'estado-activo':'estado-espera'}" onclick="toggleEstado('${p.id}')">${act?"🟢 Activo":"🟡 Espera"}</span></td>
-      <td><b>${p.nombre||p.HK3||p.HK2||p.HK1||"–"}</b><br><small style="color:var(--text-muted)">${p.TIER||""} · ${p.SITE||""} · ${fechaStr}</small></td>
+      <td><b>${p["HK3 Coding"]||p.nombre||p.HK3||p.HK2||p.HK1||"–"}</b><br><small style="color:var(--text-muted)">${p.TIER||""} · ${p.SITE||""} · ${fechaStr}</small></td>
       <td>${p.CHAMPION||"–"}</td><td>${p.SPONSOR||"–"}</td><td>${p.OWNER||"–"}</td>
       <td><div class="semaforo" style="background:${colorSemaforo('kpi',ev.kpi)}"></div></td>
       <td><div class="semaforo" style="background:${colorSemaforo('gantt',ev.gantt)}"></div></td>
@@ -675,7 +675,7 @@ function actualizarHistTabs(proyectosFiltrados){
   if (!proyectosFiltrados.length){ cont.innerHTML='<span style="font-size:12px;color:var(--text-muted)">Sin proyectos</span>';
     if (STATE.chartHistorial){ STATE.chartHistorial.data.labels=[]; STATE.chartHistorial.data.datasets[0].data=[]; STATE.chartHistorial.update("none"); } return; }
   proyectosFiltrados.slice(0,20).forEach((p,i)=>{
-    const btn=document.createElement("button"); btn.className="hist-tab"+(i===0?" active":""); btn.textContent=p.HK3||p.id; btn.dataset.id=p.id;
+    const btn=document.createElement("button"); btn.className="hist-tab"+(i===0?" active":""); btn.textContent=p["HK3 Coding"]||p.HK3||p.id; btn.dataset.id=p.id;
     btn.onclick=function(){ document.querySelectorAll(".hist-tab").forEach(b=>b.classList.remove("active")); this.classList.add("active"); STATE.histTabActivo=p.id; renderHistorial(p.id); };
     cont.appendChild(btn);
   });
@@ -1000,7 +1000,7 @@ function renderSelectUser(){
   if (directive) lista=lista.filter(p=>p.DIRECTIVE===directive);
   const sel=document.getElementById("selectProyectoUser"); sel.innerHTML="";
   if (!lista.length){ sel.innerHTML='<option value="">Sin proyectos</option>'; ["infoChampion","infoSponsor","infoOwner","infoSeccion"].forEach(id=>document.getElementById(id).textContent="–"); return; }
-  lista.forEach(p=>{ const o=document.createElement("option"); o.value=p.id; o.textContent = p.nombre || p.HK3 || p.HK2 || p.HK1 || p.id; sel.appendChild(o); });
+  lista.forEach(p=>{ const o=document.createElement("option"); o.value=p.id; o.textContent = p["HK3 Coding"] || p.nombre || p.HK3 || p.HK2 || p.HK1 || p.id; sel.appendChild(o); });
   seleccionarProyecto(lista[0].id);
 }
 function seleccionarProyecto(id){
@@ -1074,7 +1074,7 @@ async function guardar(){
 
     const histEntry={
       proyectoId:    STATE.proyectoActualId,
-      proyectoNombre:STATE.proyectoActual.HK3||STATE.proyectoActual.nombre||"–",
+      proyectoNombre:STATE.proyectoActual["HK3 Coding"]||STATE.proyectoActual.HK3||STATE.proyectoActual.nombre||"–",
       champion:      STATE.proyectoActual.CHAMPION||STATE.proyectoActual.champion||"–",
       seccion:       STATE.proyectoActual.SITE    ||STATE.proyectoActual.seccion ||"–",
       tier:          STATE.proyectoActual.TIER    ||STATE.proyectoActual.tier    ||"–",
