@@ -304,7 +304,6 @@ canvas { max-height: 240px; }
         <h3>Filtrar proyectos</h3>
         <div class="filtro-group" id="filtroTier"><button class="filtro-btn active" onclick="setFiltroUser('tier','',this)">Todos</button></div>
         <div class="filtro-group" id="filtroDirective"><button class="filtro-btn active" onclick="setFiltroUser('directive','',this)">Todas</button></div>
-        <div class="filtro-group" id="filtroSeccion"><button class="filtro-btn active" onclick="setFiltroUser('seccion','',this);poblarChampionFiltros('')">Todas</button></div>
         <div class="filtro-group" id="filtroChampion"><button class="filtro-btn active" onclick="setFiltroUser('champion','',this)">Todos</button></div>
       </div>
       <div class="card" style="margin-bottom:12px">
@@ -563,7 +562,7 @@ async function init() {
         sincronizarFiltrosDinamicos(); renderTabla(); poblarFiltrosHistorial();
       } else {
         document.getElementById("vista-user").style.display="block";
-        poblarTierFiltrosUser(); poblarSeccionesFiltrosUser(); poblarChampionFiltros(""); poblarDirectivaFiltrosUser(); poblarSelectUser();
+        poblarTierFiltrosUser(); poblarSeccionesFiltrosUser(); poblarDirectivaFiltrosUser(); poblarChampionFiltros(); poblarSelectUser();
       }
     } catch(err){ console.error(err); notif("Error: "+err.message,true); }
     finally { setLoading(false); }
@@ -968,25 +967,30 @@ function poblarSeccionesFiltrosUser(){
   const cont=document.getElementById("filtroSeccion"); cont.innerHTML=`<button class="filtro-btn active" onclick="setFiltroUser('seccion','',this);poblarChampionFiltros('')">Todas</button>`;
   [...new Set(STATE.proyectos.map(p=>p.SITE||p.seccion).filter(Boolean))].sort().forEach(sec=>{
     const btn=document.createElement("button"); btn.className="filtro-btn"; btn.textContent=sec;
-    btn.onclick=function(){ setFiltroUser("seccion",sec,this); poblarChampionFiltros(sec); }; cont.appendChild(btn);
+    btn.onclick=function(){ setFiltroUser("seccion",sec,this); }; cont.appendChild(btn);
   });
 }
-function poblarChampionFiltros(seccion){
+function poblarChampionFiltros(){
+  const {seccion,directive}=STATE.filtrosUser;
   const cont=document.getElementById("filtroChampion"); cont.innerHTML=`<button class="filtro-btn active" onclick="setFiltroUser('champion','',this)">Todos</button>`;
-  const champs=seccion
-    ?[...new Set(STATE.proyectos.filter(p=>(p.SITE||p.seccion)===seccion).map(p=>p.CHAMPION||p.champion).filter(Boolean))]
-    :[...new Set(STATE.proyectos.map(p=>p.CHAMPION||p.champion).filter(Boolean))];
-  champs.sort().forEach(ch=>{
+  let base=STATE.proyectos;
+  if (seccion)   base=base.filter(p=>(p.SITE||p.seccion)===seccion);
+  if (directive) base=base.filter(p=>p.DIRECTIVE===directive);
+  const champs=[...new Set(base.map(p=>p.CHAMPION||p.champion).filter(Boolean))].sort();
+  champs.forEach(ch=>{
     const btn=document.createElement("button"); btn.className="filtro-btn"; btn.textContent=ch;
     btn.onclick=function(){ setFiltroUser("champion",ch,this); }; cont.appendChild(btn);
   });
+  STATE.filtrosUser.champion="";
 }
 function poblarSelectUser(){ renderSelectUser(); }
 function setFiltroUser(tipo,valor,el){
   STATE.filtrosUser[tipo]=valor;
   const cont=document.getElementById(`filtro${tipo.charAt(0).toUpperCase()+tipo.slice(1)}`);
   if (cont) cont.querySelectorAll(".filtro-btn").forEach(b=>b.classList.remove("active"));
-  if (el) el.classList.add("active"); renderSelectUser();
+  if (el) el.classList.add("active");
+  if (tipo==="seccion"||tipo==="directive") poblarChampionFiltros();
+  renderSelectUser();
 }
   function poblarDirectivaFiltrosUser(){
   const cont=document.getElementById("filtroDirective"); cont.innerHTML=`<button class="filtro-btn active" onclick="setFiltroUser('directive','',this)">Todas</button>`;
