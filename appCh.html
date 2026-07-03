@@ -764,7 +764,8 @@ function exportarConsolidado() {
     "HK1 Coding","HK1","HK1 KPI","CHAMPION","SPONSOR",
     "HK2 Coding","HK2","OWNER","FRAMEWORK","HK3",
     "HK3 Coding","FRAME","SAVINGS","YEAR","STATUS",
-    "CODE0","KPI","GANTT","PDCA","TARGET","SCORE","CODE"
+    "CODE0","KPI","GANTT","PDCA","TARGET","SCORE","CODE",
+    "Comentarios KPI","Comentarios GANTT","Comentarios PDCA"
   ];
 
   const proyectosOrdenados = STATE.proyectos
@@ -817,7 +818,10 @@ function exportarConsolidado() {
       toDecimal(scorePDCA),     // PDCA  → decimal
       str(p.TARGET),            // TARGET ← campo propio separado
       toDecimal(scoreGEN),      // SCORE → decimal
-      str(p.CODE)               // CODE
+      str(p.CODE),              // CODE
+      str(p.evaluacion?.comentarios?.kpi),    // Comentarios KPI
+      str(p.evaluacion?.comentarios?.gantt),  // Comentarios GANTT
+      str(p.evaluacion?.comentarios?.pdca)    // Comentarios PDCA
     ];
   });
 
@@ -827,7 +831,8 @@ function exportarConsolidado() {
     {wch:15},{wch:30},{wch:15},{wch:22},{wch:22},
     {wch:15},{wch:30},{wch:22},{wch:20},{wch:30},
     {wch:15},{wch:15},{wch:18},{wch:10},{wch:12},
-    {wch:18},{wch:10},{wch:10},{wch:10},{wch:15},{wch:10},{wch:18}
+    {wch:18},{wch:10},{wch:10},{wch:10},{wch:15},{wch:10},{wch:18},
+    {wch:35},{wch:35},{wch:35}
   ];
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, "Consolidado_Chihuahua");
