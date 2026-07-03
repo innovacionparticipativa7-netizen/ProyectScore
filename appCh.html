@@ -519,13 +519,6 @@ function updateActiveFiltersBar() {
   bar.style.display="block"; cont.innerHTML="";
   chips.forEach(ch=>{ const el=document.createElement("span"); el.className="filter-chip"; el.innerHTML=`${ch.label} <span class="rm" title="Quitar">✕</span>`; el.querySelector(".rm").onclick=ch.remove; cont.appendChild(el); });
 }
-function poblarDirectivaFiltrosUser(){
-  const cont=document.getElementById("filtroDirective"); cont.innerHTML=`<button class="filtro-btn active" onclick="setFiltroUser('directive','',this)">Todas</button>`;
-  [...new Set(STATE.proyectos.map(p=>p.DIRECTIVE).filter(Boolean))].sort().forEach(dir=>{
-    const btn=document.createElement("button"); btn.className="filtro-btn"; btn.textContent=dir;
-    btn.onclick=function(){ setFiltroUser("directive",dir,this); }; cont.appendChild(btn);
-  });
-}
 // ── Helpers de cálculo ────────────────────────────────────────
 function calcKPI(v)   { return ({en_tiempo:100,cumple:75,mitigado:50,retraso_kpi:0,na:0}[v]??0); }
 function calcGANTT(v) { return ({valor:100,retraso_gantt:75,r2:50,r3:0,na:0}[v]??0); }
@@ -987,6 +980,13 @@ function setFiltroUser(tipo,valor,el){
   const cont=document.getElementById(`filtro${tipo.charAt(0).toUpperCase()+tipo.slice(1)}`);
   if (cont) cont.querySelectorAll(".filtro-btn").forEach(b=>b.classList.remove("active"));
   if (el) el.classList.add("active"); renderSelectUser();
+}
+  function poblarDirectivaFiltrosUser(){
+  const cont=document.getElementById("filtroDirective"); cont.innerHTML=`<button class="filtro-btn active" onclick="setFiltroUser('directive','',this)">Todas</button>`;
+  [...new Set(STATE.proyectos.map(p=>p.DIRECTIVE).filter(Boolean))].sort().forEach(dir=>{
+    const btn=document.createElement("button"); btn.className="filtro-btn"; btn.textContent=dir;
+    btn.onclick=function(){ setFiltroUser("directive",dir,this); }; cont.appendChild(btn);
+  });
 }
 function renderSelectUser(){
   const {tier,seccion,champion}=STATE.filtrosUser;
