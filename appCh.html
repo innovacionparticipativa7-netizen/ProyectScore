@@ -788,9 +788,10 @@ function exportarConsolidado() {
     const scoreGEN   = (scoreKPI !== "" || scoreGANTT !== "" || scorePDCA !== "")
                        ? +calcGeneral(ev).toFixed(2) : "";
 
-    // DATE: leer campo DATE del documento (ya guardado como Firestore Timestamp)
+
+    // DATE: usar la fecha de la última calificación; si nunca fue calificado, usar la fecha de creación
     let fecha = "";
-    const fd = toDate(p.DATE) || toDate(p.fechaCalificacion);
+    const fd = toDate(p.fechaCalificacion) || toDate(p.DATE);
     if (fd) fecha = fd.toLocaleDateString();
 
     return [
