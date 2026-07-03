@@ -767,7 +767,13 @@ function exportarConsolidado() {
     "CODE0","KPI","GANTT","PDCA","TARGET","SCORE","CODE"
   ];
 
-  const rows = STATE.proyectos.map(p => {
+  const proyectosOrdenados = [...STATE.proyectos].sort((a, b) => {
+    const na = parseFloat(a["#"]) || 0;
+    const nb = parseFloat(b["#"]) || 0;
+    return na - nb;
+  });
+
+  const rows = proyectosOrdenados.map(p => {
     const ev = p.evaluacion || { kpi:"", gantt:"", pdca:[] };
     const scoreKPI   = ev.kpi                      ? calcKPI(ev.kpi)     : "";
     const scoreGANTT = ev.gantt                    ? calcGANTT(ev.gantt) : "";
