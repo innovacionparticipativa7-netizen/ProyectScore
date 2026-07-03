@@ -200,6 +200,48 @@ canvas { max-height: 240px; }
       </div>
     </div>
 
+    <div class="card" id="cardEditar" style="display:none;margin-bottom:16px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <h3 style="margin:0">✏️ Editar Proyecto</h3>
+        <button class="btn-sm btn-secondary" onclick="cerrarEditar()">✕ Cerrar</button>
+      </div>
+      <div class="form-grid">
+        <div><label class="field-label">#</label><input id="numProyectoEdit" type="number"></div>
+        <div><label class="field-label">DATE</label><input id="dateProyectoEdit" type="date"></div>
+        <div><label class="field-label">SITE</label><input id="seccionProyectoEdit"></div>
+        <div><label class="field-label">TIER</label>
+          <select id="tierProyectoEdit">
+            <option value="">Selecciona Tier</option>
+            <option>Tier 1</option><option>Tier 2</option><option>Tier 3</option>
+            <option>Tier 4</option><option>Tier 5</option><option>Tier 6</option>
+          </select>
+        </div>
+        <div><label class="field-label">DIRECTIVE</label><input id="directiveProyectoEdit"></div>
+        <div><label class="field-label">MAIN PROGRAM</label><input id="mainProgramProyectoEdit"></div>
+        <div><label class="field-label">HK1 Coding</label><input id="hk1CodingProyectoEdit"></div>
+        <div><label class="field-label">HK1</label><input id="hk1ProyectoEdit"></div>
+        <div><label class="field-label">HK1 KPI</label><input id="hk1KpiProyectoEdit"></div>
+        <div><label class="field-label">CHAMPION</label><input id="championProyectoEdit"></div>
+        <div><label class="field-label">SPONSOR</label><input id="sponsorProyectoEdit"></div>
+        <div><label class="field-label">HK2 Coding</label><input id="hk2CodingProyectoEdit"></div>
+        <div><label class="field-label">HK2</label><input id="hk2ProyectoEdit"></div>
+        <div><label class="field-label">OWNER</label><input id="ownerProyectoEdit"></div>
+        <div><label class="field-label">FRAMEWORK</label><input id="frameworkProyectoEdit"></div>
+        <div><label class="field-label">HK3</label><input id="hk3ProyectoEdit"></div>
+        <div><label class="field-label">HK3 Coding (nombre visible)</label><input id="hk3CodingProyectoEdit"></div>
+        <div><label class="field-label">FRAME</label><input id="frameProyectoEdit"></div>
+        <div><label class="field-label">SAVINGS</label><input id="savingsProyectoEdit"></div>
+        <div><label class="field-label">YEAR</label><input id="yearProyectoEdit"></div>
+        <div><label class="field-label">STATUS</label><input id="statusProyectoEdit"></div>
+        <div><label class="field-label">CODE0</label><input id="code0ProyectoEdit"></div>
+        <div><label class="field-label">TARGET</label><input id="targetProyectoEdit" type="number"></div>
+        <div><label class="field-label">CODE</label><input id="codeProyectoEdit"></div>
+      </div>
+      <div style="margin-top:12px">
+        <button class="btn" onclick="guardarEdicion()">💾 Guardar Cambios</button>
+      </div>
+    </div>
+
     <div class="card gauge-wrap" style="margin-bottom:12px">
       <h3>Calificación General (Promedio)</h3>
       <canvas id="grafGENERAL" style="max-height:220px"></canvas>
@@ -400,7 +442,7 @@ const COL_HISTORIAL = "historial_ch";
 
 const STATE = {
   rol:"", uid:"", proyectos:[], historial:[], mapaUsuarios:{},
-  proyectoActual:null, proyectoActualId:null, evalTemp:null,
+  proyectoActual:null, proyectoActualId:null, evalTemp:null, editandoId:null,
   filtrosUser:{ tier:"", champion:"", directive:"" },
   filtrosAdmin:{ tiers:[], secciones:[], champions:[], fechaInicio:"", fechaFin:"" },
   gaugeUser:null, gaugesAdmin:{}, chartHistorial:null, histTabActivo:null
@@ -695,6 +737,7 @@ function renderTabla() {
       <td><div class="semaforo" style="background:${colorSemaforo('kpi',ev.kpi)}"></div></td>
       <td><div class="semaforo" style="background:${colorSemaforo('gantt',ev.gantt)}"></div></td>
       <td><div class="semaforo" style="background:${colorSemaforo('pdca',ev.pdca)}"></div></td>
+      <td><button class="btn-sm btn-secondary" onclick="abrirEditar('${p.id}')" title="Editar">✏️</button><td>
       <td><button class="btn-sm btn-danger" onclick="eliminarProyecto('${p.id}')">🗑</button></td>`;
     frag.appendChild(tr);
   });
@@ -717,6 +760,105 @@ async function eliminarProyecto(id){
   } catch(err){ notif("Error: "+err.message,true); }
 }
 
+function abrirEditar(id){
+  const p=STATE.proyectos.find(x=>x.id===id); if(!p) return;
+  STATE.editandoId=id;
+  const set=(elId,val)=>document.getElementById(elId).value = (val!=null?val:"");
+  const fd = toDate(p.DATE);
+  set("numProyectoEdit", p["#"]);
+  set("dateProyectoEdit", fd ? fd.toISOString().slice(0,10) : "");
+  set("seccionProyectoEdit", p.SITE);
+  set("tierProyectoEdit", p.TIER);
+  set("directiveProyectoEdit", p.DIRECTIVE);
+  set("mainProgramProyectoEdit", p["MAIN PROGRAM"]);
+  set("hk1CodingProyectoEdit", p["HK1 Coding"]);
+  set("hk1ProyectoEdit", p.HK1);
+  set("hk1KpiProyectoEdit", p["HK1 KPI"]);
+  set("championProyectoEdit", p.CHAMPION);
+  set("sponsorProyectoEdit", p.SPONSOR);
+  set("hk2CodingProyectoEdit", p["HK2 Coding"]);
+  set("hk2ProyectoEdit", p.HK2);
+  set("ownerProyectoEdit", p.OWNER);
+  set("frameworkProyectoEdit", p.FRAMEWORK);
+  set("hk3ProyectoEdit", p.HK3);
+  set("hk3CodingProyectoEdit", p["HK3 Coding"]);
+  set("frameProyectoEdit", p.FRAME);
+  set("savingsProyectoEdit", p.SAVINGS);
+  set("yearProyectoEdit", p.YEAR);
+  set("statusProyectoEdit", p.STATUS);
+  set("code0ProyectoEdit", p.CODE0);
+  set("targetProyectoEdit", p.TARGET);
+  set("codeProyectoEdit", p.CODE);
+  document.getElementById("cardEditar").style.display="block";
+  document.getElementById("cardEditar").scrollIntoView({behavior:"smooth",block:"start"});
+}
+
+function cerrarEditar(){
+  STATE.editandoId=null;
+  document.getElementById("cardEditar").style.display="none";
+}
+
+async function guardarEdicion(){
+  if (!STATE.editandoId) return;
+  const g = id => document.getElementById(id).value.trim();
+  setLoading(true,"Guardando cambios...");
+  try {
+    const seccion   = g("seccionProyectoEdit");
+    const champion  = g("championProyectoEdit");
+    const sponsor   = g("sponsorProyectoEdit");
+    const owner     = g("ownerProyectoEdit");
+    const hk3Coding = g("hk3CodingProyectoEdit");
+    const numVal    = g("numProyectoEdit");
+    const targetVal = g("targetProyectoEdit");
+    const dateVal   = g("dateProyectoEdit");
+
+    const datos = {
+      "#":            numVal !== "" ? Number(numVal) : 1,
+      DATE:           dateVal ? new Date(dateVal) : new Date(),
+      SITE:           seccion,
+      TIER:           g("tierProyectoEdit"),
+      DIRECTIVE:      g("directiveProyectoEdit"),
+      "MAIN PROGRAM": g("mainProgramProyectoEdit"),
+      "HK1 Coding":   g("hk1CodingProyectoEdit"),
+      HK1:            g("hk1ProyectoEdit"),
+      "HK1 KPI":      g("hk1KpiProyectoEdit"),
+      CHAMPION:       champion,
+      SPONSOR:        sponsor,
+      "HK2 Coding":   g("hk2CodingProyectoEdit"),
+      HK2:            g("hk2ProyectoEdit"),
+      OWNER:          owner,
+      FRAMEWORK:      g("frameworkProyectoEdit"),
+      HK3:            g("hk3ProyectoEdit"),
+      "HK3 Coding":   hk3Coding,
+      FRAME:          g("frameProyectoEdit"),
+      SAVINGS:        g("savingsProyectoEdit"),
+      YEAR:           g("yearProyectoEdit") || "2026",
+      STATUS:         g("statusProyectoEdit"),
+      CODE0:          g("code0ProyectoEdit"),
+      TARGET:         targetVal !== "" && !isNaN(targetVal) ? Number(targetVal) : 1,
+      CODE:           g("codeProyectoEdit"),
+
+      nombre:   hk3Coding,
+      tier:     g("tierProyectoEdit"),
+      seccion:  seccion,
+      champion: champion,
+      sponsor:  sponsor,
+      owner:    owner
+    };
+
+    await db.collection(COL_PROYECTOS).doc(STATE.editandoId).update(datos);
+    const idx=STATE.proyectos.findIndex(p=>p.id===STATE.editandoId);
+    if (idx!==-1) STATE.proyectos[idx]={...STATE.proyectos[idx],...datos};
+
+    cerrarEditar();
+    sincronizarFiltrosDinamicos(); renderTabla(); poblarFiltrosHistorial();
+    notif("Proyecto actualizado ✅");
+  } catch(err){ notif("Error: "+err.message,true); }
+  finally { setLoading(false); }
+}
+
+
+  
 // ── Admin – gráficas ──────────────────────────────────────────
 function actualizarGraficasAdmin(lista){
   const act=lista.filter(p=>p.estado!=="espera"), n=act.length||1;
