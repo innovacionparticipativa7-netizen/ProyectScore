@@ -819,6 +819,20 @@ const STATE = {
   gaugeUser: null, gaugesAdmin: {}, chartHistorial: null, histTabActivo: null
 };
 
+  // ── Orden: nombres que inician con número primero (ordenados de menor a mayor),
+// luego el resto en orden alfabético ─────────────────────────
+function compararNombres(a,b){
+  a=String(a); b=String(b);
+  const aNum=/^\s*\d/.test(a), bNum=/^\s*\d/.test(b);
+  if (aNum && !bNum) return -1;
+  if (!aNum && bNum) return 1;
+  if (aNum && bNum) return a.localeCompare(b,'es',{numeric:true,sensitivity:'base'});
+  return a.localeCompare(b,'es',{sensitivity:'base'});
+}
+
+const CHAMPIONS = {
+
+  
 const CHAMPIONS = {
   "Buy to Make":           ["Antonio Aguilar"],
   "DTC":                   ["Jaime Castro"],
@@ -1833,7 +1847,7 @@ function setFiltroUser(tipo, valor, el) {
 function poblarChampionFiltros(seccion) {
   const cont = document.getElementById("filtroChampion");
   cont.innerHTML = `<button class="filtro-btn active" onclick="setFiltroUser('champion','',this)">Todos</button>`;
-  const champs = seccion ? (CHAMPIONS[seccion]||[]) : [...new Set(STATE.proyectos.map(p=>p.champion).filter(Boolean))];
+  const champs = (seccion ? (CHAMPIONS[seccion]||[]) : [...new Set(STATE.proyectos.map(p=>p.champion).filter(Boolean))]).sort(compararNombres);
   champs.forEach(ch => {
     const btn = document.createElement("button");
     btn.className="filtro-btn"; btn.textContent=ch;
@@ -1858,7 +1872,9 @@ function renderSelectUser() {
       return campos.some(c => c.includes(busqueda));
     });
   }
-
+  
+  lista = [...lista].sort((a,b)=>compararNombres(a.nombre||"", b.nombre||""));
+  
   const sel = document.getElementById("selectProyectoUser");
   sel.innerHTML = "";
 
