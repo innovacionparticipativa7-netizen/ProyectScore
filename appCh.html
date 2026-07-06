@@ -451,6 +451,18 @@ const STATE = {
 // ── Helper string seguro ──────────────────────────────────────
 const str = v => (typeof v === "string" ? v.trim() : (v != null ? String(v) : ""));
 
+// ── Orden: nombres que inician con número primero (ordenados de menor a mayor),
+// luego el resto en orden alfabético ─────────────────────────
+function compararNombres(a,b){
+  a=String(a); b=String(b);
+  const aNum=/^\s*\d/.test(a), bNum=/^\s*\d/.test(b);
+  if (aNum && !bNum) return -1;
+  if (!aNum && bNum) return 1;
+  if (aNum && bNum) return a.localeCompare(b,'es',{numeric:true,sensitivity:'base'});
+  return a.localeCompare(b,'es',{sensitivity:'base'});
+}
+
+  
 // ── Convierte serial Excel → Date real ───────────────────────
 // Excel guarda fechas como número (ej: 45123). Fórmula estándar:
 // (serial - 25569) * 86400 segundos * 1000 ms
@@ -1164,7 +1176,7 @@ function descargarPlantilla() {
 // ── User – filtros ────────────────────────────────────────────
 function poblarTierFiltrosUser(){
   const cont=document.getElementById("filtroTier"); cont.innerHTML=`<button class="filtro-btn active" onclick="setFiltroUser('tier','',this)">Todos</button>`;
-  [...new Set(STATE.proyectos.map(p=>p.TIER||p.tier).filter(Boolean))].sort().forEach(t=>{
+  [...new Set(STATE.proyectos.map(p=>p.TIER||p.tier).filter(Boolean))].sort(compararNombres).forEach(t=>{
     const btn=document.createElement("button"); btn.className="filtro-btn"; btn.textContent=t;
     btn.onclick=function(){ setFiltroUser("tier",t,this); }; cont.appendChild(btn);
   });
@@ -1175,7 +1187,7 @@ function poblarChampionFiltros(){
   const cont=document.getElementById("filtroChampion"); cont.innerHTML=`<button class="filtro-btn active" onclick="setFiltroUser('champion','',this)">Todos</button>`;
   let base=STATE.proyectos;
   if (directive) base=base.filter(p=>p.DIRECTIVE===directive);
-  const champs=[...new Set(base.map(p=>p.CHAMPION||p.champion).filter(Boolean))].sort();
+  const champs=[...new Set(base.map(p=>p.CHAMPION||p.champion).filter(Boolean))].sort(compararNombres);
   champs.forEach(ch=>{
     const btn=document.createElement("button"); btn.className="filtro-btn"; btn.textContent=ch;
     btn.onclick=function(){ setFiltroUser("champion",ch,this); }; cont.appendChild(btn);
@@ -1193,7 +1205,7 @@ function setFiltroUser(tipo,valor,el){
 }
   function poblarDirectivaFiltrosUser(){
   const cont=document.getElementById("filtroDirective"); cont.innerHTML=`<button class="filtro-btn active" onclick="setFiltroUser('directive','',this)">Todas</button>`;
-  [...new Set(STATE.proyectos.map(p=>p.DIRECTIVE).filter(Boolean))].sort().forEach(dir=>{
+  [...new Set(STATE.proyectos.map(p=>p.DIRECTIVE).filter(Boolean))].sort(compararNombres).forEach(dir=>{
     const btn=document.createElement("button"); btn.className="filtro-btn"; btn.textContent=dir;
     btn.onclick=function(){ setFiltroUser("directive",dir,this); }; cont.appendChild(btn);
   });
@@ -1204,9 +1216,11 @@ function renderSelectUser(){
   if (tier)     lista=lista.filter(p=>(p.TIER||p.tier)===tier);
   if (champion) lista=lista.filter(p=>(p.CHAMPION||p.champion)===champion);
   if (directive) lista=lista.filter(p=>p.DIRECTIVE===directive);
+  const nombreDe = p => p["HK3 Coding"] || p.nombre || p.HK3 || p.HK2 || p.HK1 || p.id;
+  lista = [...lista].sort((a,b)=>compararNombres(nombreDe(a),nombreDe(b)));
   const sel=document.getElementById("selectProyectoUser"); sel.innerHTML="";
   if (!lista.length){ sel.innerHTML='<option value="">Sin proyectos</option>'; ["infoChampion","infoSponsor","infoOwner","infoSeccion"].forEach(id=>document.getElementById(id).textContent="–"); return; }
-  lista.forEach(p=>{ const o=document.createElement("option"); o.value=p.id; o.textContent = p["HK3 Coding"] || p.nombre || p.HK3 || p.HK2 || p.HK1 || p.id; sel.appendChild(o); });
+  lista.forEach(p=>{ const o=document.createElement("option"); o.value=p.id; o.textContent = nombreDe(p); sel.appendChild(o); });
   seleccionarProyecto(lista[0].id);
 }
 function seleccionarProyecto(id){
