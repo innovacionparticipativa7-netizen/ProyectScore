@@ -890,6 +890,7 @@ function renderGaugeAdmin(cid,valor,pctId){
 
 // ── Historial semanal ─────────────────────────────────────────
 function actualizarHistTabs(proyectosFiltrados){
+  proyectosFiltrados = proyectosFiltrados.filter(p => p.estado !== "espera" && p.fechaCalificacion);
   const cont=document.getElementById("histTabs"); cont.innerHTML="";
   if (!proyectosFiltrados.length){ cont.innerHTML='<span style="font-size:12px;color:var(--text-muted)">Sin proyectos</span>';
     if (STATE.chartHistorial){ STATE.chartHistorial.data.labels=[]; STATE.chartHistorial.data.datasets[0].data=[]; STATE.chartHistorial.update("none"); } return; }
