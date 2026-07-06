@@ -751,7 +751,7 @@ function renderTabla() {
       <td><div class="semaforo" style="background:${colorSemaforo('gantt',ev.gantt)}"></div></td>
       <td><div class="semaforo" style="background:${colorSemaforo('pdca',ev.pdca)}"></div></td>
       <button class="btn-sm btn-secondary" onclick="abrirEditar('${p.id}')" title="Editar">✏️</button>
-      <button class="btn-sm btn-danger" onclick="eliminarProyecto('${p.id}')">🗑</button>;
+      <td><button class="btn-sm btn-danger" onclick="eliminarProyecto('${p.id}')">🗑</button></td>';
     frag.appendChild(tr);
   });
   tbody.appendChild(frag); actualizarGraficasAdmin(lista); actualizarHistTabs(lista);
