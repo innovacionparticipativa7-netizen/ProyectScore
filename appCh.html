@@ -359,13 +359,22 @@ canvas { max-height: 240px; }
     <div class="header-right"><button class="btn-sm btn-secondary" onclick="logout()">Salir</button></div>
   </div>
   <div class="container">
-    <div style="max-width:640px;margin:auto">
-      <div class="card" style="margin-bottom:12px">
-        <h3>Filtrar proyectos</h3>
-        <div class="filtro-group" id="filtroTier"><button class="filtro-btn active" onclick="setFiltroUser('tier','',this)">Todos</button></div>
-        <div class="filtro-group" id="filtroDirective"><button class="filtro-btn active" onclick="setFiltroUser('directive','',this)">Todas</button></div>
-        <div class="filtro-group" id="filtroChampion"><button class="filtro-btn active" onclick="setFiltroUser('champion','',this)">Todos</button></div>
-      </div>
+    <div class="card" style="margin-bottom:12px">
+  <h3>Filtrar proyectos</h3>
+  <div class="filtro-group" id="filtroTier"><button class="filtro-btn active" onclick="setFiltroUser('tier','',this)">Todos</button></div>
+  <div class="filtro-group" id="filtroDirective"><button class="filtro-btn active" onclick="setFiltroUser('directive','',this)">Todas</button></div>
+  <div class="filtro-group" id="filtroChampion"><button class="filtro-btn active" onclick="setFiltroUser('champion','',this)">Todos</button></div>
+  <!-- BUSCAR POR TEXTO -->
+  <div style="margin-top:8px">
+    <input 
+      type="text" 
+      id="busquedaGeneral" 
+      placeholder="🔍 Buscar por nombre, champion, owner, sponsor..." 
+      oninput="renderSelectUser()"
+      style="font-size:13px"
+    >
+  </div>
+</div>
       <div class="card" style="margin-bottom:12px">
         <label class="field-label">Proyecto activo</label>
         <select id="selectProyectoUser" onchange="seleccionarProyecto(this.value)"></select>
@@ -1214,17 +1223,31 @@ function setFiltroUser(tipo,valor,el){
 }
 function renderSelectUser(){
   const {tier,champion,directive}=STATE.filtrosUser;
+  const busqueda = (document.getElementById("busquedaGeneral")?.value || "").trim().toLowerCase();
   let lista=[...STATE.proyectos];
   if (tier)     lista=lista.filter(p=>(p.TIER||p.tier)===tier);
   if (champion) lista=lista.filter(p=>(p.CHAMPION||p.champion)===champion);
   if (directive) lista=lista.filter(p=>p.DIRECTIVE===directive);
+
   const nombreDe = p => p["HK3 Coding"] || p.nombre || p.HK3 || p.HK2 || p.HK1 || p.id;
+
+  if (busqueda) {
+    lista = lista.filter(p => {
+      const campos = [
+        nombreDe(p),
+        p.CHAMPION || p.champion,
+        p.OWNER    || p.owner,
+        p.SPONSOR  || p.sponsor,
+        p.SITE     || p.seccion,
+        p.TIER     || p.tier,
+        p.DIRECTIVE
+      ].map(c => (c || "").toString().toLowerCase());
+      return campos.some(c => c.includes(busqueda));
+    });
+  }
+
   lista = [...lista].sort((a,b)=>compararNombres(nombreDe(a),nombreDe(b)));
   const sel=document.getElementById("selectProyectoUser"); sel.innerHTML="";
-  if (!lista.length){ sel.innerHTML='<option value="">Sin proyectos</option>'; ["infoChampion","infoSponsor","infoOwner","infoSeccion"].forEach(id=>document.getElementById(id).textContent="–"); return; }
-  lista.forEach(p=>{ const o=document.createElement("option"); o.value=p.id; o.textContent = nombreDe(p); sel.appendChild(o); });
-  seleccionarProyecto(lista[0].id);
-}
 function seleccionarProyecto(id){
   const p=STATE.proyectos.find(x=>x.id===id); if (!p) return;
   STATE.proyectoActualId=id; STATE.proyectoActual=p;
