@@ -1221,6 +1221,7 @@ function setFiltroUser(tipo,valor,el){
     btn.onclick=function(){ setFiltroUser("directive",dir,this); }; cont.appendChild(btn);
   });
 }
+
 function renderSelectUser(){
   const {tier,champion,directive}=STATE.filtrosUser;
   const busqueda = (document.getElementById("busquedaGeneral")?.value || "").trim().toLowerCase();
@@ -1228,9 +1229,7 @@ function renderSelectUser(){
   if (tier)     lista=lista.filter(p=>(p.TIER||p.tier)===tier);
   if (champion) lista=lista.filter(p=>(p.CHAMPION||p.champion)===champion);
   if (directive) lista=lista.filter(p=>p.DIRECTIVE===directive);
-
   const nombreDe = p => p["HK3 Coding"] || p.nombre || p.HK3 || p.HK2 || p.HK1 || p.id;
-
   if (busqueda) {
     lista = lista.filter(p => {
       const campos = [
@@ -1245,9 +1244,24 @@ function renderSelectUser(){
       return campos.some(c => c.includes(busqueda));
     });
   }
-
   lista = [...lista].sort((a,b)=>compararNombres(nombreDe(a),nombreDe(b)));
   const sel=document.getElementById("selectProyectoUser"); sel.innerHTML="";
+  if (!lista.length){ sel.innerHTML='<option value="">Sin proyectos</option>'; ["infoChampion","infoSponsor","infoOwner","infoSeccion"].forEach(id=>document.getElementById(id).textContent="–"); return; }
+  lista.forEach(p=>{ const o=document.createElement("option"); o.value=p.id; o.textContent = nombreDe(p); sel.appendChild(o); });
+  seleccionarProyecto(lista[0].id);
+}
+
+function seleccionarProyecto(id){
+  const p=STATE.proyectos.find(x=>x.id===id); if (!p) return;
+  STATE.proyectoActualId=id; STATE.proyectoActual=p;
+  document.getElementById("infoChampion").textContent = p.CHAMPION||p.champion||"–";
+  document.getElementById("infoSponsor").textContent  = p.SPONSOR ||p.sponsor ||"–";
+  document.getElementById("infoOwner").textContent    = p.OWNER   ||p.owner   ||"–";
+  document.getElementById("infoSeccion").textContent  = p.SITE    ||p.seccion ||"–";
+  STATE.evalTemp={kpi:"",gantt:"",pdca:[]}; limpiarFormulario(); renderSemaforosDesdeProyecto(p.evaluacion);
+}
+
+  
 function seleccionarProyecto(id){
   const p=STATE.proyectos.find(x=>x.id===id); if (!p) return;
   STATE.proyectoActualId=id; STATE.proyectoActual=p;
