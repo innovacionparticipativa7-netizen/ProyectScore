@@ -750,8 +750,8 @@ function renderTabla() {
       <td><div class="semaforo" style="background:${colorSemaforo('kpi',ev.kpi)}"></div></td>
       <td><div class="semaforo" style="background:${colorSemaforo('gantt',ev.gantt)}"></div></td>
       <td><div class="semaforo" style="background:${colorSemaforo('pdca',ev.pdca)}"></div></td>
-      <button class="btn-sm btn-secondary" onclick="abrirEditar('${p.id}')" title="Editar">✏️</button>
-      <td><button class="btn-sm btn-danger" onclick="eliminarProyecto('${p.id}')">🗑</button></td>';
+      <td><button class="btn-sm btn-blue" onclick="abrirEditar('${p.id}')" title="Editar">✏️</button></td>
+      <td><button class="btn-sm btn-danger" onclick="eliminarProyecto('${p.id}')">🗑</button></td>`;
     frag.appendChild(tr);
   });
   tbody.appendChild(frag); actualizarGraficasAdmin(lista); actualizarHistTabs(lista);
