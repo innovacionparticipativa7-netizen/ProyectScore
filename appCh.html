@@ -1213,7 +1213,7 @@ function setFiltroUser(tipo,valor,el){
 }
 function renderSelectUser(){
   const {tier,champion,directive}=STATE.filtrosUser;
-  let lista=STATE.proyectos.filter(p=>p.estado!=="espera");
+  let lista=[...STATE.proyectos];
   if (tier)     lista=lista.filter(p=>(p.TIER||p.tier)===tier);
   if (champion) lista=lista.filter(p=>(p.CHAMPION||p.champion)===champion);
   if (directive) lista=lista.filter(p=>p.DIRECTIVE===directive);
@@ -1283,14 +1283,15 @@ async function guardar(){
     const pdcaScore  = calcPDCA(ev);
     const genScore   = calcGeneral(ev);
 
-    // Solo actualiza los campos de calificación, no toca nada más del proyecto
+    // Actualiza los campos de calificación y pasa el proyecto a "activo"
     await db.collection(COL_PROYECTOS).doc(STATE.proyectoActualId).update({
       evaluacion:        ev,
       fechaCalificacion: now,
       scoreKPI:          toDecimal(kpiScore),
       scoreGANTT:        toDecimal(ganttScore),
       scorePDCA:         toDecimal(pdcaScore),
-      scoreGEN:          toDecimal(genScore)
+      scoreGEN:          toDecimal(genScore),
+      estado:            "activo"
     });
 
     const histEntry={
@@ -1315,6 +1316,7 @@ async function guardar(){
       STATE.proyectos[idx].scoreGANTT        = toDecimal(ganttScore);
       STATE.proyectos[idx].scorePDCA         = toDecimal(pdcaScore);
       STATE.proyectos[idx].scoreGEN          = toDecimal(genScore);
+      STATE.proyectos[idx].estado            = "activo";
     }
     STATE.historial.unshift({...histEntry,_fecha:now});
     renderSemaforosDesdeProyecto(ev); notif("Evaluación guardada ✅");
