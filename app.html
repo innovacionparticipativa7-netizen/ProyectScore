@@ -1307,6 +1307,7 @@ function renderGaugeAdmin(cid, valor, pctId) {
    HISTORIAL SEMANAL
 ============================================================ */
 function actualizarHistTabs(proyectosFiltrados) {
+   proyectosFiltrados = proyectosFiltrados.filter(p => p.estado !== "espera" && p.fechaCalificacion);
   const cont = document.getElementById("histTabs");
   cont.innerHTML = "";
   if (!proyectosFiltrados.length) {
