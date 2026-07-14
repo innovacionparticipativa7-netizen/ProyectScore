@@ -1249,17 +1249,6 @@ function renderSelectUser(){
   lista.forEach(p=>{ const o=document.createElement("option"); o.value=p.id; o.textContent = nombreDe(p); sel.appendChild(o); });
   seleccionarProyecto(lista[0].id);
 }
-
-function seleccionarProyecto(id){
-  const p=STATE.proyectos.find(x=>x.id===id); if (!p) return;
-  STATE.proyectoActualId=id; STATE.proyectoActual=p;
-  document.getElementById("infoChampion").textContent = p.CHAMPION||p.champion||"–";
-  document.getElementById("infoSponsor").textContent  = p.SPONSOR ||p.sponsor ||"–";
-  document.getElementById("infoOwner").textContent    = p.OWNER   ||p.owner   ||"–";
-  document.getElementById("infoSeccion").textContent  = p.SITE    ||p.seccion ||"–";
-  STATE.evalTemp={kpi:"",gantt:"",pdca:[]}; limpiarFormulario(); renderSemaforosDesdeProyecto(p.evaluacion);
-}
-
   
 function seleccionarProyecto(id){
   const p=STATE.proyectos.find(x=>x.id===id); if (!p) return;
@@ -1268,7 +1257,7 @@ function seleccionarProyecto(id){
   document.getElementById("infoSponsor").textContent  = p.SPONSOR ||p.sponsor ||"–";
   document.getElementById("infoOwner").textContent    = p.OWNER   ||p.owner   ||"–";
   document.getElementById("infoSeccion").textContent  = p.SITE    ||p.seccion ||"–";
-  STATE.evalTemp={kpi:"",gantt:"",pdca:[]}; limpiarFormulario(); renderSemaforosDesdeProyecto(p.evaluacion);
+  STATE.evalTemp={kpi:"",gantt:"",pdca:[]}; limpiarFormulario(); renderSemaforosDesdeProyecto(STATE.evalTemp);
 }
 function limpiarFormulario(){
   document.querySelectorAll('input[name="kpi"],input[name="gantt"]').forEach(r=>r.checked=false);
@@ -1356,8 +1345,9 @@ async function guardar(){
       STATE.proyectos[idx].estado            = "activo";
     }
     STATE.historial.unshift({...histEntry,_fecha:now});
-    renderSemaforosDesdeProyecto(ev); notif("Evaluación guardada ✅");
+    notif("Evaluación guardada ✅");
     STATE.evalTemp={kpi:"",gantt:"",pdca:[]}; limpiarFormulario();
+    renderSemaforosDesdeProyecto(STATE.evalTemp);
   } catch(err){ console.error(err); notif("Error: "+err.message,true); }
   finally { btn.disabled=false; btn.textContent="💾 Guardar Evaluación"; }
 }
