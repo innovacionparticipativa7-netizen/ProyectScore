@@ -1903,7 +1903,7 @@ function seleccionarProyecto(id) {
   document.getElementById("infoSeccion").textContent  = p.seccion ||"–";
   STATE.evalTemp = { kpi:"", gantt:"", pdca:[] };
   limpiarFormulario();
-  renderSemaforosDesdeProyecto(p.evaluacion);
+  renderSemaforosDesdeProyecto(STATE.evalTemp);   // ← ahora arranca en blanco
 }
 
 function limpiarFormulario() {
@@ -1996,11 +1996,11 @@ async function guardar() {
         STATE.proyectos[idx].overallScore      = +calcGeneral(ev).toFixed(2);
         STATE.proyectos[idx].estado            = "activo";
       }
-    STATE.historial.unshift({...histEntry, _fecha:now});
-    renderSemaforosDesdeProyecto(ev);
+   STATE.historial.unshift({...histEntry, _fecha:now});
     notif("Evaluación guardada ✅");
     STATE.evalTemp = { kpi:"", gantt:"", pdca:[] };
     limpiarFormulario();
+    renderSemaforosDesdeProyecto(STATE.evalTemp);
   } catch(err) { console.error(err); notif("Error: "+err.message,true); }
   finally { btn.disabled=false; btn.textContent="💾 Guardar Evaluación"; }
 }
