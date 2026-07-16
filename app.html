@@ -1043,12 +1043,13 @@ async function init() {
       STATE.rol    = (userData.rol || "user").toLowerCase().trim();
       STATE.nombre = userData.nombre || user.email;
 
-      const [snapP, snapH] = await Promise.all([
-        db.collection("proyectos").limit(200).get(),
-        db.collection("historial").orderBy("fecha","desc").limit(1000).get()
-      ]);
+      const promesas = [ db.collection("proyectos").limit(200).get() ];
+      if (userData.rol === "admin") {
+        promesas.push(db.collection("historial").orderBy("fecha","desc").limit(1000).get());
+      }
+      const [snapP, snapH] = await Promise.all(promesas);
       STATE.proyectos = snapP.docs.map(d => ({ id: d.id, ...d.data(), evaluacion: d.data().evaluacion || { kpi:"", gantt:"", pdca:[] } }));
-      STATE.historial = snapH.docs.map(d => ({ id: d.id, ...d.data() }));
+      STATE.historial = snapH ? snapH.docs.map(d => ({ id: d.id, ...d.data() })) : [];
 
       if (STATE.rol === "admin") {
         document.getElementById("vista-admin").style.display = "block";
