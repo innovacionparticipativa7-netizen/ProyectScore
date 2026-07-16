@@ -630,12 +630,17 @@ async function init() {
       if (!userDoc.exists){ notif("Usuario sin acceso",true); await firebase.auth().signOut(); window.location.href="index.html"; return; }
       const userData=userDoc.data();
       STATE.uid=user.uid; STATE.rol=(userData.rol||"user").toLowerCase().trim(); STATE.nombre=userData.nombre||user.email;
-      const [snapP,snapH]=await Promise.all([
-        db.collection(COL_PROYECTOS).limit(500).get(),
-        db.collection(COL_HISTORIAL).orderBy("fecha","desc").limit(1000).get()
-      ]);
-      STATE.proyectos=snapP.docs.map(d=>({id:d.id,...d.data(),evaluacion:d.data().evaluacion||{kpi:"",gantt:"",pdca:[]}}));
-      STATE.historial=snapH.docs.map(d=>({id:d.id,...d.data()}));
+      
+
+      const promesas = [ db.collection(COL_PROYECTOS).limit(500).get() ];
+      if (userData.rol === "admin") {
+        promesas.push(db.collection(COL_HISTORIAL).orderBy("fecha","desc").limit(1000).get());
+      }
+      const [snapP, snapH] = await Promise.all(promesas);
+      STATE.proyectos = snapP.docs.map(d=>({id:d.id,...d.data(),evaluacion:d.data().evaluacion||{kpi:"",gantt:"",pdca:[]}}));
+      STATE.historial = snapH ? snapH.docs.map(d=>({id:d.id,...d.data()})) : [];
+
+      
       if (STATE.rol==="admin"){
         document.getElementById("vista-admin").style.display="block";
         document.getElementById("badge-rol").textContent="Admin";
