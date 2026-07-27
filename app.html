@@ -523,7 +523,20 @@ canvas { max-height: 240px; }
       <div class="hist-tabs" id="histTabs"></div>
       <canvas id="grafHistorial" style="max-height:260px"></canvas>
     </div>
-
+<!-- ASISTENCIA DE CALIFICACIONES POR DIRECTIVA -->
+<div class="card" style="margin-bottom:16px">
+  <h3>🗳️ Asistencia de Calificaciones por Directiva</h3>
+  <p style="font-size:12px;color:var(--text-muted);margin-bottom:10px">Selecciona una directiva/sección para ver cuántos proyectos se calificaron cada semana.</p>
+  <div style="max-width:360px;margin-bottom:12px">
+    <label class="field-label" style="margin-top:0">Directiva / Sección</label>
+    <select id="asistDirectivaSelect" onchange="renderAsistenciaDirectiva()">
+      <option value="">Selecciona una directiva</option>
+      <option>Buy to Make</option><option>DTC</option>
+      <option>Material Optimization</option><option>OH Cost Control</option><option>Resourcing</option>
+    </select>
+  </div>
+  <canvas id="grafAsistencia" style="max-height:260px"></canvas>
+</div>
     <!-- TABLA -->
     <div class="card" style="margin-bottom:16px">
       <h3>Proyectos (<span id="count-proyectos">0</span>)</h3>
@@ -816,7 +829,8 @@ const STATE = {
   proyectoActual: null, proyectoActualId: null, evalTemp: null,
   filtrosUser: { tier: "", seccion: "", champion: "" },
   filtrosAdmin: { tiers: [], secciones: [], champions: [], fechaInicio: "", fechaFin: "" },
-  gaugeUser: null, gaugesAdmin: {}, chartHistorial: null, histTabActivo: null
+  gaugeUser: null, gaugesAdmin: {}, chartHistorial: null, histTabActivo: null,
+chartAsistencia: null
 };
 
   // ── Orden: nombres que inician con número primero (ordenados de menor a mayor),
@@ -1228,6 +1242,7 @@ function getProyectosFiltrados() {
 
 function renderTabla() {
   const lista = getProyectosFiltrados();
+  lista.sort((a,b) => compararNombres(a.nombre||"", b.nombre||""));
   document.getElementById("count-proyectos").textContent = lista.length;
   const tbody = document.getElementById("tablaBody");
   const frag  = document.createDocumentFragment();
@@ -1377,6 +1392,69 @@ function renderHistorial(proyectoId) {
   });
 }
 
+/* ============================================================
+   ASISTENCIA DE CALIFICACIONES POR DIRECTIVA
+============================================================ */
+function renderAsistenciaDirectiva() {
+  const directiva = document.getElementById("asistDirectivaSelect").value;
+  const canvas = document.getElementById("grafAsistencia");
+  if (!canvas) return;
+
+  if (!directiva) {
+    if (STATE.chartAsistencia) {
+      STATE.chartAsistencia.data.labels = [];
+      STATE.chartAsistencia.data.datasets[0].data = [];
+      STATE.chartAsistencia.update("none");
+    }
+    return;
+  }
+
+  // Filtrar el historial de evaluaciones de la directiva/sección seleccionada
+  const hist = STATE.historial.filter(h => h.seccion === directiva);
+
+  // Contar cuántas evaluaciones (proyectos calificados) hubo por semana
+  const porSemana = {};
+  hist.forEach(h => {
+    const fa = h.fecha?.toDate ? h.fecha.toDate() : new Date(h.fecha || 0);
+    const k  = h.semana || getSemana(fa);
+    porSemana[k] = (porSemana[k] || 0) + 1;
+  });
+
+  const semanas = Object.keys(porSemana).sort((a,b) => +a - +b);
+  const labels  = semanas.map(s => "Sem " + s);
+  const data    = semanas.map(s => porSemana[s]);
+
+  if (STATE.chartAsistencia) {
+    STATE.chartAsistencia.data.labels = labels;
+    STATE.chartAsistencia.data.datasets[0].data = data;
+    STATE.chartAsistencia.data.datasets[0].label = `Proyectos calificados · ${directiva}`;
+    STATE.chartAsistencia.update("none");
+    return;
+  }
+
+  STATE.chartAsistencia = new Chart(canvas.getContext("2d"), {
+    type: "bar",
+    data: { labels, datasets: [{
+      label: `Proyectos calificados · ${directiva}`,
+      data,
+      backgroundColor: "#3b82f6",
+      borderRadius: 6,
+      maxBarThickness: 46
+    }]},
+    options: {
+      animation: false, responsive: true,
+      scales: { y: { beginAtZero: true, ticks: { precision: 0 } } },
+      plugins: { legend: { display: true } }
+    }
+  });
+}
+
+
+
+
+
+
+  
 /* ============================================================
    HISTORIAL COMPLETO
 ============================================================ */
