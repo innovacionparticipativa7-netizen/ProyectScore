@@ -171,6 +171,7 @@ td { vertical-align: middle; }
 .estado-badge { display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; cursor: pointer; user-select: none; }
 .estado-activo { background: #d1fae5; color: #065f46; }
 .estado-espera { background: #fef3c7; color: #92400e; }
+  .estado-cancelado { background: #fee2e2; color: #991b1b; }
 
 .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 12px; }
 @media (max-width: 500px) { .form-grid { grid-template-columns: 1fr; } }
@@ -472,25 +473,28 @@ canvas { max-height: 240px; }
           </div>
         </div>
 
-        <!-- CHAMPION multi-select -->
-        <div>
-          <label class="field-label">Champion</label>
-          <div class="multi-select-wrap" id="ms-champion">
-            <div class="multi-select-trigger" onclick="toggleMS('ms-champion')">
-              <span class="trigger-text" id="ms-champion-label">Todos los Champions</span>
-              <span class="arrow">▼</span>
-            </div>
-            <div class="multi-select-tags" id="ms-champion-tags"></div>
-            <div class="multi-select-dropdown" id="ms-champion-drop">
-              <div class="ms-options" id="ms-champion-opts">
-                <div class="ms-option ms-all">
-                  <input type="checkbox" id="ms-champion-all" onchange="toggleAllMS('ms-champion')">
-                  <label for="ms-champion-all">Todos</label>
+        <!-- ESTADO multi-select -->
+          <div>
+            <label class="field-label">Estado</label>
+            <div class="multi-select-wrap" id="ms-estado">
+              <div class="multi-select-trigger" onclick="toggleMS('ms-estado')">
+                <span class="trigger-text" id="ms-estado-label">Todos los Estados</span>
+                <span class="arrow">▼</span>
+              </div>
+              <div class="multi-select-tags" id="ms-estado-tags"></div>
+              <div class="multi-select-dropdown" id="ms-estado-drop">
+                <div class="ms-options" id="ms-estado-opts">
+                  <div class="ms-option ms-all">
+                    <input type="checkbox" id="ms-estado-all" onchange="toggleAllMS('ms-estado')">
+                    <label for="ms-estado-all">Todos</label>
+                  </div>
+                  <div class="ms-option"><input type="checkbox" value="activo" onchange="updateMS('ms-estado')"><label>🟢 Activo</label></div>
+                  <div class="ms-option"><input type="checkbox" value="espera" onchange="updateMS('ms-estado')"><label>🟡 En Espera</label></div>
+                  <div class="ms-option"><input type="checkbox" value="cancelado" onchange="updateMS('ms-estado')"><label>🔴 Cancelado</label></div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
         
         <!-- FECHA RANGO -->
         <div>
@@ -646,9 +650,11 @@ canvas { max-height: 240px; }
         <div><label class="field-label">Owner</label><input id="edit-owner"></div>
         <div><label class="field-label">Estado</label>
           <select id="edit-estado">
-            <option value="activo">🟢 Activo</option>
-            <option value="espera">🟡 En Espera</option>
-          </select>
+            <select id="edit-estado">
+              <option value="activo">🟢 Activo</option>
+              <option value="espera">🟡 En Espera</option>
+              <option value="cancelado">🔴 Cancelado</option>
+            </select>
         </div>
         <div><label class="field-label">#</label><input id="edit-numeroProyecto"></div>
       </div>
@@ -828,7 +834,7 @@ const STATE = {
   rol: "", uid: "", proyectos: [], historial: [], mapaUsuarios: {},
   proyectoActual: null, proyectoActualId: null, evalTemp: null,
   filtrosUser: { tier: "", seccion: "", champion: "" },
-  filtrosAdmin: { tiers: [], secciones: [], champions: [], fechaInicio: "", fechaFin: "" },
+  filtrosAdmin: { tiers: [], secciones: [], champions: [], estados: [], fechaInicio: "", fechaFin: "" },
   gaugeUser: null, gaugesAdmin: {}, chartHistorial: null, histTabActivo: null,
 chartAsistencia: null
 };
@@ -889,23 +895,25 @@ function updateMS(id) {
   const allOpts = [...document.querySelectorAll(`#${id}-opts input[type=checkbox]:not(#${id}-all)`)];
   if (allCb) allCb.checked = selected.length === allOpts.length && allOpts.length > 0;
 
-  const labelMap = { "ms-tier": "Todos los Tiers", "ms-seccion": "Todas las Secciones", "ms-champion": "Todos los Champions" };
+  const labelMap = { "ms-tier": "Todos los Tiers", "ms-seccion": "Todas las Secciones", "ms-champion": "Todos los Champions", "ms-estado": "Todos los Estados" };
+  const displayMap = { activo: "🟢 Activo", espera: "🟡 En Espera", cancelado: "🔴 Cancelado" };
   document.getElementById(`${id}-label`).textContent =
     selected.length === 0 ? (labelMap[id] || "Todos") :
-    selected.length === 1 ? selected[0] : `${selected.length} seleccionados`;
+    selected.length === 1 ? (displayMap[selected[0]] || selected[0]) : `${selected.length} seleccionados`;
 
   const tagsContainer = document.getElementById(`${id}-tags`);
   tagsContainer.innerHTML = "";
   selected.forEach(val => {
     const tag = document.createElement("span");
     tag.className = "ms-tag";
-    tag.innerHTML = `${val} <span class="rm" onclick="removeTagMS('${id}','${val}')">✕</span>`;
+    tag.innerHTML = `${displayMap[val] || val} <span class="rm" onclick="removeTagMS('${id}','${val}')">✕</span>`;
     tagsContainer.appendChild(tag);
   });
 
   if (id === "ms-tier")     STATE.filtrosAdmin.tiers     = selected;
   if (id === "ms-seccion")  STATE.filtrosAdmin.secciones = selected;
   if (id === "ms-champion") STATE.filtrosAdmin.champions = selected;
+  if (id === "ms-estado")   STATE.filtrosAdmin.estados   = selected;
 
   updateActiveFiltersBar();
   renderTabla();
@@ -949,13 +957,13 @@ function syncChampionMS() {
 }
 
 function limpiarFiltrosAdmin() {
-  ["ms-tier", "ms-seccion", "ms-champion"].forEach(id => {
+  ["ms-tier", "ms-seccion", "ms-champion", "ms-estado"].forEach(id => {
     document.querySelectorAll(`#${id}-opts input[type=checkbox]`).forEach(cb => cb.checked = false);
     updateMS(id);
   });
   document.getElementById("adminFechaInicio").value = "";
   document.getElementById("adminFechaFin").value    = "";
-  STATE.filtrosAdmin = { tiers: [], secciones: [], champions: [], fechaInicio: "", fechaFin: "" };
+  STATE.filtrosAdmin = { tiers: [], secciones: [], champions: [], estados: [], fechaInicio: "", fechaFin: "" };
   updateActiveFiltersBar();
   renderTabla();
 }
@@ -964,6 +972,7 @@ function updateActiveFiltersBar() {
   const bar  = document.getElementById("activeFiltersBar");
   const cont = document.getElementById("activeFilterChips");
   const chips = [];
+  const displayMap = { activo: "🟢 Activo", espera: "🟡 En Espera", cancelado: "🔴 Cancelado" };
 
   STATE.filtrosAdmin.tiers.forEach(t =>
     chips.push({ label: t, remove: () => removeTagMS("ms-tier", t) }));
@@ -971,6 +980,8 @@ function updateActiveFiltersBar() {
     chips.push({ label: s, remove: () => { removeTagMS("ms-seccion", s); syncChampionMS(); } }));
   STATE.filtrosAdmin.champions.forEach(c =>
     chips.push({ label: c, remove: () => removeTagMS("ms-champion", c) }));
+  STATE.filtrosAdmin.estados.forEach(es =>
+    chips.push({ label: displayMap[es] || es, remove: () => removeTagMS("ms-estado", es) }));
 
   const fi = document.getElementById("adminFechaInicio").value;
   const ff = document.getElementById("adminFechaFin").value;
@@ -1211,7 +1222,7 @@ function onSeccionChange() {
    ADMIN – FILTROS & TABLA
 ============================================================ */
 function getProyectosFiltrados() {
-  const { tiers, secciones, champions } = STATE.filtrosAdmin;
+  const { tiers, secciones, champions, estados } = STATE.filtrosAdmin;
   const fechaInicio = document.getElementById("adminFechaInicio").value;
   const fechaFin    = document.getElementById("adminFechaFin").value;
 
@@ -1219,6 +1230,7 @@ function getProyectosFiltrados() {
   if (tiers.length)     lista = lista.filter(p => tiers.includes(p.tier));
   if (secciones.length) lista = lista.filter(p => secciones.includes(p.seccion));
   if (champions.length) lista = lista.filter(p => champions.includes(p.champion));
+  if (estados.length)   lista = lista.filter(p => estados.includes(p.estado || "activo"));
 
   if (fechaInicio || fechaFin) {
     const mapaFechas = {};
@@ -1247,13 +1259,19 @@ function renderTabla() {
   const tbody = document.getElementById("tablaBody");
   const frag  = document.createDocumentFragment();
   tbody.innerHTML = "";
+  const ESTADO_INFO = {
+    activo:    { clase: "estado-activo",    label: "🟢 Activo" },
+    espera:    { clase: "estado-espera",    label: "🟡 Espera" },
+    cancelado: { clase: "estado-cancelado", label: "🔴 Cancelado" }
+  };
   lista.forEach(p => {
     const ev  = p.evaluacion||{};
     const tr  = document.createElement("tr");
-    const act = p.estado !== "espera";
+    const estadoActual = p.estado || "activo";
+    const info = ESTADO_INFO[estadoActual] || ESTADO_INFO.activo;
     tr.innerHTML = `
-      <td><span class="estado-badge ${act?'estado-activo':'estado-espera'}" onclick="toggleEstado('${p.id}')">
-        ${act?"🟢 Activo":"🟡 Espera"}</span></td>
+      <td><span class="estado-badge ${info.clase}" onclick="toggleEstado('${p.id}')" title="Click para cambiar estado">
+        ${info.label}</span></td>
       <td><b>${p.nombre||"–"}</b><br><small style="color:var(--text-muted)">${p.tier||""} · ${p.seccion||""}</small></td>
       <td>${p.champion||"–"}</td><td>${p.sponsor||"–"}</td><td>${p.owner||"–"}</td>
       <td><div class="semaforo" style="background:${colorSemaforo('kpi',ev.kpi)}" title="${calcKPI(ev.kpi)}%"></div></td>
@@ -1273,7 +1291,9 @@ function renderTabla() {
 async function toggleEstado(id) {
   const p = STATE.proyectos.find(x=>x.id===id);
   if (!p) return;
-  const nuevo = p.estado==="activo" ? "espera" : "activo";
+  const ciclo = { activo: "espera", espera: "cancelado", cancelado: "activo" };
+  const actual = p.estado || "activo";
+  const nuevo = ciclo[actual] || "activo";
   try { await db.collection("proyectos").doc(id).update({estado:nuevo}); p.estado=nuevo; renderTabla(); }
   catch(err) { notif("Error: "+err.message,true); }
 }
@@ -1291,7 +1311,7 @@ async function eliminarProyecto(id) {
    ADMIN – GRÁFICAS
 ============================================================ */
 function actualizarGraficasAdmin(lista) {
-  const act = lista.filter(p=>p.estado!=="espera");
+  const act = lista.filter(p=>(p.estado||"activo")==="activo");
   const n   = act.length || 1;
   let sK=0,sG=0,sP=0,sGen=0;
   act.forEach(p=>{ const ev=p.evaluacion||{}; sK+=calcKPI(ev.kpi); sG+=calcGANTT(ev.gantt); sP+=calcPDCA(ev); sGen+=calcGeneral(ev); });
@@ -1323,7 +1343,7 @@ function renderGaugeAdmin(cid, valor, pctId) {
    HISTORIAL SEMANAL
 ============================================================ */
 function actualizarHistTabs(proyectosFiltrados) {
-   proyectosFiltrados = proyectosFiltrados.filter(p => p.estado !== "espera" && p.fechaCalificacion);
+   proyectosFiltrados = proyectosFiltrados.filter(p => (p.estado || "activo") === "activo" && p.fechaCalificacion);
   const cont = document.getElementById("histTabs");
   cont.innerHTML = "";
   if (!proyectosFiltrados.length) {
@@ -1673,6 +1693,7 @@ General: +(( h.general||0)/100).toFixed(4),
 
 function exportarProyectos() {
   if (!STATE.proyectos.length) return notif("Sin proyectos para exportar", true);
+  const ESTADO_LABEL = { activo: "Activo", espera: "En Espera", cancelado: "Cancelado" };
   const rows = STATE.proyectos.map(p => ({
     Nombre:   p.nombre   || "–",
     Tier:     p.tier     || "–",
@@ -1680,18 +1701,12 @@ function exportarProyectos() {
     Champion: p.champion || "–",
     Sponsor:  p.sponsor  || "–",
     Owner:    p.owner    || "–",
-    Estado:   p.estado   || "activo"
+    Estado:   ESTADO_LABEL[p.estado || "activo"] || "Activo"
   }));
   rows.sort((a, b) => a.Seccion.localeCompare(b.Seccion) || a.Nombre.localeCompare(b.Nombre));
   const ws = XLSX.utils.json_to_sheet(rows);
   ws['!cols'] = [
-    { wch: 35 }, // Nombre
-    { wch: 10 }, // Tier
-    { wch: 25 }, // Seccion
-    { wch: 22 }, // Champion
-    { wch: 22 }, // Sponsor
-    { wch: 22 }, // Owner
-    { wch: 10 }  // Estado
+    { wch: 35 }, { wch: 10 }, { wch: 25 }, { wch: 22 }, { wch: 22 }, { wch: 22 }, { wch: 12 }
   ];
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, "Proyectos");
@@ -1938,7 +1953,7 @@ function renderSelectUser() {
   const {tier, seccion, champion} = STATE.filtrosUser;
   const busqueda = (document.getElementById("busquedaGeneral")?.value || "").trim().toLowerCase();
 
-  let lista = [...STATE.proyectos];
+  let lista = [...STATE.proyectos].filter(p => (p.estado || "activo") !== "cancelado");
   if (tier)     lista = lista.filter(p => p.tier === tier);
   if (seccion)  lista = lista.filter(p => p.seccion === seccion);
   if (champion) lista = lista.filter(p => p.champion === champion);
