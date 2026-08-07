@@ -648,6 +648,7 @@ canvas { max-height: 240px; }
           <select id="edit-estado">
             <option value="activo">🟢 Activo</option>
             <option value="espera">🟡 En Espera</option>
+            <option value="espera">🔴 Cancelado</option>
           </select>
         </div>
         <div><label class="field-label">#</label><input id="edit-numeroProyecto"></div>
@@ -1250,10 +1251,11 @@ function renderTabla() {
   lista.forEach(p => {
     const ev  = p.evaluacion||{};
     const tr  = document.createElement("tr");
-    const act = p.estado !== "espera";
+    const estadoActual = p.estado || "activo";
+    const info = { activo:{clase:"estado-activo",label:"🟢 Activo"}, espera:{clase:"estado-espera",label:"🟡 Espera"}, cancelado:{clase:"estado-cancelado",label:"🔴 Cancelado"} }[estadoActual];
     tr.innerHTML = `
-      <td><span class="estado-badge ${act?'estado-activo':'estado-espera'}" onclick="toggleEstado('${p.id}')">
-        ${act?"🟢 Activo":"🟡 Espera"}</span></td>
+      <td><span class="estado-badge ${info.clase}" onclick="toggleEstado('${p.id}')">
+        ${info.label}</span></td>
       <td><b>${p.nombre||"–"}</b><br><small style="color:var(--text-muted)">${p.tier||""} · ${p.seccion||""}</small></td>
       <td>${p.champion||"–"}</td><td>${p.sponsor||"–"}</td><td>${p.owner||"–"}</td>
       <td><div class="semaforo" style="background:${colorSemaforo('kpi',ev.kpi)}" title="${calcKPI(ev.kpi)}%"></div></td>
