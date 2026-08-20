@@ -1596,10 +1596,13 @@ const overallScore      = (scoreKPI !== "" || scoreSchedule !== "" || scorePrese
       ? p.projectStatus.trim()
       : "2026";
 
-    // PRESENTED: solo YES/NO o texto
-    const presentedLimpio = (typeof p.presented === "string" && p.presented.trim())
-      ? p.presented.trim()
-      : "";
+// PRESENTED: si el proyecto tiene alguna calificación registrada, forzar "YES"
+const tieneCalificacion = !!(ev.kpi || ev.gantt || (Array.isArray(ev.pdca) && ev.pdca.length > 0));
+const presentedLimpio = tieneCalificacion
+  ? "YES"
+  : (typeof p.presented === "string" && p.presented.trim())
+    ? p.presented.trim()
+    : "";
 
     return [
       typeof p.numeroProyecto === "string" || typeof p.numeroProyecto === "number" ? p.numeroProyecto : "",
