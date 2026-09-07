@@ -358,6 +358,7 @@ canvas { max-height: 240px; }
               <option value="">Selecciona Sección</option>
               <option>Buy to Make</option><option>DTC</option>
               <option>Material Optimization</option><option>OH Cost Control</option><option>Resourcing</option>
+              <option>Productividad</option>
             </select>
           </div>
           <div><label class="field-label">Champion</label>
@@ -467,6 +468,7 @@ canvas { max-height: 240px; }
                 <div class="ms-option"><input type="checkbox" value="Material Optimization" onchange="updateMS('ms-seccion');syncChampionMS()"><label>Material Optimization</label></div>
                 <div class="ms-option"><input type="checkbox" value="OH Cost Control" onchange="updateMS('ms-seccion');syncChampionMS()"><label>OH Cost Control</label></div>
                 <div class="ms-option"><input type="checkbox" value="Resourcing" onchange="updateMS('ms-seccion');syncChampionMS()"><label>Resourcing</label></div>
+                <div class="ms-option"><input type="checkbox" value="Productividad" onchange="updateMS('ms-seccion');syncChampionMS()"><label>Productividad</label></div>
               </div>
             </div>
           </div>
@@ -533,6 +535,7 @@ canvas { max-height: 240px; }
       <option value="">Selecciona una directiva</option>
       <option>Buy to Make</option><option>DTC</option>
       <option>Material Optimization</option><option>OH Cost Control</option><option>Resourcing</option>
+      <option>Productividad</option>
     </select>
   </div>
   <canvas id="grafAsistencia" style="max-height:260px"></canvas>
@@ -637,6 +640,7 @@ canvas { max-height: 240px; }
             <option value="">Sin Sección</option>
             <option>Buy to Make</option><option>DTC</option>
             <option>Material Optimization</option><option>OH Cost Control</option><option>Resourcing</option>
+            <option>Productividad</option>
           </select>
         </div>
         <div><label class="field-label">Champion</label>
@@ -728,6 +732,7 @@ canvas { max-height: 240px; }
           <button class="filtro-btn" onclick="setFiltroUser('seccion','Material Optimization',this);poblarChampionFiltros('Material Optimization')">Mat. Opt.</button>
           <button class="filtro-btn" onclick="setFiltroUser('seccion','OH Cost Control',this);poblarChampionFiltros('OH Cost Control')">OH Cost</button>
           <button class="filtro-btn" onclick="setFiltroUser('seccion','Resourcing',this);poblarChampionFiltros('Resourcing')">Resourcing</button>
+          <button class="filtro-btn" onclick="setFiltroUser('seccion','Productividad',this);poblarChampionFiltros('Productividad')">Productividad</button>
         </div>
         <div class="filtro-group" id="filtroChampion">
           <button class="filtro-btn active" onclick="setFiltroUser('champion','',this)">Todos</button>
@@ -851,7 +856,8 @@ const CHAMPIONS = {
   "DTC":                   ["Jaime Castro"],
   "Material Optimization": ["Fabian Perez", "Jorge Millan"],
   "Resourcing":            ["Gerardo Loredo"],
-  "OH Cost Control":       ["Carlos Perez"]
+  "OH Cost Control":       ["Carlos Perez"],
+   "Productividad":         ["Antonio Aguilar","Jaime Castro","Fabian Perez", "Jorge Millan","Gerardo Loredo","Carlos Perez"]
 };
 
 /* ============================================================
