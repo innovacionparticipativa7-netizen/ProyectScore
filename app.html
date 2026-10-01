@@ -171,6 +171,7 @@ td { vertical-align: middle; }
 .estado-badge { display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; cursor: pointer; user-select: none; }
 .estado-activo { background: #d1fae5; color: #065f46; }
 .estado-espera { background: #fef3c7; color: #92400e; }
+.estado-cancelado { background: #fee2e2; color: #991b1b; }
 
 .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 12px; }
 @media (max-width: 500px) { .form-grid { grid-template-columns: 1fr; } }
@@ -187,11 +188,7 @@ canvas { max-height: 240px; }
 .hist-table-wrap { overflow-x: auto; max-height: 340px; overflow-y: auto; border-radius: 10px; border: 1px solid var(--border); margin-top: 10px; }
 .hist-table-wrap table { font-size: 12px; }
 
-.filter-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; }
-.filter-grid > div { min-width: 0; }
-.date-range-row input[type=date] { min-width: 0; }
-.date-range-row > div { min-width: 0; }
-@media (min-width: 900px) { .filter-grid > div:last-child { grid-column: span 2; } }
+.filter-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
 
 @media (max-width: 600px) {
   .container { padding: 10px; }
@@ -312,30 +309,6 @@ canvas { max-height: 240px; }
   font-size: 13px;
 }
 .coment-empty .icon { font-size: 32px; margin-bottom: 8px; }
-
-/* ===== SINCRONIZACIÓN EXCEL ===== */
-.estado-cancelado { background:#fee2e2; color:#991b1b; }
-.sync-box { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; background:#eff6ff; border:1px solid #bfdbfe; border-radius:12px; padding:12px 14px; margin-top:6px; }
-.sync-info { display:flex; flex-direction:column; gap:3px; font-size:12px; color:#1e3a8a; flex:1; min-width:240px; }
-.sync-info .t { font-size:13px; font-weight:700; }
-.sync-actions { display:flex; gap:6px; flex-wrap:wrap; }
-.hint { font-size:11px; color:var(--text-muted); margin-top:8px; }
-.codigo-preview { margin-top:10px; font-size:12px; color:var(--text-muted); background:var(--surface2); border:1px dashed var(--border); border-radius:8px; padding:8px 10px; }
-.codigo-preview b { color:var(--text); font-family:ui-monospace,Consolas,monospace; }
-.tag-code { font-family:ui-monospace,Consolas,monospace; font-size:11px; color:var(--text-muted); }
-.imp-stats { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-bottom:12px; }
-.imp-stat { background:var(--surface2); border:1px solid var(--border); border-radius:10px; padding:10px; text-align:center; }
-.imp-stat .n { font-size:22px; font-weight:700; }
-.imp-stat .l { font-size:10px; color:var(--text-muted); font-weight:700; text-transform:uppercase; letter-spacing:.4px; }
-.imp-stat.nuevo .n { color:#059669; } .imp-stat.upd .n { color:#2563eb; } .imp-stat.fuera .n { color:#dc2626; }
-.imp-list { max-height:190px; overflow:auto; font-size:12px; border:1px solid var(--border); border-radius:8px; padding:4px 10px; background:var(--surface2); }
-.imp-list > div { padding:5px 0; border-bottom:1px solid var(--border); }
-.imp-list > div:last-child { border-bottom:none; }
-details.imp-det { margin-bottom:6px; }
-details.imp-det summary { cursor:pointer; font-weight:600; font-size:13px; padding:6px 0; }
-.imp-check { display:flex; gap:8px; align-items:flex-start; font-size:12px; background:#fef2f2; border:1px solid #fecaca; border-radius:8px; padding:10px; margin-top:10px; cursor:pointer; }
-.imp-check input { width:auto; margin-top:2px; }
-@media (max-width:600px) { .imp-stats { grid-template-columns:repeat(2,1fr); } }
 </style>
 </head>
 <body>
@@ -363,31 +336,74 @@ details.imp-det summary { cursor:pointer; font-weight:600; font-size:13px; paddi
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
         <h3 style="margin:0">Gestión de Proyectos</h3>
         <div style="display:flex;gap:8px;flex-wrap:wrap">
+          
           <button class="btn-sm btn-secondary" onclick="toggleForm()">＋ Nuevo</button>
           <button class="btn-sm btn-danger" onclick="eliminarDuplicados()">🧹 Eliminar Duplicados</button>
-          <button class="btn-sm btn-blue" onclick="exportarConsolidado()">📥 Exportar Consolidado (PSR)</button>
+          <button class="btn-sm btn-blue" onclick="exportarExcel()">📥 Exportar Consolidado</button>
           <button class="btn-sm btn-secondary" onclick="exportarHistorialCompleto()">📋 Exportar Historial</button>
         </div>
       </div>
 
-      <!-- ===== ACTUALIZAR DESDE EXCEL (PROPUESTA_CONSOLIDADO) ===== -->
-      <div class="sync-box">
-        <div class="sync-info">
-          <span class="t">📤 Actualizar proyectos desde Excel</span>
-          <span>Sube el archivo <b>PROPUESTA_CONSOLIDADO</b> (hoja MASTER). Cada proyecto se identifica por su <b>MASTER CODE</b>: se agregan los nuevos y se actualizan los existentes sin perder sus calificaciones ni su historial.</span>
-        </div>
-        <div class="sync-actions">
-          <input type="file" id="inputExcel" accept=".xlsx,.xls,.xlsm" onchange="cargarExcel()" style="display:none">
-          <button class="btn-sm btn-blue" onclick="document.getElementById('inputExcel').click()">📂 Subir Excel</button>
-          <button class="btn-sm btn-secondary" onclick="descargarPlantilla()">Plantilla</button>
-        </div>
-      </div>
-      <p class="hint">📥 <b>Exportar Consolidado</b> genera el Excel con el mismo formato (MASTER · HORARIOS · PSR · Savings) y el PSR lleno con la última calificación de cada proyecto. Si pones un rango de fechas en Filtros, el PSR usa la última calificación dentro de ese rango.</p>
-
       <div id="formNuevo" style="display:none;margin-top:12px;border-top:1px solid var(--border);padding-top:12px">
-        <div class="modal-grid" id="formNuevoCampos"></div>
-        <div class="codigo-preview">MASTER CODE (automático): <b id="np-codigo">–</b></div>
-        <button class="btn" onclick="crearProyecto()" style="margin-top:12px">Crear Proyecto</button>
+        <div class="form-grid">
+          <div><label class="field-label">Nombre</label><input id="nombreProyecto" placeholder="Nombre del proyecto"></div>
+          <div><label class="field-label">Tier</label>
+            <select id="tierProyecto">
+              <option value="">Selecciona Tier</option>
+              <option>Tier 1</option><option>Tier 2</option><option>Tier 3</option>
+              <option>Tier 4</option><option>Tier 5</option><option>Tier 6</option>
+            </select>
+          </div>
+          <div><label class="field-label">Sección</label>
+            <select id="seccionProyecto" onchange="onSeccionChange()">
+              <option value="">Selecciona Sección</option>
+              <option>Buy to Make</option><option>DTC</option>
+              <option>Material Optimization</option><option>OH Cost Control</option><option>Resourcing</option>
+              <option>Productividad</option>
+            </select>
+          </div>
+          <div><label class="field-label">Champion</label>
+            <select id="championProyecto"><option value="">Primero elige sección</option></select>
+          </div>
+          <div><label class="field-label">Sponsor</label><input id="sponsorProyecto" placeholder="Sponsor"></div>
+          <div><label class="field-label">Owner</label><input id="ownerProyecto" placeholder="Owner"></div>
+        </div>
+        <div><label class="field-label">Priority Level</label><input id="priorityLevel"></div>
+            <div><label class="field-label">L1 Coding</label><input id="l1Coding"></div>
+            <div><label class="field-label">Nivel 1</label><input id="nivel1"></div>
+            <div><label class="field-label">L1 KPI</label><input id="l1KPI"></div>
+            <div><label class="field-label">Primary Lead L1</label><input id="primaryLeadL1"></div>
+            <div><label class="field-label">Support Lead</label><input id="supportLead"></div>
+            <div><label class="field-label">L2 Coding</label><input id="l2Coding"></div>
+            <div><label class="field-label">Nivel 2</label><input id="nivel2"></div>
+            <div><label class="field-label">Primary Lead L2</label><input id="primaryLeadL2"></div>
+            <div><label class="field-label">Type 2</label><input id="type2"></div>
+            <div><label class="field-label">Nivel 3</label><input id="nivel3"></div>
+            <div><label class="field-label">L3 CODE</label><input id="l3Code"></div>
+            <div><label class="field-label">Primary Lead L3</label><input id="primaryLeadL3"></div>
+            <div><label class="field-label">Type</label><input id="type"></div>
+            <div><label class="field-label">FRONT AXIS</label><input id="frontAxis"></div>
+            <div><label class="field-label">Concatenate</label><input id="concatenate"></div>
+            <div><label class="field-label">PRESENTED</label><input id="presented"></div>
+            <div><label class="field-label">TARGET</label><input id="target"></div>
+            <div><label class="field-label">DATE</label><input id="dateProject" type="date"></div>
+            <div><label class="field-label">FORUM</label><input id="forum"></div>
+            <div><label class="field-label">STATUS (IN PROCESS / IN PLAN / CANCEL)</label><input id="projectStatus"></div>
+            <div><label class="field-label">YEAR</label><input id="yearProyecto" type="number" placeholder="2026"></div>
+            <div><label class="field-label">SITE</label><input id="siteProyecto" placeholder="TIJ"></div>
+            <div><label class="field-label">SAVINGS</label><input id="savingsProyecto" type="number" placeholder="0"></div>
+            <div><label class="field-label">FRAMEWORK</label><input id="frameworkProyecto" placeholder="PDCA"></div>
+        <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn" onclick="crearProyecto()" style="flex:1;min-width:120px">Crear Proyecto</button>
+          <div style="flex:1;min-width:200px">
+            <label class="field-label">Carga masiva (.xlsx)</label>
+            <div style="display:flex;gap:6px">
+              <input type="file" id="inputExcel" accept=".xlsx,.xls" style="flex:1">
+              <button class="btn-sm btn-secondary" onclick="cargarExcel()">Subir</button>
+              <button class="btn-sm btn-secondary" onclick="descargarPlantilla()">Plantilla</button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -411,26 +427,6 @@ details.imp-det summary { cursor:pointer; font-weight:600; font-size:13px; paddi
 
       <div class="filter-grid">
 
-        <!-- SITIO multi-select -->
-        <div>
-          <label class="field-label">Sitio</label>
-          <div class="multi-select-wrap" id="ms-site">
-            <div class="multi-select-trigger" onclick="toggleMS('ms-site')">
-              <span class="trigger-text" id="ms-site-label">Todos los Sitios</span>
-              <span class="arrow">▼</span>
-            </div>
-            <div class="multi-select-tags" id="ms-site-tags"></div>
-            <div class="multi-select-dropdown" id="ms-site-drop">
-              <div class="ms-options" id="ms-site-opts">
-                <div class="ms-option ms-all">
-                  <input type="checkbox" id="ms-site-all" onchange="toggleAllMS('ms-site')">
-                  <label for="ms-site-all">Todos</label>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
         <!-- TIER multi-select -->
         <div>
           <label class="field-label">Tier</label>
@@ -446,6 +442,12 @@ details.imp-det summary { cursor:pointer; font-weight:600; font-size:13px; paddi
                   <input type="checkbox" id="ms-tier-all" onchange="toggleAllMS('ms-tier')">
                   <label for="ms-tier-all">Todos</label>
                 </div>
+                <div class="ms-option"><input type="checkbox" value="Tier 1" onchange="updateMS('ms-tier')"><label>Tier 1</label></div>
+                <div class="ms-option"><input type="checkbox" value="Tier 2" onchange="updateMS('ms-tier')"><label>Tier 2</label></div>
+                <div class="ms-option"><input type="checkbox" value="Tier 3" onchange="updateMS('ms-tier')"><label>Tier 3</label></div>
+                <div class="ms-option"><input type="checkbox" value="Tier 4" onchange="updateMS('ms-tier')"><label>Tier 4</label></div>
+                <div class="ms-option"><input type="checkbox" value="Tier 5" onchange="updateMS('ms-tier')"><label>Tier 5</label></div>
+                <div class="ms-option"><input type="checkbox" value="Tier 6" onchange="updateMS('ms-tier')"><label>Tier 6</label></div>
               </div>
             </div>
           </div>
@@ -466,6 +468,12 @@ details.imp-det summary { cursor:pointer; font-weight:600; font-size:13px; paddi
                   <input type="checkbox" id="ms-seccion-all" onchange="toggleAllMS('ms-seccion')">
                   <label for="ms-seccion-all">Todas</label>
                 </div>
+                <div class="ms-option"><input type="checkbox" value="Buy to Make" onchange="updateMS('ms-seccion');syncChampionMS()"><label>Buy to Make</label></div>
+                <div class="ms-option"><input type="checkbox" value="DTC" onchange="updateMS('ms-seccion');syncChampionMS()"><label>DTC</label></div>
+                <div class="ms-option"><input type="checkbox" value="Material Optimization" onchange="updateMS('ms-seccion');syncChampionMS()"><label>Material Optimization</label></div>
+                <div class="ms-option"><input type="checkbox" value="OH Cost Control" onchange="updateMS('ms-seccion');syncChampionMS()"><label>OH Cost Control</label></div>
+                <div class="ms-option"><input type="checkbox" value="Resourcing" onchange="updateMS('ms-seccion');syncChampionMS()"><label>Resourcing</label></div>
+                <div class="ms-option"><input type="checkbox" value="Productividad" onchange="updateMS('ms-seccion');syncChampionMS()"><label>Productividad</label></div>
               </div>
             </div>
           </div>
@@ -530,6 +538,9 @@ details.imp-det summary { cursor:pointer; font-weight:600; font-size:13px; paddi
     <label class="field-label" style="margin-top:0">Directiva / Sección</label>
     <select id="asistDirectivaSelect" onchange="renderAsistenciaDirectiva()">
       <option value="">Selecciona una directiva</option>
+      <option>Buy to Make</option><option>DTC</option>
+      <option>Material Optimization</option><option>OH Cost Control</option><option>Resourcing</option>
+      <option>Productividad</option>
     </select>
   </div>
   <canvas id="grafAsistencia" style="max-height:260px"></canvas>
@@ -618,8 +629,30 @@ details.imp-det summary { cursor:pointer; font-weight:600; font-size:13px; paddi
       <button class="modal-close" onclick="cerrarModalEditar()">✕</button>
     </div>
     <div class="modal-body">
-      <div class="modal-section-title">Estado en el panel</div>
+
+      <div class="modal-section-title">Datos principales</div>
       <div class="modal-grid">
+        <div class="full"><label class="field-label">Nombre</label><input id="edit-nombre"></div>
+        <div><label class="field-label">Tier / FORUM</label>
+          <select id="edit-tier">
+            <option value="">Sin Tier</option>
+            <option>Tier 1</option><option>Tier 2</option><option>Tier 3</option>
+            <option>Tier 4</option><option>Tier 5</option><option>Tier 6</option>
+          </select>
+        </div>
+        <div><label class="field-label">Sección / FRONT AXIS</label>
+          <select id="edit-seccion" onchange="onEditSeccionChange()">
+            <option value="">Sin Sección</option>
+            <option>Buy to Make</option><option>DTC</option>
+            <option>Material Optimization</option><option>OH Cost Control</option><option>Resourcing</option>
+            <option>Productividad</option>
+          </select>
+        </div>
+        <div><label class="field-label">Champion</label>
+          <select id="edit-champion"><option value="">Selecciona primero sección</option></select>
+        </div>
+        <div><label class="field-label">Sponsor</label><input id="edit-sponsor"></div>
+        <div><label class="field-label">Owner</label><input id="edit-owner"></div>
         <div><label class="field-label">Estado</label>
           <select id="edit-estado">
             <option value="activo">🟢 Activo</option>
@@ -627,10 +660,53 @@ details.imp-det summary { cursor:pointer; font-weight:600; font-size:13px; paddi
             <option value="cancelado">🔴 Cancelado</option>
           </select>
         </div>
-        <div><label class="field-label">MASTER CODE (automático)</label><input id="edit-codigo" readonly></div>
+        <div><label class="field-label">#</label><input id="edit-numeroProyecto"></div>
       </div>
-      <div class="modal-section-title">Datos del MASTER</div>
-      <div class="modal-grid" id="formEditarCampos"></div>
+
+      <div class="modal-section-title">Nivel 1</div>
+      <div class="modal-grid">
+        <div><label class="field-label">Priority Level</label><input id="edit-priorityLevel"></div>
+        <div><label class="field-label">L1 Coding</label><input id="edit-l1Coding"></div>
+        <div class="full"><label class="field-label">Nivel 1</label><input id="edit-nivel1"></div>
+        <div><label class="field-label">L1 KPI</label><input id="edit-l1KPI"></div>
+        <div><label class="field-label">Primary Lead L1</label><input id="edit-primaryLeadL1"></div>
+        <div><label class="field-label">Support Lead</label><input id="edit-supportLead"></div>
+      </div>
+
+      <div class="modal-section-title">Nivel 2</div>
+      <div class="modal-grid">
+        <div><label class="field-label">L2 Coding</label><input id="edit-l2Coding"></div>
+        <div><label class="field-label">Type 2</label><input id="edit-type2"></div>
+        <div class="full"><label class="field-label">Nivel 2</label><input id="edit-nivel2"></div>
+        <div><label class="field-label">Primary Lead L2</label><input id="edit-primaryLeadL2"></div>
+      </div>
+
+      <div class="modal-section-title">Nivel 3</div>
+      <div class="modal-grid">
+        <div><label class="field-label">L3 CODE</label><input id="edit-l3Code"></div>
+        <div><label class="field-label">Type</label><input id="edit-type"></div>
+        <div class="full"><label class="field-label">Nivel 3</label><input id="edit-nivel3"></div>
+        <div><label class="field-label">Primary Lead L3</label><input id="edit-primaryLeadL3"></div>
+      </div>
+
+      <div class="modal-section-title">Información adicional</div>
+      <div class="modal-grid">
+        <div><label class="field-label">Concatenate</label><input id="edit-concatenate"></div>
+        <div><label class="field-label">PRESENTED</label><input id="edit-presented"></div>
+        <div><label class="field-label">TARGET</label><input id="edit-target"></div>
+        <div><label class="field-label">DATE</label><input id="edit-dateProject" type="date"></div>
+        <div><label class="field-label">FORUM</label><input id="edit-forum"></div>
+        <div><label class="field-label">STATUS (IN PROCESS / IN PLAN / CANCEL)</label><input id="edit-projectStatus"></div>
+      </div>
+
+      <div class="modal-section-title">Consolidado Power BI</div>
+      <div class="modal-grid">
+        <div><label class="field-label">YEAR</label><input id="edit-year" type="number"></div>
+        <div><label class="field-label">SITE</label><input id="edit-site"></div>
+        <div><label class="field-label">SAVINGS</label><input id="edit-savings" type="number"></div>
+        <div><label class="field-label">FRAMEWORK</label><input id="edit-framework"></div>
+      </div>
+
     </div>
     <div class="modal-footer">
       <button class="btn-sm btn-secondary" onclick="cerrarModalEditar()">Cancelar</button>
@@ -638,24 +714,6 @@ details.imp-det summary { cursor:pointer; font-weight:600; font-size:13px; paddi
     </div>
   </div>
 </div>
-<!-- ===== MODAL VISTA PREVIA IMPORTACIÓN ===== -->
-<div class="modal-overlay" id="modalImportOverlay">
-  <div class="modal-box">
-    <div class="modal-header">
-      <h3>📤 Vista previa de la actualización</h3>
-      <button class="modal-close" onclick="cerrarModalImport()">✕</button>
-    </div>
-    <div class="modal-body" id="importBody"></div>
-    <div class="modal-footer">
-      <button class="btn-sm btn-secondary" onclick="cerrarModalImport()">Cancelar</button>
-      <button class="btn-sm btn-blue" id="btnAplicarImport" onclick="aplicarImport()">✅ Aplicar cambios</button>
-    </div>
-  </div>
-</div>
-
-<datalist id="dl-site"></datalist><datalist id="dl-tier"></datalist><datalist id="dl-seccion"></datalist>
-<datalist id="dl-persona"></datalist><datalist id="dl-framework"></datalist><datalist id="dl-status"></datalist>
-
 <!-- ==================== USER ==================== -->
 <div id="vista-user" style="display:none">
 
@@ -671,9 +729,24 @@ details.imp-det summary { cursor:pointer; font-weight:600; font-size:13px; paddi
 
       <div class="card" style="margin-bottom:12px">
         <h3>Filtrar proyectos</h3>
-        <div class="filtro-group" id="filtroSite"></div>
-        <div class="filtro-group" id="filtroTier"></div>
-        <div class="filtro-group" id="filtroSeccion"></div>
+        <div class="filtro-group" id="filtroTier">
+          <button class="filtro-btn active" onclick="setFiltroUser('tier','',this)">Todos</button>
+          <button class="filtro-btn" onclick="setFiltroUser('tier','Tier 1',this)">Tier 1</button>
+          <button class="filtro-btn" onclick="setFiltroUser('tier','Tier 2',this)">Tier 2</button>
+          <button class="filtro-btn" onclick="setFiltroUser('tier','Tier 3',this)">Tier 3</button>
+          <button class="filtro-btn" onclick="setFiltroUser('tier','Tier 4',this)">Tier 4</button>
+          <button class="filtro-btn" onclick="setFiltroUser('tier','Tier 5',this)">Tier 5</button>
+          <button class="filtro-btn" onclick="setFiltroUser('tier','Tier 6',this)">Tier 6</button>
+        </div>
+        <div class="filtro-group" id="filtroSeccion">
+          <button class="filtro-btn active" onclick="setFiltroUser('seccion','',this);poblarChampionFiltros('')">Todas</button>
+          <button class="filtro-btn" onclick="setFiltroUser('seccion','Buy to Make',this);poblarChampionFiltros('Buy to Make')">Buy to Make</button>
+          <button class="filtro-btn" onclick="setFiltroUser('seccion','DTC',this);poblarChampionFiltros('DTC')">DTC</button>
+          <button class="filtro-btn" onclick="setFiltroUser('seccion','Material Optimization',this);poblarChampionFiltros('Material Optimization')">Mat. Opt.</button>
+          <button class="filtro-btn" onclick="setFiltroUser('seccion','OH Cost Control',this);poblarChampionFiltros('OH Cost Control')">OH Cost</button>
+          <button class="filtro-btn" onclick="setFiltroUser('seccion','Resourcing',this);poblarChampionFiltros('Resourcing')">Resourcing</button>
+          <button class="filtro-btn" onclick="setFiltroUser('seccion','Productividad',this);poblarChampionFiltros('Productividad')">Productividad</button>
+        </div>
         <div class="filtro-group" id="filtroChampion">
           <button class="filtro-btn active" onclick="setFiltroUser('champion','',this)">Todos</button>
         </div>
@@ -682,7 +755,7 @@ details.imp-det summary { cursor:pointer; font-weight:600; font-size:13px; paddi
           <input 
             type="text" 
             id="busquedaGeneral" 
-            placeholder="🔍 Buscar por nombre, master code, champion, owner, sponsor..." 
+            placeholder="🔍 Buscar por nombre, champion, owner, sponsor..." 
             oninput="renderSelectUser()"
             style="font-size:13px"
           >
@@ -697,8 +770,6 @@ details.imp-det summary { cursor:pointer; font-weight:600; font-size:13px; paddi
           <div><b>Sponsor:</b> <span id="infoSponsor">-</span></div>
           <div><b>Owner:</b> <span id="infoOwner">-</span></div>
           <div><b>Sección:</b> <span id="infoSeccion">-</span></div>
-          <div><b>Sitio:</b> <span id="infoSite">-</span></div>
-          <div><b>Master code:</b> <span id="infoMaster" class="tag-code" style="font-size:12px">-</span></div>
         </div>
       </div>
 
@@ -775,8 +846,8 @@ const db = firebase.firestore();
 const STATE = {
   rol: "", uid: "", proyectos: [], historial: [], mapaUsuarios: {},
   proyectoActual: null, proyectoActualId: null, evalTemp: null,
-  filtrosUser: { site: "", tier: "", seccion: "", champion: "" },
-  filtrosAdmin: { sites: [], tiers: [], secciones: [], champions: [], fechaInicio: "", fechaFin: "" },
+  filtrosUser: { tier: "", seccion: "", champion: "" },
+  filtrosAdmin: { tiers: [], secciones: [], champions: [], fechaInicio: "", fechaFin: "" },
   gaugeUser: null, gaugesAdmin: {}, chartHistorial: null, histTabActivo: null,
 chartAsistencia: null
 };
@@ -793,200 +864,14 @@ function compararNombres(a,b){
 }
 
   
-/* ============================================================
-   CONFIGURACIÓN · FORMATO PROPUESTA_CONSOLIDADO
-============================================================ */
-// Todos los sitios (TIJ, CUU...) viven en la misma base de datos.
-// Los proyectos antiguos que no tienen SITE se consideran de este sitio:
-const SITIO_DEFAULT = "TIJ";
-// Sitio preseleccionado desde la URL, p.ej. app.html?sitio=CUU  (opcional)
-const SITIO_URL = (new URLSearchParams(location.search).get("sitio") || "").trim().toUpperCase();
-
-// Normaliza la columna DIRECTIVE del Excel a los nombres de sección que ya usaba el panel
-const DIRECTIVA_MAP = {
-  "MATERIAL OPTIMIZATION":    "Material Optimization",
-  "BUY TO MAKE":              "Buy to Make",
-  "BUY TO MAKE & RESOURCING": "Buy to Make & Resourcing",
-  "DTC":                      "DTC",
-  "OH COST CONTROL":          "OH Cost Control",
-  "RESOURCING":               "Resourcing",
-  "PRODUCTIVITY":             "Productividad",
-  "PRODUCTIVIDAD":            "Productividad",
-  "QUALITY":                  "Quality",
-  "DELIVERY":                 "Delivery",
-  "SAFETY":                   "Safety",
-  "STRATEGIC":                "Strategic"
+const CHAMPIONS = {
+  "Buy to Make":           ["Antonio Aguilar"],
+  "DTC":                   ["Jaime Castro"],
+  "Material Optimization": ["Fabian Perez", "Jorge Millan"],
+  "Resourcing":            ["Gerardo Loredo"],
+  "OH Cost Control":       ["Carlos Perez"],
+   "Productividad":         ["Antonio Aguilar","Jaime Castro","Fabian Perez", "Jorge Millan","Gerardo Loredo","Carlos Perez"]
 };
-
-function limpiarTexto(v) { return String(v ?? "").replace(/\s+/g, " ").trim(); }
-function masterKey(v)    { return String(v ?? "").toUpperCase().replace(/\s+/g, ""); }
-function normNombre(v)   { return limpiarTexto(v).toLowerCase(); }
-function numero(v) {
-  if (typeof v === "number") return v;
-  const n = parseFloat(String(v ?? "").replace(/[$,\s]/g, ""));
-  return isNaN(n) ? 0 : n;
-}
-function toDate(ts) {
-  if (!ts) return null;
-  const d = ts.toDate ? ts.toDate() : new Date(ts);
-  return isNaN(d) ? null : d;
-}
-function normTier(v) {
-  const s = limpiarTexto(v);
-  if (!s) return "";
-  const m = s.match(/^tier\s*(\d+)$/i);
-  if (m) return "Tier " + m[1];
-  return s.charAt(0).toUpperCase() + s.slice(1).toLowerCase();   // FACTOR -> Factor
-}
-function normDirectiva(v) {
-  const s = limpiarTexto(v);
-  if (!s) return "Sin directiva";
-  return DIRECTIVA_MAP[s.toUpperCase()] ||
-    s.split(" ").map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(" ");
-}
-// MASTER CODE = CONCATENATE(SITE, HK1 Coding, HK2 CODE, HK3 CODE)
-function calcMasterCode(o) { return [o.site, o.l1Coding, o.l2Coding, o.l3Code].map(limpiarTexto).join(""); }
-function nombreDesdeNiveles(o) { return limpiarTexto(o.nivel3) || limpiarTexto(o.nivel2) || limpiarTexto(o.nivel1) || ""; }
-function siteDe(p) { return String(p.site || SITIO_DEFAULT).toUpperCase(); }
-
-async function recargarProyectos() {
-  const snap = await db.collection("proyectos").limit(1000).get();
-  STATE.proyectos = snap.docs.map(d => ({ id: d.id, ...d.data(), evaluacion: d.data().evaluacion || { kpi:"", gantt:"", pdca:[] } }));
-}
-function refrescarAdmin() { poblarOpcionesFiltros(); renderTabla(); poblarFiltrosHistorial(); }
-
-/* ---------- Campos del proyecto (mismas columnas que la hoja MASTER) ---------- */
-const CAMPOS_FORM = [
-  { k:"year",          label:"YEAR",        type:"number" },
-  { k:"site",          label:"SITE",        list:"dl-site" },
-  { k:"tier",          label:"TIER",        list:"dl-tier" },
-  { k:"seccion",       label:"DIRECTIVE",   list:"dl-seccion" },
-  { k:"l1Coding",      label:"HK1 Coding" },
-  { k:"l1KPI",         label:"L1 KPI" },
-  { k:"nivel1",        label:"HK1 NAME",    full:true },
-  { k:"champion",      label:"CHAMPION",    list:"dl-persona" },
-  { k:"l2Coding",      label:"HK2 CODE" },
-  { k:"nivel2",        label:"HK2 NAME",    full:true },
-  { k:"sponsor",       label:"SPONSOR",     list:"dl-persona" },
-  { k:"l3Code",        label:"HK3 CODE" },
-  { k:"nivel3",        label:"HK3 NAME",    full:true },
-  { k:"owner",         label:"OWNER",       list:"dl-persona" },
-  { k:"savings",       label:"SAVINGS ($)", type:"number" },
-  { k:"framework",     label:"FRAMEWORK",   list:"dl-framework" },
-  { k:"projectStatus", label:"STATUS",      list:"dl-status" }
-];
-
-function renderCamposForm(contId, prefix) {
-  const cont = document.getElementById(contId);
-  if (!cont) return;
-  cont.innerHTML = CAMPOS_FORM.map(c => `
-    <div class="${c.full ? "full" : ""}">
-      <label class="field-label">${c.label}</label>
-      <input id="${prefix}-${c.k}" ${c.type ? `type="${c.type}"` : ""} ${c.list ? `list="${c.list}"` : ""}
-             autocomplete="off" oninput="previewCodigo('${prefix}')">
-    </div>`).join("");
-}
-
-function leerCamposForm(prefix) {
-  const raw = {};
-  CAMPOS_FORM.forEach(c => raw[c.k] = limpiarTexto(document.getElementById(`${prefix}-${c.k}`)?.value));
-  const d = {
-    year:              raw.year ? numero(raw.year) : "",
-    site:              raw.site.toUpperCase(),
-    tier:              normTier(raw.tier),
-    tierOriginal:      raw.tier.toUpperCase(),
-    seccion:           normDirectiva(raw.seccion),
-    directivaOriginal: raw.seccion,
-    l1Coding: raw.l1Coding, nivel1: raw.nivel1, l1KPI: raw.l1KPI, champion: raw.champion,
-    l2Coding: raw.l2Coding, nivel2: raw.nivel2, sponsor: raw.sponsor,
-    l3Code:   raw.l3Code,   nivel3: raw.nivel3, owner: raw.owner,
-    savings:       raw.savings === "" ? 0 : numero(raw.savings),
-    framework:     raw.framework,
-    projectStatus: raw.projectStatus.toUpperCase()
-  };
-  d.masterCode = calcMasterCode(d);
-  d.masterKey  = masterKey(d.masterCode);
-  d.nombre     = nombreDesdeNiveles(d);
-  return d;
-}
-
-function llenarCamposForm(prefix, p) {
-  const val = {
-    ...p,
-    tier:    p.tierOriginal || p.tier || "",
-    seccion: p.directivaOriginal ?? (p.seccion && p.seccion !== "Sin directiva" ? p.seccion : ""),
-    nivel3:  p.nivel3 || (!p.nivel1 && !p.nivel2 ? p.nombre : "") || "",
-    projectStatus: /^\d{4}$/.test(p.projectStatus || "") ? "" : (p.projectStatus || "")
-  };
-  CAMPOS_FORM.forEach(c => {
-    const el = document.getElementById(`${prefix}-${c.k}`);
-    if (el) el.value = val[c.k] ?? "";
-  });
-  previewCodigo(prefix);
-}
-
-function previewCodigo(prefix) {
-  const d  = leerCamposForm(prefix);
-  const el = document.getElementById(prefix === "np" ? "np-codigo" : "edit-codigo");
-  if (!el) return;
-  if (el.tagName === "INPUT") el.value = d.masterCode;
-  else el.textContent = d.masterCode || "–";
-}
-
-/* ---------- Opciones de filtros generadas desde los datos ---------- */
-function valoresUnicos(campo, lista = STATE.proyectos) {
-  return [...new Set(lista.map(p => limpiarTexto(p[campo])).filter(Boolean))].sort(compararNombres);
-}
-function llenarDatalist(id, valores) {
-  const dl = document.getElementById(id);
-  if (dl) dl.innerHTML = valores.map(v => `<option value="${escapeHTML(v)}">`).join("");
-}
-function llenarMS(id, valores, alCambiar) {
-  const cont = document.getElementById(`${id}-opts`);
-  if (!cont) return;
-  const todos   = cont.querySelector(".ms-all");
-  const previos = new Set(getSelectedMS(id));
-  cont.innerHTML = "";
-  cont.appendChild(todos);
-  valores.forEach(v => {
-    const div = document.createElement("div");
-    div.className = "ms-option";
-    const cb = document.createElement("input");
-    cb.type = "checkbox"; cb.value = v; cb.checked = previos.has(v);
-    cb.onchange = () => { updateMS(id); if (alCambiar) alCambiar(); };
-    const lb = document.createElement("label");
-    lb.textContent = v;
-    lb.onclick = () => { cb.checked = !cb.checked; cb.onchange(); };
-    div.append(cb, lb);
-    cont.appendChild(div);
-  });
-  const sel = getSelectedMS(id);
-  if (id === "ms-site")    STATE.filtrosAdmin.sites     = sel;
-  if (id === "ms-tier")    STATE.filtrosAdmin.tiers     = sel;
-  if (id === "ms-seccion") STATE.filtrosAdmin.secciones = sel;
-}
-function poblarOpcionesFiltros() {
-  llenarMS("ms-site",    [...new Set(STATE.proyectos.map(siteDe))].sort());
-  llenarMS("ms-tier",    valoresUnicos("tier"));
-  llenarMS("ms-seccion", valoresUnicos("seccion"), syncChampionMS);
-  syncChampionMS();
-
-  const asis = document.getElementById("asistDirectivaSelect");
-  if (asis) {
-    const prev = asis.value;
-    asis.innerHTML = '<option value="">Selecciona una directiva</option>' +
-      valoresUnicos("seccion").map(s => `<option value="${escapeHTML(s)}">${escapeHTML(s)}</option>`).join("");
-    asis.value = prev;
-  }
-
-  const uniq = arr => [...new Set(arr)];
-  llenarDatalist("dl-site",      uniq(["TIJ", "CUU", ...valoresUnicos("site")]));
-  llenarDatalist("dl-tier",      uniq(["TIER 1","TIER 2","TIER 3","TIER 4","TIER 5","TIER 6","FACTOR", ...valoresUnicos("tierOriginal")]));
-  llenarDatalist("dl-seccion",   valoresUnicos("seccion").filter(s => s !== "Sin directiva"));
-  llenarDatalist("dl-persona",   uniq([...valoresUnicos("champion"), ...valoresUnicos("sponsor"), ...valoresUnicos("owner")]).sort(compararNombres));
-  llenarDatalist("dl-framework", uniq(["PDCA", "GB", "YB (DMAIC)", "OS", ...valoresUnicos("framework")]));
-  llenarDatalist("dl-status",    uniq(["IN PLAN", "IN PROCESS", "CANCEL", ...valoresUnicos("projectStatus").filter(v => !/^\d{4}$/.test(v))]));
-}
 
 /* ============================================================
    MULTI-SELECT ENGINE
@@ -1024,7 +909,7 @@ function updateMS(id) {
   const allOpts = [...document.querySelectorAll(`#${id}-opts input[type=checkbox]:not(#${id}-all)`)];
   if (allCb) allCb.checked = selected.length === allOpts.length && allOpts.length > 0;
 
-  const labelMap = { "ms-site": "Todos los Sitios", "ms-tier": "Todos los Tiers", "ms-seccion": "Todas las Secciones", "ms-champion": "Todos los Champions" };
+  const labelMap = { "ms-tier": "Todos los Tiers", "ms-seccion": "Todas las Secciones", "ms-champion": "Todos los Champions" };
   document.getElementById(`${id}-label`).textContent =
     selected.length === 0 ? (labelMap[id] || "Todos") :
     selected.length === 1 ? selected[0] : `${selected.length} seleccionados`;
@@ -1038,7 +923,6 @@ function updateMS(id) {
     tagsContainer.appendChild(tag);
   });
 
-  if (id === "ms-site")     STATE.filtrosAdmin.sites     = selected;
   if (id === "ms-tier")     STATE.filtrosAdmin.tiers     = selected;
   if (id === "ms-seccion")  STATE.filtrosAdmin.secciones = selected;
   if (id === "ms-champion") STATE.filtrosAdmin.champions = selected;
@@ -1069,14 +953,14 @@ function syncChampionMS() {
   optsContainer.appendChild(todosRow);
 
   const champSet = new Set();
-  const base = secciones.length ? STATE.proyectos.filter(p => secciones.includes(p.seccion)) : STATE.proyectos;
-  valoresUnicos("champion", base).forEach(c => champSet.add(c));
+  if (!secciones.length) { Object.values(CHAMPIONS).flat().forEach(c => champSet.add(c)); }
+  else { secciones.forEach(s => (CHAMPIONS[s] || []).forEach(c => champSet.add(c))); }
 
   STATE.filtrosAdmin.champions = [];
   document.getElementById("ms-champion-tags").innerHTML = "";
   document.getElementById("ms-champion-label").textContent = "Todos los Champions";
 
-  [...champSet].sort(compararNombres).forEach(ch => {
+  [...champSet].sort().forEach(ch => {
     const div = document.createElement("div");
     div.className = "ms-option";
     div.innerHTML = `<input type="checkbox" value="${ch}" onchange="updateMS('ms-champion')"><label>${ch}</label>`;
@@ -1085,13 +969,13 @@ function syncChampionMS() {
 }
 
 function limpiarFiltrosAdmin() {
-  ["ms-site", "ms-tier", "ms-seccion", "ms-champion"].forEach(id => {
+  ["ms-tier", "ms-seccion", "ms-champion"].forEach(id => {
     document.querySelectorAll(`#${id}-opts input[type=checkbox]`).forEach(cb => cb.checked = false);
     updateMS(id);
   });
   document.getElementById("adminFechaInicio").value = "";
   document.getElementById("adminFechaFin").value    = "";
-  STATE.filtrosAdmin = { sites: [], tiers: [], secciones: [], champions: [], fechaInicio: "", fechaFin: "" };
+  STATE.filtrosAdmin = { tiers: [], secciones: [], champions: [], fechaInicio: "", fechaFin: "" };
   updateActiveFiltersBar();
   renderTabla();
 }
@@ -1101,8 +985,6 @@ function updateActiveFiltersBar() {
   const cont = document.getElementById("activeFilterChips");
   const chips = [];
 
-  STATE.filtrosAdmin.sites.forEach(t =>
-    chips.push({ label: "📍 " + t, remove: () => removeTagMS("ms-site", t) }));
   STATE.filtrosAdmin.tiers.forEach(t =>
     chips.push({ label: t, remove: () => removeTagMS("ms-tier", t) }));
   STATE.filtrosAdmin.secciones.forEach(s =>
@@ -1206,19 +1088,11 @@ async function init() {
       if (STATE.rol === "admin") {
         document.getElementById("vista-admin").style.display = "block";
         document.getElementById("badge-rol").textContent = "Admin";
-        renderCamposForm("formNuevoCampos", "np");
-        renderCamposForm("formEditarCampos", "edit");
-        iniciarFormNuevo();
-        poblarOpcionesFiltros();
-        if (SITIO_URL) {
-          const cb = [...document.querySelectorAll("#ms-site-opts input[type=checkbox]")].find(c => c.value === SITIO_URL);
-          if (cb) { cb.checked = true; updateMS("ms-site"); }
-        }
-        refrescarAdmin();
+        syncChampionMS();
+        renderTabla();
+        poblarFiltrosHistorial();
       } else {
         document.getElementById("vista-user").style.display = "block";
-        STATE.filtrosUser.site = SITIO_URL;
-        poblarFiltrosUser();
         poblarSelectUser();
       }
     } catch(err) { console.error(err); notif("Error al cargar: " + err.message, true); }
@@ -1233,58 +1107,139 @@ function toggleForm() {
   const f = document.getElementById("formNuevo");
   f.style.display = f.style.display === "none" ? "block" : "none";
 }
-function iniciarFormNuevo() {
-  renderCamposForm("formNuevoCampos", "np");
-  document.getElementById("np-year").value = new Date().getFullYear();
-  document.getElementById("np-site").value = STATE.filtrosAdmin.sites.length === 1 ? STATE.filtrosAdmin.sites[0] : SITIO_DEFAULT;
-  document.getElementById("np-projectStatus").value = "IN PLAN";
-  previewCodigo("np");
-}
 
 async function crearProyecto() {
-  const d = leerCamposForm("np");
-  if (!d.nombre) return notif("Captura al menos un nombre (HK1, HK2 o HK3 NAME)", true);
-  if (!d.site)   return notif("Captura el SITE", true);
-  if (!d.l1Coding && !d.l2Coding && !d.l3Code)
-    return notif("Captura al menos un código (HK1/HK2/HK3) para formar el MASTER CODE", true);
-  if (STATE.proyectos.some(p => p.masterKey === d.masterKey))
-    return notif(`Ya existe un proyecto con MASTER CODE ${d.masterCode}`, true);
+
+  const nombre   = document.getElementById("nombreProyecto").value.trim();
+  const tier     = document.getElementById("tierProyecto").value;
+  const seccion  = document.getElementById("seccionProyecto").value;
+  const champion = document.getElementById("championProyecto").value;
+  const sponsor  = document.getElementById("sponsorProyecto").value.trim();
+  const owner    = document.getElementById("ownerProyecto").value.trim();
+
+  if (!nombre || !tier || !seccion || !champion || !sponsor || !owner) {
+    return notif("Completa los campos principales", true);
+  }
+
+  const extras = getCamposExtraProyecto();
 
   setLoading(true, "Creando proyecto...");
+
   try {
-    const orden = Math.max(0, ...STATE.proyectos.map(p => +p.orden || 0)) + 1;
-    const data = {
-      ...d,
-      orden,
-      estado: d.projectStatus === "CANCEL" ? "cancelado" : "activo",
-      fueraDeExcel: false,
+
+    const dataProyecto = {
+
+      nombre,
+      tier,
+      seccion,
+      champion,
+      sponsor,
+      owner,
+
+      ...extras,
+
+      estado: "activo",
+
       createdAt: new Date(),
-      evaluacion: { kpi:"", gantt:"", pdca:[], comentarios:{ kpi:"", gantt:"", pdca:"" } }
+
+      evaluacion: {
+        kpi: "",
+        gantt: "",
+        pdca: [],
+        comentarios: {
+          kpi: "",
+          gantt: "",
+          pdca: ""
+        }
+      }
     };
-    const ref = await db.collection("proyectos").add(data);
-    STATE.proyectos.push({ id: ref.id, ...data });
-    iniciarFormNuevo();
-    refrescarAdmin();
+
+    const ref = await db.collection("proyectos").add(dataProyecto);
+
+    STATE.proyectos.push({
+      id: ref.id,
+      ...dataProyecto
+    });
+
+    const camposLimpiar = [
+
+      "nombreProyecto",
+      "sponsorProyecto",
+      "ownerProyecto",
+
+      "priorityLevel",
+      "l1Coding",
+      "nivel1",
+      "l1KPI",
+      "primaryLeadL1",
+      "supportLead",
+      "l2Coding",
+      "nivel2",
+      "primaryLeadL2",
+      "type2",
+      "nivel3",
+      "l3Code",
+      "primaryLeadL3",
+      "type",
+      "frontAxis",
+      "concatenate",
+      "presented",
+      "target",
+      "dateProject",
+      "forum",
+      "projectStatus",
+      "yearProyecto",
+      "siteProyecto",
+      "savingsProyecto",
+      "frameworkProyecto"
+
+    ];
+
+    camposLimpiar.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.value = "";
+    });
+
+    document.getElementById("tierProyecto").value = "";
+    document.getElementById("seccionProyecto").value = "";
+
+    document.getElementById("championProyecto").innerHTML =
+      '<option value="">Primero elige sección</option>';
+
+    renderTabla();
+    poblarFiltrosHistorial();
+
     notif("Proyecto creado correctamente ✅");
-  } catch (err) {
+
+  } catch(err) {
+
     console.error(err);
     notif("Error: " + err.message, true);
+
   } finally {
+
     setLoading(false);
+
   }
 }
 
+
+function onSeccionChange() {
+  const sec = document.getElementById("seccionProyecto").value;
+  const sel = document.getElementById("championProyecto");
+  sel.innerHTML = '<option value="">Selecciona Champion</option>';
+  (CHAMPIONS[sec]||[]).forEach(ch => { const o=document.createElement("option"); o.value=o.textContent=ch; sel.appendChild(o); });
+}
 
 /* ============================================================
    ADMIN – FILTROS & TABLA
 ============================================================ */
 function getProyectosFiltrados() {
-  const { sites, tiers, secciones, champions } = STATE.filtrosAdmin;
+  const { tiers, secciones, champions } = STATE.filtrosAdmin;
   const fechaInicio = document.getElementById("adminFechaInicio").value;
   const fechaFin    = document.getElementById("adminFechaFin").value;
 
   let lista = [...STATE.proyectos];
-  if (sites.length)     lista = lista.filter(p => sites.includes(siteDe(p)));
   if (tiers.length)     lista = lista.filter(p => tiers.includes(p.tier));
   if (secciones.length) lista = lista.filter(p => secciones.includes(p.seccion));
   if (champions.length) lista = lista.filter(p => champions.includes(p.champion));
@@ -1324,7 +1279,7 @@ function renderTabla() {
     tr.innerHTML = `
       <td><span class="estado-badge ${info.clase}" onclick="toggleEstado('${p.id}')">
         ${info.label}</span></td>
-      <td><b>${escapeHTML(p.nombre||"–")}</b><br><small style="color:var(--text-muted)">📍 ${siteDe(p)} · ${p.tier||""} · ${p.seccion||""}${p.masterCode?` · <span class="tag-code">${escapeHTML(p.masterCode)}</span>`:""}</small></td>
+      <td><b>${p.nombre||"–"}</b><br><small style="color:var(--text-muted)">${p.tier||""} · ${p.seccion||""}</small></td>
       <td>${p.champion||"–"}</td><td>${p.sponsor||"–"}</td><td>${p.owner||"–"}</td>
       <td><div class="semaforo" style="background:${colorSemaforo('kpi',ev.kpi)}" title="${calcKPI(ev.kpi)}%"></div></td>
       <td><div class="semaforo" style="background:${colorSemaforo('gantt',ev.gantt)}" title="${calcGANTT(ev.gantt)}%"></div></td>
@@ -1338,15 +1293,13 @@ function renderTabla() {
   tbody.appendChild(frag);
   actualizarGraficasAdmin(lista);
   actualizarHistTabs(lista);
-  renderAsistenciaDirectiva();
 }
 
 async function toggleEstado(id) {
   const p = STATE.proyectos.find(x=>x.id===id);
   if (!p) return;
-  const nuevo = p.estado==="activo" ? "espera" : "activo";
-  const cambios = nuevo === "activo" ? { estado:nuevo, fueraDeExcel:false } : { estado:nuevo };
-  try { await db.collection("proyectos").doc(id).update(cambios); Object.assign(p, cambios); renderTabla(); }
+  const nuevo = (p.estado||"activo")==="activo" ? "espera" : "activo";
+  try { await db.collection("proyectos").doc(id).update({estado:nuevo}); p.estado=nuevo; renderTabla(); }
   catch(err) { notif("Error: "+err.message,true); }
 }
 
@@ -1355,7 +1308,7 @@ async function eliminarProyecto(id) {
   try {
     await db.collection("proyectos").doc(id).delete();
     STATE.proyectos = STATE.proyectos.filter(p=>p.id!==id);
-    refrescarAdmin(); notif("Eliminado");
+    renderTabla(); poblarFiltrosHistorial(); notif("Eliminado");
   } catch(err) { notif("Error: "+err.message,true); }
 }
 
@@ -1482,11 +1435,7 @@ function renderAsistenciaDirectiva() {
   }
 
   // Filtrar el historial de evaluaciones de la directiva/sección seleccionada
-  const sitios = STATE.filtrosAdmin.sites;
-  const sitioProy = {};
-  STATE.proyectos.forEach(p => sitioProy[p.id] = siteDe(p));
-  const hist = STATE.historial.filter(h => h.seccion === directiva &&
-    (!sitios.length || sitios.includes(h.site || sitioProy[h.proyectoId] || SITIO_DEFAULT)));
+  const hist = STATE.historial.filter(h => h.seccion === directiva);
 
   // Contar cuántas evaluaciones (proyectos calificados) hubo por semana
   const porSemana = {};
@@ -1577,138 +1526,225 @@ function renderTablaHistorial() {
   });
   tbody.appendChild(frag);
 }
-/* ============================================================
-   EXPORTAR CONSOLIDADO · formato PROPUESTA_CONSOLIDADO
-   Hojas: MASTER · HORARIOS · PSR · Savings
-============================================================ */
-const HDR_MASTER = ["YEAR","SITE","TIER","DIRECTIVE","HK1 Coding","HK1 NAME","L1 KPI","CHAMPION",
-                    "HK2 CODE","HK2 NAME","SPONSOR","HK3 CODE","HK3 NAME","OWNER","SAVINGS","FRAMEWORK","STATUS","MASTER CODE"];
-const HDR_HORARIOS = ["MASTER CODE","HK1 NAME","HK2 NAME","HK3 NAME","Proyecto","YEAR","FORUM","DAY","HOUR"];
-const HDR_PSR = ["MASTER CODE","OWNER","PRESENTO","FECHA","PDCA","GANTT","KPI","SCORE","TARGET",
-                 "COMENTARIOS PDCA","COMENTARIOS GANTT","COMENTARIOS KPI"];
-const ANCHOS_MASTER = [{wch:7},{wch:7},{wch:9},{wch:24},{wch:11},{wch:45},{wch:28},{wch:20},
-                       {wch:11},{wch:40},{wch:20},{wch:11},{wch:45},{wch:20},{wch:12},{wch:12},{wch:12},{wch:24}];
-
-// Serial de Excel usando la fecha LOCAL (evita que una calificación de la tarde salga con el día siguiente)
-function serialExcel(d) {
-  return (Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) - Date.UTC(1899, 11, 30)) / 864e5;
-}
-
-// Devuelve la calificación que va en el PSR para un proyecto (o null si no tiene)
-function evaluacionParaPSR(p, usarRango, ultimoPorProyecto) {
-  if (usarRango) {
-    const h = ultimoPorProyecto[p.id];
-    if (!h) return null;
-    const noPresento = h.kpiOpcion === "na" && h.ganttOpcion === "na" && !(h.pdcaItems || []).length;
-    return {
-      fecha: toDate(h.fecha), kpi: h.kpi ?? 0, gantt: h.gantt ?? 0, pdca: h.pdca ?? 0, presento: !noPresento,
-      cKPI: h.comentariosKPI || "", cGANTT: h.comentariosGANTT || "", cPDCA: h.comentariosPDCA || ""
-    };
-  }
-  const ev = p.evaluacion || {};
-  const tiene = !!(ev.kpi || ev.gantt || (Array.isArray(ev.pdca) && ev.pdca.length));
-  if (!tiene) return null;
-  const noPresento = ev.kpi === "na" && ev.gantt === "na" && !(ev.pdca || []).length;
+function getCamposExtraProyecto() {
   return {
-    fecha: toDate(p.fechaCalificacion), kpi: calcKPI(ev.kpi), gantt: calcGANTT(ev.gantt), pdca: calcPDCA(ev), presento: !noPresento,
-    cKPI: ev.comentarios?.kpi || "", cGANTT: ev.comentarios?.gantt || "", cPDCA: ev.comentarios?.pdca || ""
+    priorityLevel: document.getElementById("priorityLevel")?.value.trim() || "",
+    l1Coding: document.getElementById("l1Coding")?.value.trim() || "",
+    nivel1: document.getElementById("nivel1")?.value.trim() || "",
+    l1KPI: document.getElementById("l1KPI")?.value.trim() || "",
+    primaryLeadL1: document.getElementById("primaryLeadL1")?.value.trim() || "",
+    supportLead: document.getElementById("supportLead")?.value.trim() || "",
+    l2Coding: document.getElementById("l2Coding")?.value.trim() || "",
+    nivel2: document.getElementById("nivel2")?.value.trim() || "",
+    primaryLeadL2: document.getElementById("primaryLeadL2")?.value.trim() || "",
+    type2: document.getElementById("type2")?.value.trim() || "",
+    nivel3: document.getElementById("nivel3")?.value.trim() || "",
+    l3Code: document.getElementById("l3Code")?.value.trim() || "",
+    primaryLeadL3: document.getElementById("primaryLeadL3")?.value.trim() || "",
+    type: document.getElementById("type")?.value.trim() || "",
+    frontAxis: document.getElementById("frontAxis")?.value.trim() || "",
+    concatenate: document.getElementById("concatenate")?.value.trim() || "",
+    presented: document.getElementById("presented")?.value.trim() || "",
+    target: document.getElementById("target")?.value.trim() || "",
+    dateProject: document.getElementById("dateProject")?.value || "",
+    forum: document.getElementById("forum")?.value.trim() || "",
+    projectStatus: document.getElementById("projectStatus")?.value.trim() || "",
+    year: Number(document.getElementById("yearProyecto")?.value) || ANIO_DEFAULT,
+    site: (document.getElementById("siteProyecto")?.value.trim() || SITE_DEFAULT).toUpperCase(),
+    savings: Number(document.getElementById("savingsProyecto")?.value) || 0,
+    framework: document.getElementById("frameworkProyecto")?.value.trim() || ""
   };
 }
+/* ============================================================
+   EXPORTAR
+============================================================ */
+/* ============================================================
+   CONSOLIDADO POWER BI
+   Genera exactamente la estructura de PROPUESTA_CONSOLIDADO:
+   hojas MASTER / HORARIOS / PSR / Savings, mismos encabezados,
+   mismo orden de columnas y de filas.
+============================================================ */
+const SITE_DEFAULT       = "TIJ";   // en appCh.html cambiar a "CUU"
+const ANIO_DEFAULT       = 2026;
+const NOMBRE_CONSOLIDADO = "PROPUESTA_CONSOLIDADO_TIJ_CUU.xlsx"; // mismo nombre que usa Power BI
 
-function exportarConsolidado() {
-  const lista = STATE.proyectos
-    .filter(p => !p.fueraDeExcel && (!STATE.filtrosAdmin.sites.length || STATE.filtrosAdmin.sites.includes(siteDe(p))))
-    .sort((a, b) => (a.orden ?? 1e9) - (b.orden ?? 1e9) || siteDe(a).localeCompare(siteDe(b)) || compararNombres(a.nombre || "", b.nombre || ""));
-  if (!lista.length) return notif("No hay proyectos para exportar", true);
+const COLS_MASTER   = ["YEAR","SITE","TIER","DIRECTIVE","HK1 Coding","HK1 NAME","L1 KPI","CHAMPION","HK2 CODE","HK2 NAME","SPONSOR","HK3 CODE","HK3 NAME","OWNER","SAVINGS","FRAMEWORK","STATUS","MASTER CODE"];
+const COLS_HORARIOS = ["MASTER CODE","HK1 NAME","HK2 NAME","HK3 NAME","Proyecto","YEAR","FORUM","DAY","HOUR"];
+const COLS_PSR      = ["MASTER CODE","OWNER","PRESENTO","FECHA","PDCA","GANTT","KPI","SCORE","TARGET","COMENTARIOS PDCA","COMENTARIOS GANTT","COMENTARIOS KPI"];
 
-  // Rango de fechas del panel de filtros (opcional)
-  const fi = document.getElementById("adminFechaInicio").value;
-  const ff = document.getElementById("adminFechaFin").value;
-  const usarRango = !!(fi || ff);
-  const ultimo = {};
-  if (usarRango) {
-    STATE.historial.forEach(h => {
-      const f = fechaISO(h.fecha);
-      if (!f || (fi && f < fi) || (ff && f > ff)) return;
-      const d = toDate(h.fecha);
-      if (!ultimo[h.proyectoId] || d > ultimo[h.proyectoId]._d) ultimo[h.proyectoId] = { ...h, _d: d };
-    });
+const ANCHOS_MASTER   = [8,8,10,25,12,46,29,21,12,41,21,12,46,21,13,12,12,25];
+const ANCHOS_HORARIOS = [25,46,41,46,21,8,13,11,9];
+const ANCHOS_PSR      = [25,21,11,13,9,9,9,10,9,46,46,46];
+
+const SECCION_A_DIRECTIVA = {
+  "Buy to Make":"BUY TO MAKE", "DTC":"DTC", "Material Optimization":"MATERIAL OPTIMIZATION",
+  "OH Cost Control":"OH COST CONTROL", "Resourcing":"RESOURCING", "Productividad":"PRODUCTIVITY"
+};
+
+function txt(v)    { return v == null ? "" : String(v); }
+function limpio(v) { return txt(v).replace(/\u00a0/g," ").replace(/\s+/g," ").trim(); }
+function prim(v)   { return typeof v === "number" ? v : txt(v); }           // conserva números como números
+function numOrNull(v) {
+  if (v === "" || v == null) return null;
+  const n = typeof v === "number" ? v : Number(String(v).replace("%","").trim());
+  return Number.isFinite(n) ? n : null;
+}
+function normalizarTier(v) {
+  const t = limpio(v), m = t.match(/^tier\s*(\d+)$/i);
+  return m ? `Tier ${m[1]}` : t;
+}
+function normalizarSeccion(v) {
+  const t = limpio(v).toUpperCase();
+  if (t === "PRODUCTIVIDAD") return "Productividad";
+  const e = Object.entries(SECCION_A_DIRECTIVA).find(([, d]) => d === t);
+  return e ? e[0] : limpio(v);
+}
+function setSelectValue(sel, val) {
+  if (!sel) return;
+  if (val && ![...sel.options].some(o => o.value === val)) {
+    const o = document.createElement("option"); o.value = o.textContent = val; sel.appendChild(o);
   }
+  sel.value = val;
+}
+function colLetra(i) { let s = ""; i++; while (i > 0) { const m = (i - 1) % 26; s = String.fromCharCode(65 + m) + s; i = Math.floor((i - 1) / 26); } return s; }
 
-  /* ---------- MASTER ---------- */
-  const filasM = lista.map(p => {
-    const site   = siteDe(p);
-    const status = /^\d{4}$/.test(p.projectStatus || "") ? "" : (p.projectStatus || "");
-    return [
-      p.year ?? "", site,
-      p.tierOriginal || (p.tier || "").toUpperCase(),
-      p.directivaOriginal ?? (p.seccion && p.seccion !== "Sin directiva" ? p.seccion : ""),
-      p.l1Coding || "", p.nivel1 || "", p.l1KPI || "", p.champion || "",
-      p.l2Coding || "", p.nivel2 || "", p.sponsor || "",
-      p.l3Code || "", p.nivel3 || (!p.nivel1 && !p.nivel2 ? p.nombre || "" : ""), p.owner || "",
-      typeof p.savings === "number" ? p.savings : numero(p.savings),
-      p.framework || "",
-      status || (p.estado === "cancelado" ? "CANCEL" : ""),
-      calcMasterCode({ ...p, site })
-    ];
-  });
-  const wsM = XLSX.utils.aoa_to_sheet([HDR_MASTER, ...filasM]);
-  filasM.forEach((f, i) => {
-    const n = i + 2;
-    wsM[`R${n}`] = { t: "s", v: f[17], f: `CONCATENATE(B${n},E${n},I${n},L${n})` };
-    if (wsM[`O${n}`]) wsM[`O${n}`].z = '"$"#,##0';
-  });
-  wsM["!cols"] = ANCHOS_MASTER;
-  wsM["!autofilter"] = { ref: wsM["!ref"] };
+// Fechas <-> número de serie de Excel (sin desfases de zona horaria)
+function fechaASerial(f) {
+  if (!f) return null;
+  let d;
+  if (f.toDate) d = f.toDate();
+  else if (f instanceof Date) d = f;
+  else if (typeof f === "string" && /^\d{4}-\d{2}-\d{2}$/.test(f)) d = new Date(f + "T00:00:00");
+  else if (typeof f === "string" && /^\d{1,2}\/\d{1,2}\/\d{4}$/.test(f)) { const [dd, mm, yy] = f.split("/").map(Number); d = new Date(yy, mm - 1, dd); }
+  else d = new Date(f);
+  if (isNaN(d)) return null;
+  return Math.round((Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) - Date.UTC(1899, 11, 30)) / 86400000);
+}
+function serialAISO(n) { return new Date(Date.UTC(1899, 11, 30) + Math.round(n) * 86400000).toISOString().slice(0, 10); }
 
-  /* ---------- HORARIOS ---------- */
-  const filasH = filasM.map(m => [m[17], m[5], m[9], m[12], "", m[0], "", "", ""]);
-  const wsH = XLSX.utils.aoa_to_sheet([HDR_HORARIOS, ...filasH]);
-  filasH.forEach((f, i) => { const n = i + 2; wsH[`A${n}`] = { t: "s", v: f[0], f: `PSR!A${n}` }; });
-  wsH["!cols"] = [{wch:24},{wch:45},{wch:40},{wch:45},{wch:20},{wch:7},{wch:12},{wch:10},{wch:10}];
-
-  /* ---------- PSR ---------- */
-  const evals = lista.map(p => evaluacionParaPSR(p, usarRango, ultimo));
-  const filasP = filasM.map((m, i) => {
-    const e = evals[i];
-    if (!e) return [m[17], m[13], "", "", "", "", "", "", 1, "", "", ""];
-    return [m[17], m[13], e.presento ? "YES" : "NO", "", e.pdca / 100, e.gantt / 100, e.kpi / 100,
-            (e.pdca + e.gantt + e.kpi) / 300, 1, e.cPDCA, e.cGANTT, e.cKPI];
-  });
-  const wsP = XLSX.utils.aoa_to_sheet([HDR_PSR, ...filasP]);
-  filasP.forEach((f, i) => {
-    const n = i + 2, e = evals[i];
-    wsP[`A${n}`] = { t: "s", v: f[0], f: `MASTER!R${n}` };
-    wsP[`B${n}`] = { t: "s", v: f[1], f: `MASTER!N${n}` };
-    if (e) {
-      if (e.fecha) wsP[`D${n}`] = { t: "n", v: serialExcel(e.fecha), z: "dd/mm/yyyy" };
-      ["E", "F", "G"].forEach(c => { if (wsP[c + n]) wsP[c + n].z = "0%"; });
-    }
-    wsP[`H${n}`] = e
-      ? { t: "n", v: f[7], f: `IF(COUNT(E${n}:G${n})=0,"",AVERAGE(E${n}:G${n}))`, z: "0.0%" }
-      : { t: "s", v: "",   f: `IF(COUNT(E${n}:G${n})=0,"",AVERAGE(E${n}:G${n}))` };
-    if (wsP[`I${n}`]) wsP[`I${n}`].z = "0%";
-  });
-  wsP["!cols"] = [{wch:24},{wch:20},{wch:10},{wch:12},{wch:8},{wch:8},{wch:8},{wch:9},{wch:9},{wch:45},{wch:45},{wch:45}];
-  wsP["!autofilter"] = { ref: wsP["!ref"] };
-
-  /* ---------- Savings (se conserva la hoja del formato) ---------- */
-  const wsS = XLSX.utils.aoa_to_sheet([[]]);
-
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, wsM, "MASTER");
-  XLSX.utils.book_append_sheet(wb, wsH, "HORARIOS");
-  XLSX.utils.book_append_sheet(wb, wsP, "PSR");
-  XLSX.utils.book_append_sheet(wb, wsS, "Savings");
-
-  const hoy = new Date().toISOString().slice(0, 10);
-  const sitiosArchivo = [...new Set(lista.map(siteDe))].sort().join("_");
-  XLSX.writeFile(wb, `PROPUESTA_CONSOLIDADO_${sitiosArchivo}_${hoy}.xlsx`);
-
-  const calificados = evals.filter(Boolean).length;
-  notif(`Consolidado exportado ✅ ${calificados}/${lista.length} con calificación${usarRango ? " en el rango" : ""}`);
+function tierExport(p) {
+  const base = (p.forum && normalizarTier(p.forum) === (p.tier || "")) ? txt(p.forum) : txt(p.tier || p.forum);
+  return /^tier\s*\d+$/i.test(limpio(base)) ? limpio(base).toUpperCase() : base;
+}
+function directivaExport(p) {
+  if (p.frontAxis && normalizarSeccion(p.frontAxis) === (p.seccion || "")) return txt(p.frontAxis);
+  if (!p.seccion) return txt(p.frontAxis);
+  return SECCION_A_DIRECTIVA[p.seccion] || p.seccion;
+}
+function statusExport(p) {
+  const s = limpio(p.projectStatus);
+  if (p.estado === "cancelado") return "CANCEL";
+  if (s && !/^\d{4}$/.test(s) && !/^cancel/i.test(s)) return txt(p.projectStatus);
+  return p.estado === "espera" ? "IN PLAN" : "IN PROCESS";
 }
 
+// Devuelve las filas de las 3 hojas como celdas {v, f?, z?} (null = celda vacía)
+function construirConsolidado(proyectos) {
+  const lista = [...proyectos].sort((a, b) => {
+    const oa = Number.isFinite(a.orden), ob = Number.isFinite(b.orden);
+    if (oa && ob && a.orden !== b.orden) return a.orden - b.orden;
+    if (oa !== ob) return oa ? -1 : 1;
+    return compararNombres(a.nombre || "", b.nombre || "");
+  });
+
+  const V = (v, extra) => (v === "" || v == null) ? null : { v, ...(extra || {}) };
+  const usados = new Set();
+  const master = [], horarios = [], psr = [];
+
+  lista.forEach((p, i) => {
+    const r = i + 2;
+    const year   = p.year !== undefined ? p.year : ANIO_DEFAULT;
+    const site   = p.site !== undefined ? prim(p.site) : SITE_DEFAULT;
+    const hk1C   = prim(p.l1Coding), hk1N = txt(p.nivel1);
+    const hk2C   = prim(p.l2Coding), hk2N = txt(p.nivel2);
+    const hk3C   = prim(p.l3Code);
+    const hk3N   = txt(p.nivel3) || (!p.nivel1 && !p.nivel2 ? txt(p.nombre) : "");
+    const owner  = txt(p.owner || p.primaryLeadL3);
+
+    // MASTER CODE = CONCATENATE(SITE, HK1, HK2, HK3). Si se repite, usa OWNER (igual que el archivo original)
+    let code = txt(site) + txt(hk1C) + txt(hk2C) + txt(hk3C), f = `CONCATENATE(B${r},E${r},I${r},L${r})`;
+    if (usados.has(code)) { code = txt(site) + txt(hk1C) + txt(hk2C) + owner; f = `CONCATENATE(B${r},E${r},I${r},N${r})`; }
+    if (usados.has(code)) { code = `${code}-${r}`; f = null; }
+    usados.add(code);
+
+    master.push([
+      V(year), V(site), V(tierExport(p)), V(directivaExport(p)),
+      V(hk1C), V(hk1N), V(txt(p.l1KPI)), V(txt(p.champion || p.primaryLeadL1)),
+      V(hk2C), V(hk2N), V(txt(p.sponsor || p.supportLead)),
+      V(hk3C), V(hk3N), V(owner),
+      { v: Number(p.savings) || 0, z: "\\$#,##0" },
+      V(txt(p.framework)), V(statusExport(p)),
+      f ? { v: code, f } : { v: code }
+    ]);
+
+    const h = p.horario || {};
+    horarios.push([
+      { v: code, f: `PSR!A${r}` }, V(hk1N), V(hk2N), V(hk3N),
+      V(prim(h.proyecto)), V(year), V(prim(h.forum)), V(prim(h.day)), V(prim(h.hour))
+    ]);
+
+    // PSR: la evaluación de la app tiene prioridad; si no hay, se conserva lo importado del archivo
+    const ev = p.evaluacion || {};
+    const pdcaArr = Array.isArray(ev.pdca) ? ev.pdca : [];
+    let presento = "", fecha = null, kpi = null, gantt = null, pdca = null, cP = "", cG = "", cK = "";
+    if (ev.kpi || ev.gantt || pdcaArr.length) {
+      kpi      = ev.kpi   ? calcKPI(ev.kpi) / 100     : null;
+      gantt    = ev.gantt ? calcGANTT(ev.gantt) / 100 : null;
+      pdca     = pdcaArr.length ? calcPDCA(ev) / 100  : null;
+      presento = (ev.kpi === "na" && ev.gantt === "na" && !pdcaArr.length) ? "NO" : "YES";
+      fecha    = fechaASerial(p.fechaCalificacion);
+      cP = txt(ev.comentarios?.pdca); cG = txt(ev.comentarios?.gantt); cK = txt(ev.comentarios?.kpi);
+    } else if (p.psr) {
+      presento = txt(p.psr.presento); fecha = fechaASerial(p.psr.fecha);
+      kpi = numOrNull(p.psr.kpi); gantt = numOrNull(p.psr.gantt); pdca = numOrNull(p.psr.pdca);
+      cP = txt(p.psr.comPdca); cG = txt(p.psr.comGantt); cK = txt(p.psr.comKpi);
+    }
+    const nums   = [pdca, gantt, kpi].filter(x => typeof x === "number");
+    const score  = nums.length ? nums.reduce((a, b) => a + b, 0) / nums.length : null;
+    const target = numOrNull(p.psr?.target) ?? 1;
+
+    psr.push([
+      { v: code, f: `MASTER!R${r}` },
+      owner ? { v: owner, f: `MASTER!N${r}` } : null,
+      V(presento), V(fecha, { z: "dd/mm/yyyy" }),
+      V(pdca, { z: "0%" }), V(gantt, { z: "0%" }), V(kpi, { z: "0%" }),
+      V(score, { z: "0.0%" }), V(target, { z: "0%" }),
+      V(cP), V(cG), V(cK)
+    ]);
+  });
+
+  return { master, horarios, psr };
+}
+
+function hojaDesdeFilas(headers, filas, anchos) {
+  const ws = {};
+  [headers.map(h => ({ v: h })), ...filas].forEach((fila, ri) => fila.forEach((c, ci) => {
+    if (!c || c.v === "" || c.v == null) return;
+    const cell = { v: c.v, t: typeof c.v === "number" ? "n" : "s" };
+    if (c.f) cell.f = c.f;
+    if (c.z) cell.z = c.z;
+    ws[colLetra(ci) + (ri + 1)] = cell;
+  }));
+  ws["!ref"] = `A1:${colLetra(headers.length - 1)}${Math.max(filas.length + 1, 1)}`;
+  if (anchos) ws["!cols"] = anchos.map(w => ({ wch: w }));
+  return ws;
+}
+
+function libroConsolidado(c) {
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, hojaDesdeFilas(COLS_MASTER,   c.master,   ANCHOS_MASTER),   "MASTER");
+  XLSX.utils.book_append_sheet(wb, hojaDesdeFilas(COLS_HORARIOS, c.horarios, ANCHOS_HORARIOS), "HORARIOS");
+  XLSX.utils.book_append_sheet(wb, hojaDesdeFilas(COLS_PSR,      c.psr,      ANCHOS_PSR),      "PSR");
+  XLSX.utils.book_append_sheet(wb, { "!ref": "A1" }, "Savings");
+  return wb;
+}
+
+function exportarExcel() {
+  if (!STATE.proyectos.length) return notif("No hay proyectos", true);
+  const c = construirConsolidado(STATE.proyectos);
+  XLSX.writeFile(libroConsolidado(c), NOMBRE_CONSOLIDADO, { bookType: "xlsx", compression: true });
+  notif(`Consolidado exportado (${c.master.length} proyectos) ✅`);
+}
 
 function exportarHistorialCompleto() {
   const rows = STATE.historial.map(h => {
@@ -1763,40 +1799,139 @@ function exportarProyectos() {
 }
   
 /* ============================================================
-   ACTUALIZAR PROYECTOS DESDE EXCEL (PROPUESTA_CONSOLIDADO)
-   - Lee la hoja MASTER
-   - Identifica cada proyecto por MASTER CODE
-   - Agrega nuevos / actualiza existentes (sin tocar evaluación ni historial)
-   - Los que ya no vienen en el Excel se marcan como cancelados (opcional, nunca se borran)
+   EXCEL MASIVO
+   Acepta el consolidado de Power BI (hoja MASTER) o la plantilla anterior.
 ============================================================ */
-const COLS_MASTER = {
-  year:"YEAR", site:"SITE", tier:"TIER", directive:"DIRECTIVE",
-  l1Coding:"HK1 CODING", nivel1:"HK1 NAME", l1KPI:"L1 KPI", champion:"CHAMPION",
-  l2Coding:"HK2 CODE", nivel2:"HK2 NAME", sponsor:"SPONSOR",
-  l3Code:"HK3 CODE", nivel3:"HK3 NAME", owner:"OWNER",
-  savings:"SAVINGS", framework:"FRAMEWORK", status:"STATUS", masterCode:"MASTER CODE"
-};
-let _importPlan = null;
+function filaMasterAProyecto(row, psr, hor, orden) {
+  const g = k => row[k] ?? "";
+  const nivel1 = txt(g("HK1 NAME")), nivel2 = txt(g("HK2 NAME")), nivel3 = txt(g("HK3 NAME"));
+  const champion = txt(g("CHAMPION")), sponsor = txt(g("SPONSOR")), owner = txt(g("OWNER"));
+  const status = txt(g("STATUS"));
+  const year = g("YEAR");
+
+  const p = {
+    orden,
+    year: year === "" ? "" : (Number.isFinite(Number(year)) ? Number(year) : txt(year)),
+    site: prim(g("SITE")),
+    nombre: limpio(nivel3 || nivel2 || nivel1),
+    tier: normalizarTier(g("TIER")),
+    seccion: normalizarSeccion(g("DIRECTIVE")),
+    champion, sponsor, owner,
+    numeroProyecto: "", priorityLevel: "",
+    l1Coding: prim(g("HK1 Coding")), nivel1, l1KPI: txt(g("L1 KPI")),
+    primaryLeadL1: champion, supportLead: sponsor,
+    l2Coding: prim(g("HK2 CODE")), nivel2, primaryLeadL2: "", type2: "",
+    l3Code: prim(g("HK3 CODE")), nivel3, primaryLeadL3: owner, type: "",
+    frontAxis: txt(g("DIRECTIVE")), concatenate: txt(g("MASTER CODE")),
+    presented: "", target: "", dateProject: "",
+    forum: txt(g("TIER")), projectStatus: status,
+    savings: Number(g("SAVINGS")) || 0,
+    framework: txt(g("FRAMEWORK")),
+    masterCode: txt(g("MASTER CODE")),
+    estado: /^cancel/i.test(limpio(status)) ? "cancelado" : "activo",
+    createdAt: new Date(),
+    evaluacion: { kpi: "", gantt: "", pdca: [], comentarios: { kpi: "", gantt: "", pdca: "" } }
+  };
+
+  if (psr) {
+    const f = psr["FECHA"];
+    p.psr = {
+      presento: txt(psr["PRESENTO"]),
+      fecha: typeof f === "number" ? serialAISO(f) : txt(f),
+      pdca: numOrNull(psr["PDCA"]), gantt: numOrNull(psr["GANTT"]), kpi: numOrNull(psr["KPI"]),
+      target: numOrNull(psr["TARGET"]),
+      comPdca: txt(psr["COMENTARIOS PDCA"]), comGantt: txt(psr["COMENTARIOS GANTT"]), comKpi: txt(psr["COMENTARIOS KPI"])
+    };
+  }
+  if (hor) {
+    p.horario = { proyecto: prim(hor["Proyecto"]), forum: prim(hor["FORUM"]), day: prim(hor["DAY"]), hour: prim(hor["HOUR"]) };
+  }
+  return p;
+}
+
+function leerConsolidado(wbx) {
+  const filas = XLSX.utils.sheet_to_json(wbx.Sheets["MASTER"], { defval: "", raw: true });
+  const porCodigo = (hoja) => {
+    const mapa = {}, ws = wbx.Sheets[hoja];
+    if (!ws) return mapa;
+    XLSX.utils.sheet_to_json(ws, { defval: "", raw: true }).forEach(r => {
+      const k = txt(r["MASTER CODE"]);
+      if (k && !mapa[k]) mapa[k] = r;
+    });
+    return mapa;
+  };
+  const psr = porCodigo("PSR"), hor = porCodigo("HORARIOS");
+  return filas
+    .filter(r => COLS_MASTER.some(c => c !== "MASTER CODE" && c !== "SAVINGS" && txt(r[c]).trim()))
+    .map((r, i) => filaMasterAProyecto(r, psr[txt(r["MASTER CODE"])], hor[txt(r["MASTER CODE"])], i));
+}
+
+function leerPlantillaAnterior(wbx) {
+  const rows = XLSX.utils.sheet_to_json(wbx.Sheets[wbx.SheetNames[0]]);
+  return rows.map((row, i) => ({
+    orden: i,
+    year: ANIO_DEFAULT, site: SITE_DEFAULT, savings: 0, framework: "",
+    numeroProyecto: row["#"] || "",
+    nombre: row["Nivel 3"] || row["Nivel 2"] || row["Nivel 1"] || "",
+    tier: normalizarTier(row["FORUM"] || ""),
+    seccion: normalizarSeccion(row["FRONT AXIS"] || ""),
+    champion: row["Primary Lead Site L1"] || row["Primary Lead L1"] || "",
+    sponsor: row["Support Lead Site L1"] || row["Support Lead"] || "",
+    owner: row["Primary Lead L3"] || "",
+    priorityLevel: row["Priority Level"] || "",
+    l1Coding: row["L1 Coding"] || "", nivel1: row["Nivel 1"] || "", l1KPI: row["L1 KPI"] || "",
+    primaryLeadL1: row["Primary Lead Site L1"] || row["Primary Lead L1"] || "",
+    supportLead: row["Support Lead Site L1"] || row["Support Lead"] || "",
+    l2Coding: row["L2 Coding"] || "", nivel2: row["Nivel 2"] || "", primaryLeadL2: row["Primary Lead L2"] || "",
+    type2: row["Type 2"] || "", nivel3: row["Nivel 3"] || "", l3Code: row["L3 CODE"] || "",
+    primaryLeadL3: row["Primary Lead L3"] || "", type: row["Type"] || "",
+    frontAxis: row["FRONT AXIS"] || "", concatenate: row["Concatenate"] || "", presented: row["PRESENTED"] || "",
+    target: row["TARGET"] || "", dateProject: row["DATE"] || row["Fecha"] || "",
+    forum: row["FORUM"] || "", projectStatus: row["STATUS"] || "",
+    estado: "activo", createdAt: new Date(),
+    evaluacion: { kpi: "", gantt: "", pdca: [], comentarios: { kpi: "", gantt: "", pdca: "" } }
+  }));
+}
+
+async function commitEnLotes(operaciones, tam = 400) {
+  for (let i = 0; i < operaciones.length; i += tam) {
+    const batch = db.batch();
+    operaciones.slice(i, i + tam).forEach(op => op(batch));
+    await batch.commit();
+  }
+}
 
 async function cargarExcel() {
-  const input = document.getElementById("inputExcel");
-  const file  = input.files[0];
-  input.value = "";                       // permite volver a subir el mismo archivo
-  if (!file) return;
+  const file = document.getElementById("inputExcel").files[0];
+  if (!file) return notif("Selecciona un archivo Excel", true);
+  if (!confirm("Esto borrará TODOS los proyectos actuales y cargará los nuevos. ¿Continuar?")) return;
 
-  setLoading(true, "Leyendo Excel...");
+  setLoading(true, "Leyendo archivo Excel...");
   try {
-    const { filas, omitidasSitio, hoja } = await leerHojaMaster(file);
-    if (!filas.length)
-      throw new Error(`No se encontraron proyectos en la hoja "${hoja}"`);
+    // 1) Leer y validar ANTES de borrar nada
+    const wbx = XLSX.read(await file.arrayBuffer());
+    const esConsolidado = !!wbx.Sheets["MASTER"];
+    const nuevos = esConsolidado ? leerConsolidado(wbx) : leerPlantillaAnterior(wbx);
+    if (!nuevos.length) return notif("El archivo está vacío", true);
 
-    setLoading(true, "Comparando con la base de datos...");
-    await recargarProyectos();            // comparar contra lo más reciente de Firestore
-    _importPlan = planificarImport(filas);
-    _importPlan.sitios = Object.entries(filas.reduce((a, f) => (a[f.site || SITIO_DEFAULT] = (a[f.site || SITIO_DEFAULT] || 0) + 1, a), {}))
-      .map(([k, n]) => `${k} (${n})`).join(" · ");
-    _importPlan.archivo = file.name;
-    mostrarPreviewImport();
+    // 2) Borrar actuales
+    setLoading(true, "Borrando proyectos actuales...");
+    const snap = await db.collection("proyectos").get();
+    await commitEnLotes(snap.docs.map(d => b => b.delete(d.ref)));
+
+    // 3) Cargar nuevos (conservando el orden del archivo)
+    setLoading(true, "Cargando nuevos proyectos...");
+    await commitEnLotes(nuevos.map(p => b => b.set(db.collection("proyectos").doc(), p)));
+
+    const snapNuevo = await db.collection("proyectos").limit(1000).get();
+    STATE.proyectos = snapNuevo.docs.map(d => ({
+      id: d.id, ...d.data(),
+      evaluacion: d.data().evaluacion || { kpi: "", gantt: "", pdca: [] }
+    }));
+
+    renderTabla();
+    poblarFiltrosHistorial();
+    notif(`${nuevos.length} proyectos cargados ${esConsolidado ? "(formato consolidado)" : ""} ✅`);
   } catch (err) {
     console.error(err);
     notif("Error: " + err.message, true);
@@ -1804,218 +1939,31 @@ async function cargarExcel() {
     setLoading(false);
   }
 }
-
-async function leerHojaMaster(file) {
-  const wb   = XLSX.read(await file.arrayBuffer(), { cellDates: true });
-  const hoja = wb.SheetNames.find(n => n.trim().toUpperCase() === "MASTER") || wb.SheetNames[0];
-  const aoa  = XLSX.utils.sheet_to_json(wb.Sheets[hoja], { header: 1, defval: "", raw: true });
-
-  const norm = h => limpiarTexto(h).toUpperCase();
-  const hIdx = aoa.slice(0, 20).findIndex(r => r.some(c => ["MASTER CODE", "HK1 NAME", "HK3 NAME"].includes(norm(c))));
-  if (hIdx < 0) throw new Error(`La hoja "${hoja}" no tiene los encabezados esperados (HK1 NAME, HK3 NAME, MASTER CODE...)`);
-
-  const headers = aoa[hIdx].map(norm);
-  const col = {};
-  Object.entries(COLS_MASTER).forEach(([k, h]) => col[k] = headers.indexOf(h));
-  const faltan = ["site", "l1Coding", "l2Coding", "l3Code"].filter(k => col[k] < 0).map(k => COLS_MASTER[k]);
-  if (faltan.length && col.masterCode < 0)
-    throw new Error("Faltan columnas para formar el MASTER CODE: " + faltan.join(", "));
-
-  const get = (r, k) => col[k] >= 0 ? r[col[k]] : "";
-  const txt = (r, k) => limpiarTexto(get(r, k));
-
-  const filas = [];
-  let omitidasSitio = 0;
-  for (let i = hIdx + 1; i < aoa.length; i++) {
-    const r = aoa[i];
-    const d = {
-      year:              get(r, "year") === "" ? "" : (numero(get(r, "year")) || txt(r, "year")),
-      site:              txt(r, "site").toUpperCase(),
-      tierOriginal:      txt(r, "tier").toUpperCase(),
-      directivaOriginal: txt(r, "directive"),
-      l1Coding: txt(r, "l1Coding"), nivel1: txt(r, "nivel1"), l1KPI: txt(r, "l1KPI"), champion: txt(r, "champion"),
-      l2Coding: txt(r, "l2Coding"), nivel2: txt(r, "nivel2"), sponsor: txt(r, "sponsor"),
-      l3Code:   txt(r, "l3Code"),   nivel3: txt(r, "nivel3"), owner: txt(r, "owner"),
-      savings:       numero(get(r, "savings")),
-      framework:     txt(r, "framework"),
-      projectStatus: txt(r, "status").toUpperCase()
-    };
-    if (!d.nivel1 && !d.nivel2 && !d.nivel3 && !d.l1Coding && !d.l2Coding && !d.l3Code) continue;  // fila vacía
-
-    d.tier    = normTier(d.tierOriginal);
-    d.seccion = normDirectiva(d.directivaOriginal);
-    const codigoExcel = txt(r, "masterCode");
-    d.masterCode = codigoExcel && !codigoExcel.startsWith("#") ? codigoExcel : calcMasterCode(d);
-    d.masterKey  = masterKey(d.masterCode);
-    d.nombre     = nombreDesdeNiveles(d) || d.masterCode;
-    d.orden      = i - hIdx;               // conserva el orden del Excel al exportar
-    filas.push(d);
+async function guardarMasivo(rows) {
+  const TIERS=["Tier 1","Tier 2","Tier 3","Tier 4","Tier 5","Tier 6"], SECS=Object.keys(CHAMPIONS);
+  let ok=0,err=0;
+  setLoading(true,"Cargando proyectos...");
+  for (const row of rows) {
+    const {nombre,tier,seccion,champion,sponsor,owner}=row;
+    if (!nombre||!tier||!seccion||!champion||!sponsor||!owner||!TIERS.includes(tier)||!SECS.includes(seccion)){err++;continue;}
+    try {
+      const ref = await db.collection("proyectos").add({
+        nombre,tier,seccion,champion,sponsor,owner,estado:"activo",createdAt:new Date(),
+        evaluacion:{kpi:"",gantt:"",pdca:[],comentarios:{kpi:"",gantt:"",pdca:""}}
+      });
+      STATE.proyectos.push({id:ref.id,nombre,tier,seccion,champion,sponsor,owner,estado:"activo",evaluacion:{kpi:"",gantt:"",pdca:[]}});
+      ok++;
+    } catch{err++;}
   }
-  return { filas, omitidasSitio, hoja };
-}
-
-function planificarImport(filas) {
-  // Índices de proyectos existentes. Los que se crearon con el formato viejo (sin MASTER CODE)
-  // se intentan vincular por "Concatenate" o por nombre para no perder sus calificaciones.
-  const porKey = new Map(), porConcat = new Map(), porNombre = new Map();
-  STATE.proyectos.forEach(p => {
-    if (p.masterKey) { porKey.set(p.masterKey, p); return; }
-    const kc = masterKey(p.concatenate); if (kc) porConcat.set(kc, p);
-    const kn = normNombre(p.nombre);     if (kn) porNombre.set(siteDe(p) + "|" + kn, p);
-  });
-
-  const igual = (a, b) => String(a ?? "") === String(b ?? "");
-  const usados = new Set(), vistos = new Set();
-  const plan = { nuevos: [], actualizar: [], sinCambios: 0, duplicados: [], vinculados: 0, fuera: [] };
-
-  filas.forEach(f => {
-    if (vistos.has(f.masterKey)) { plan.duplicados.push(f); return; }
-    vistos.add(f.masterKey);
-
-    let p = porKey.get(f.masterKey), legado = false;
-    if (!p) {
-      p = porConcat.get(f.masterKey) || porNombre.get((f.site || SITIO_DEFAULT) + "|" + normNombre(f.nombre));
-      legado = !!p;
-    }
-    if (p && usados.has(p.id)) p = null;
-    if (!p) { plan.nuevos.push(f); return; }
-
-    usados.add(p.id);
-    if (legado) plan.vinculados++;
-
-    // STATUS = CANCEL en el Excel => cancelado. Si estaba cancelado y el Excel lo trae vivo => se reactiva.
-    const estado = f.projectStatus === "CANCEL" ? "cancelado"
-                 : (p.estado === "cancelado" ? "activo" : (p.estado || "activo"));
-    const datos = { ...f, estado, fueraDeExcel: false };
-    const cambios = Object.keys(datos).filter(k =>
-      k === "fueraDeExcel" ? !!p.fueraDeExcel !== datos.fueraDeExcel : !igual(p[k], datos[k]));
-
-    if (!cambios.length) { plan.sinCambios++; return; }
-    plan.actualizar.push({ p, datos, cambios });
-  });
-
-  plan.fuera = STATE.proyectos.filter(p =>
-    !usados.has(p.id) && !(p.fueraDeExcel && p.estado === "cancelado"));
-  return plan;
-}
-
-function mostrarPreviewImport() {
-  const pl = _importPlan;
-  const lista = (arr, fn) => arr.length
-    ? `<div class="imp-list">${arr.slice(0, 400).map(fn).join("")}</div>`
-    : `<div class="hint" style="margin:0 0 6px">Ninguno</div>`;
-  const etiquetas = { estado: "Estado", nombre: "Nombre", masterCode: "MASTER CODE" };
-  const etiqueta  = k => CAMPOS_FORM.find(c => c.k === k)?.label || etiquetas[k] || null;
-  const codigo    = c => `<span class="tag-code">${escapeHTML(c || "sin master code")}</span>`;
-
-  document.getElementById("importBody").innerHTML = `
-    <p class="hint" style="margin:0 0 10px">
-      Archivo: <b>${escapeHTML(pl.archivo)}</b> · Sitios: <b>${pl.sitios}</b>
-    </p>
-    <div class="imp-stats">
-      <div class="imp-stat nuevo"><div class="n">${pl.nuevos.length}</div><div class="l">Nuevos</div></div>
-      <div class="imp-stat upd"><div class="n">${pl.actualizar.length}</div><div class="l">Actualizados</div></div>
-      <div class="imp-stat"><div class="n">${pl.sinCambios}</div><div class="l">Sin cambios</div></div>
-      <div class="imp-stat fuera"><div class="n">${pl.fuera.length}</div><div class="l">Ya no están</div></div>
-    </div>
-    ${pl.vinculados ? `<p class="hint">🔗 ${pl.vinculados} proyectos del formato anterior se vincularon por nombre y conservan sus calificaciones.</p>` : ""}
-    ${pl.duplicados.length ? `<p class="hint" style="color:#b45309">⚠️ Se ignoraron ${pl.duplicados.length} filas con MASTER CODE repetido: ${pl.duplicados.map(d => escapeHTML(d.masterCode)).join(", ")}</p>` : ""}
-
-    <details class="imp-det" ${pl.nuevos.length ? "open" : ""}>
-      <summary>🆕 Nuevos (${pl.nuevos.length})</summary>
-      ${lista(pl.nuevos, f => `<div>📍${escapeHTML(f.site || SITIO_DEFAULT)} · ${escapeHTML(f.nombre)} ${codigo(f.masterCode)}</div>`)}
-    </details>
-    <details class="imp-det">
-      <summary>✏️ Actualizados (${pl.actualizar.length})</summary>
-      ${lista(pl.actualizar, u => {
-        const c = [...new Set(u.cambios.map(etiqueta).filter(Boolean))];
-        return `<div>${escapeHTML(u.datos.nombre)} ${codigo(u.datos.masterCode)}<br>
-                <small style="color:var(--text-muted)">${c.length ? "Cambia: " + c.join(", ") : "Ajustes de formato / orden"}</small></div>`;
-      })}
-    </details>
-    <details class="imp-det">
-      <summary>📦 Ya no vienen en el Excel (${pl.fuera.length})</summary>
-      ${lista(pl.fuera, p => `<div>${escapeHTML(p.nombre || "–")} ${codigo(p.masterCode)}</div>`)}
-    </details>
-    ${pl.fuera.length ? `
-      <label class="imp-check">
-        <input type="checkbox" id="impCancelarFuera" checked>
-        <span>Marcar como <b>Cancelados</b> los ${pl.fuera.length} proyectos que ya no vienen en el Excel.
-        No se borran: conservan historial y calificaciones, y se reactivan solos si vuelven a aparecer.</span>
-      </label>` : ""}
-  `;
-
-  const total = pl.nuevos.length + pl.actualizar.length + pl.fuera.length;
-  const btn = document.getElementById("btnAplicarImport");
-  btn.disabled = total === 0;
-  btn.textContent = total ? "✅ Aplicar cambios" : "Todo está al día";
-  document.getElementById("modalImportOverlay").classList.add("open");
-  document.body.style.overflow = "hidden";
-}
-
-function cerrarModalImport() {
-  document.getElementById("modalImportOverlay").classList.remove("open");
-  document.body.style.overflow = "";
-  _importPlan = null;
-}
-
-async function aplicarImport() {
-  const pl = _importPlan;
-  if (!pl) return;
-  const cancelarFuera = document.getElementById("impCancelarFuera")?.checked ?? false;
-  const btn = document.getElementById("btnAplicarImport");
-  btn.disabled = true;
-  setLoading(true, "Actualizando base de datos...");
-
-  try {
-    const ahora = new Date();
-    const col = db.collection("proyectos");
-    const ops = [];
-
-    pl.nuevos.forEach(f => ops.push(b => b.set(col.doc(), {
-      ...f,
-      estado: f.projectStatus === "CANCEL" ? "cancelado" : "activo",
-      fueraDeExcel: false,
-      createdAt: ahora, updatedAt: ahora,
-      evaluacion: { kpi:"", gantt:"", pdca:[], comentarios:{ kpi:"", gantt:"", pdca:"" } }
-    })));
-    pl.actualizar.forEach(u => ops.push(b => b.update(col.doc(u.p.id), { ...u.datos, updatedAt: ahora })));
-    if (cancelarFuera)
-      pl.fuera.forEach(p => ops.push(b => b.update(col.doc(p.id), { estado: "cancelado", fueraDeExcel: true, updatedAt: ahora })));
-
-    const LOTE = 400;                     // Firestore permite máx. 500 operaciones por batch
-    for (let i = 0; i < ops.length; i += LOTE) {
-      setLoading(true, `Guardando cambios... ${Math.min(i + LOTE, ops.length)}/${ops.length}`);
-      const batch = db.batch();
-      ops.slice(i, i + LOTE).forEach(fn => fn(batch));
-      await batch.commit();
-    }
-
-    await recargarProyectos();
-    const resumen = `✅ ${pl.nuevos.length} nuevos · ${pl.actualizar.length} actualizados` +
-                    (cancelarFuera && pl.fuera.length ? ` · ${pl.fuera.length} cancelados` : "");
-    cerrarModalImport();
-    refrescarAdmin();
-    notif(resumen);
-  } catch (err) {
-    console.error(err);
-    notif("Error: " + err.message, true);
-    btn.disabled = false;
-  } finally {
-    setLoading(false);
-  }
+  setLoading(false); renderTabla(); poblarFiltrosHistorial();
+  notif(`${ok} proyectos cargados · ${err} errores`);
 }
 
 function descargarPlantilla() {
-  const wb = XLSX.utils.book_new();
-  const wsM = XLSX.utils.aoa_to_sheet([HDR_MASTER]);
-  wsM["!cols"] = ANCHOS_MASTER;
-  XLSX.utils.book_append_sheet(wb, wsM, "MASTER");
-  XLSX.writeFile(wb, "Plantilla_PROPUESTA_CONSOLIDADO.xlsx");
+  const wb = libroConsolidado({ master: [], horarios: [], psr: [] });
+  XLSX.writeFile(wb, "Plantilla_Consolidado.xlsx");
   notif("Plantilla descargada ✅");
 }
-
-
 /* ============================================================
    USER
 ============================================================ */
@@ -2029,57 +1977,23 @@ function setFiltroUser(tipo, valor, el) {
   renderSelectUser();
 }
 
-function poblarFiltrosUser() {
-  const todos   = STATE.proyectos.filter(p => p.estado !== "cancelado");
-  const sitios  = [...new Set(todos.map(siteDe))].sort();
-  if (STATE.filtrosUser.site && !sitios.includes(STATE.filtrosUser.site)) STATE.filtrosUser.site = "";
-  const activos = todos.filter(p => !STATE.filtrosUser.site || siteDe(p) === STATE.filtrosUser.site);
-  // Si cambia el sitio, se limpian tier/sección que ya no existan en ese sitio
-  if (STATE.filtrosUser.tier    && !activos.some(p => p.tier    === STATE.filtrosUser.tier))    STATE.filtrosUser.tier = "";
-  if (STATE.filtrosUser.seccion && !activos.some(p => p.seccion === STATE.filtrosUser.seccion)) STATE.filtrosUser.seccion = "";
-  const crear = (contId, tipo, valores, textoTodos, extra) => {
-    const cont = document.getElementById(contId); if (!cont) return;
-    cont.innerHTML = "";
-    [["", textoTodos], ...valores.map(v => [v, v])].forEach(([val, txt]) => {
-      const b = document.createElement("button");
-      b.className = "filtro-btn" + (STATE.filtrosUser[tipo] === val ? " active" : "");
-      b.textContent = txt;
-      b.onclick = function(){ setFiltroUser(tipo, val, this); if (extra) extra(val); };
-      cont.appendChild(b);
-    });
-  };
-  crear("filtroSite",    "site",    sitios, "📍 Todos los sitios", () => { poblarFiltrosUser(); renderSelectUser(); });
-  crear("filtroTier",    "tier",    valoresUnicos("tier", activos),    "Todos");
-  crear("filtroSeccion", "seccion", valoresUnicos("seccion", activos), "Todas", v => poblarChampionFiltros(v));
-  poblarChampionFiltros(STATE.filtrosUser.seccion);
-}
-
 function poblarChampionFiltros(seccion) {
   const cont = document.getElementById("filtroChampion");
-  const base = STATE.proyectos.filter(p => p.estado !== "cancelado" && (!seccion || p.seccion === seccion) &&
-    (!STATE.filtrosUser.site || siteDe(p) === STATE.filtrosUser.site));
-  const champs = valoresUnicos("champion", base);
-  if (STATE.filtrosUser.champion && !champs.includes(STATE.filtrosUser.champion)) {
-    STATE.filtrosUser.champion = "";
-    renderSelectUser();
-  }
-  cont.innerHTML = "";
-  [["", "Todos"], ...champs.map(c => [c, c])].forEach(([val, txt]) => {
+  cont.innerHTML = `<button class="filtro-btn active" onclick="setFiltroUser('champion','',this)">Todos</button>`;
+  const champs = (seccion ? (CHAMPIONS[seccion]||[]) : [...new Set(STATE.proyectos.map(p=>p.champion).filter(Boolean))]).sort(compararNombres);
+  champs.forEach(ch => {
     const btn = document.createElement("button");
-    btn.className = "filtro-btn" + (STATE.filtrosUser.champion === val ? " active" : "");
-    btn.textContent = txt;
-    btn.onclick = function(){ setFiltroUser("champion", val, this); };
+    btn.className="filtro-btn"; btn.textContent=ch;
+    btn.onclick = function(){ setFiltroUser("champion",ch,this); };
     cont.appendChild(btn);
   });
 }
 
 function renderSelectUser() {
-  const {site, tier, seccion, champion} = STATE.filtrosUser;
+  const {tier, seccion, champion} = STATE.filtrosUser;
   const busqueda = (document.getElementById("busquedaGeneral")?.value || "").trim().toLowerCase();
 
-  // Los proyectos cancelados no se califican
-  let lista = STATE.proyectos.filter(p => p.estado !== "cancelado");
-  if (site)     lista = lista.filter(p => siteDe(p) === site);
+  let lista = [...STATE.proyectos];
   if (tier)     lista = lista.filter(p => p.tier === tier);
   if (seccion)  lista = lista.filter(p => p.seccion === seccion);
   if (champion) lista = lista.filter(p => p.champion === champion);
@@ -2087,7 +2001,7 @@ function renderSelectUser() {
   // Filtro de búsqueda general
   if (busqueda) {
     lista = lista.filter(p => {
-      const campos = [p.nombre, p.masterCode, p.champion, p.owner, p.sponsor, p.seccion, p.tier].map(c => (c || "").toLowerCase());
+      const campos = [p.nombre, p.champion, p.owner, p.sponsor, p.seccion, p.tier].map(c => (c || "").toLowerCase());
       return campos.some(c => c.includes(busqueda));
     });
   }
@@ -2099,7 +2013,7 @@ function renderSelectUser() {
 
   if (!lista.length) {
     sel.innerHTML = '<option value="">Sin resultados</option>';
-    ["infoChampion","infoSponsor","infoOwner","infoSeccion","infoMaster","infoSite"].forEach(id => document.getElementById(id).textContent = "–");
+    ["infoChampion","infoSponsor","infoOwner","infoSeccion"].forEach(id => document.getElementById(id).textContent = "–");
     return;
   }
 
@@ -2121,8 +2035,6 @@ function seleccionarProyecto(id) {
   document.getElementById("infoSponsor").textContent  = p.sponsor ||"–";
   document.getElementById("infoOwner").textContent    = p.owner   ||"–";
   document.getElementById("infoSeccion").textContent  = p.seccion ||"–";
-  document.getElementById("infoMaster").textContent   = p.masterCode ||"–";
-  document.getElementById("infoSite").textContent     = siteDe(p);
   STATE.evalTemp = { kpi:"", gantt:"", pdca:[] };
   limpiarFormulario();
   renderSemaforosDesdeProyecto(STATE.evalTemp);   // ← ahora arranca en blanco
@@ -2200,9 +2112,7 @@ async function guardar() {
     });
     const histEntry = {
       proyectoId:STATE.proyectoActualId, proyectoNombre:STATE.proyectoActual.nombre,
-      masterCode:STATE.proyectoActual.masterCode||"",
-      kpiOpcion:ev.kpi||"", ganttOpcion:ev.gantt||"", pdcaItems:Array.isArray(ev.pdca)?ev.pdca:[],
-      champion:STATE.proyectoActual.champion||"–", seccion:STATE.proyectoActual.seccion||"–", tier:STATE.proyectoActual.tier||"–", site:siteDe(STATE.proyectoActual),
+      champion:STATE.proyectoActual.champion||"–", seccion:STATE.proyectoActual.seccion||"–", tier:STATE.proyectoActual.tier||"–",
       usuario:STATE.uid,
       usuarioNombre:STATE.mapaUsuarios[STATE.uid]||firebase.auth().currentUser?.displayName||firebase.auth().currentUser?.email||"–",
       fecha:now, semana:getSemana(now),
@@ -2238,11 +2148,12 @@ async function eliminarDuplicados() {
     const snap = await db.collection("proyectos").get();
     const todos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
 
-    // Agrupar por MASTER CODE (o por nombre si el proyecto aún no tiene MASTER CODE)
+    // Agrupar por nombre normalizado
     const grupos = {};
     todos.forEach(p => {
-      const clave = p.masterKey ? "MC:" + p.masterKey : (p.nombre || "").trim().toLowerCase();
-      if (!clave) return;
+      const clave = [p.site, p.l1Coding, p.l2Coding, p.l3Code, p.nombre]
+        .map(x => String(x ?? "").trim().toLowerCase()).join("|");
+      if (!(p.nombre || "").trim()) return;
       if (!grupos[clave]) grupos[clave] = [];
       grupos[clave].push(p);
     });
@@ -2331,8 +2242,14 @@ async function eliminarDuplicados() {
     }
 
     // Recargar proyectos
-    await recargarProyectos();
-    refrescarAdmin();
+    const snapFinal = await db.collection("proyectos").limit(1000).get();
+    STATE.proyectos = snapFinal.docs.map(d => ({
+      id: d.id, ...d.data(),
+      evaluacion: d.data().evaluacion || { kpi: "", gantt: "", pdca: [] }
+    }));
+
+    renderTabla();
+    poblarFiltrosHistorial();
     notif(`🧹 ${totalDuplicados} duplicados eliminados ✅`);
 
   } catch (err) {
@@ -2352,11 +2269,76 @@ function abrirModalEditar(id) {
   const p = STATE.proyectos.find(x => x.id === id);
   if (!p) return;
   _editandoId = id;
-  llenarCamposForm("edit", p);
-  document.getElementById("edit-estado").value =
-    ["activo", "espera", "cancelado"].includes(p.estado) ? p.estado : "activo";
+
+  // Campos principales
+  document.getElementById("edit-nombre").value          = p.nombre          || "";
+  setSelectValue(document.getElementById("edit-tier"),    p.tier    || "");
+  setSelectValue(document.getElementById("edit-seccion"), p.seccion || "");
+  document.getElementById("edit-sponsor").value         = p.sponsor         || "";
+  document.getElementById("edit-owner").value           = p.owner           || "";
+  document.getElementById("edit-estado").value          = p.estado          || "activo";
+  document.getElementById("edit-year").value            = p.year            || ANIO_DEFAULT;
+  document.getElementById("edit-site").value            = p.site            || SITE_DEFAULT;
+  document.getElementById("edit-savings").value         = p.savings         ?? 0;
+  document.getElementById("edit-framework").value       = p.framework       || "";
+  document.getElementById("edit-numeroProyecto").value  = p.numeroProyecto  || "";
+
+  // Poblar champion según sección y seleccionar el actual
+  onEditSeccionChange(p.champion);
+
+  // Nivel 1
+  document.getElementById("edit-priorityLevel").value   = p.priorityLevel   || "";
+  document.getElementById("edit-l1Coding").value        = p.l1Coding        || "";
+  document.getElementById("edit-nivel1").value          = p.nivel1          || "";
+  document.getElementById("edit-l1KPI").value           = p.l1KPI           || "";
+  document.getElementById("edit-primaryLeadL1").value   = p.primaryLeadL1   || "";
+  document.getElementById("edit-supportLead").value     = p.supportLead     || "";
+
+  // Nivel 2
+  document.getElementById("edit-l2Coding").value        = p.l2Coding        || "";
+  document.getElementById("edit-nivel2").value          = p.nivel2          || "";
+  document.getElementById("edit-primaryLeadL2").value   = p.primaryLeadL2   || "";
+  document.getElementById("edit-type2").value           = p.type2           || "";
+
+  // Nivel 3
+  document.getElementById("edit-nivel3").value          = p.nivel3          || "";
+  document.getElementById("edit-l3Code").value          = p.l3Code          || "";
+  document.getElementById("edit-primaryLeadL3").value   = p.primaryLeadL3   || "";
+  document.getElementById("edit-type").value            = p.type            || "";
+
+  // Adicionales
+  document.getElementById("edit-concatenate").value     = p.concatenate     || "";
+  document.getElementById("edit-presented").value       = p.presented       || "";
+  document.getElementById("edit-target").value          = p.target          || "";
+  document.getElementById("edit-forum").value           = p.forum           || "";
+  document.getElementById("edit-projectStatus").value   = p.projectStatus   || "";
+
+  // Fecha: convertir a formato YYYY-MM-DD para input[type=date]
+  let fechaVal = "";
+  if (p.dateProject && typeof p.dateProject === "string" && p.dateProject.includes("-")) {
+    fechaVal = p.dateProject;
+  } else if (p.dateProject) {
+    fechaVal = String(p.dateProject);
+  }
+  document.getElementById("edit-dateProject").value = fechaVal;
+
+  // Abrir modal
   document.getElementById("modalEditarOverlay").classList.add("open");
   document.body.style.overflow = "hidden";
+}
+
+function onEditSeccionChange(championActual) {
+  const sec = document.getElementById("edit-seccion").value;
+  const sel = document.getElementById("edit-champion");
+  sel.innerHTML = '<option value="">Sin Champion</option>';
+  const lista = sec ? (CHAMPIONS[sec] || []) : [...new Set(Object.values(CHAMPIONS).flat())];
+  lista.forEach(ch => {
+    const o = document.createElement("option");
+    o.value = o.textContent = ch;
+    sel.appendChild(o);
+  });
+  // Seleccionar el champion actual si se pasó (aunque no esté en la lista fija)
+  if (championActual !== undefined) setSelectValue(sel, championActual || "");
 }
 
 function cerrarModalEditar(e) {
@@ -2369,26 +2351,66 @@ function cerrarModalEditar(e) {
 
 async function guardarEdicionProyecto() {
   if (!_editandoId) return;
-  const d = leerCamposForm("edit");
-  if (!d.nombre) return notif("Captura al menos un nombre (HK1, HK2 o HK3 NAME)", true);
-  const tieneCodigos = d.l1Coding || d.l2Coding || d.l3Code;
-  if (tieneCodigos && STATE.proyectos.some(p => p.id !== _editandoId && p.masterKey === d.masterKey))
-    return notif(`El MASTER CODE ${d.masterCode} ya pertenece a otro proyecto`, true);
-
-  const datos = { ...d, estado: document.getElementById("edit-estado").value, updatedAt: new Date() };
-  if (!tieneCodigos) { delete datos.masterCode; delete datos.masterKey; }
-  if (datos.estado !== "cancelado") datos.fueraDeExcel = false;
 
   const btn = document.getElementById("btnGuardarEdicion");
   btn.disabled = true;
   btn.textContent = "Guardando...";
+
   try {
+    const datos = {
+      nombre:         document.getElementById("edit-nombre").value.trim(),
+      tier:           document.getElementById("edit-tier").value,
+      seccion:        document.getElementById("edit-seccion").value,
+      champion:       document.getElementById("edit-champion").value,
+      sponsor:        document.getElementById("edit-sponsor").value.trim(),
+      owner:          document.getElementById("edit-owner").value.trim(),
+      estado:         document.getElementById("edit-estado").value,
+      numeroProyecto: document.getElementById("edit-numeroProyecto").value.trim(),
+
+      priorityLevel:  document.getElementById("edit-priorityLevel").value.trim(),
+      l1Coding:       document.getElementById("edit-l1Coding").value.trim(),
+      nivel1:         document.getElementById("edit-nivel1").value.trim(),
+      l1KPI:          document.getElementById("edit-l1KPI").value.trim(),
+      primaryLeadL1:  document.getElementById("edit-primaryLeadL1").value.trim(),
+      supportLead:    document.getElementById("edit-supportLead").value.trim(),
+
+      l2Coding:       document.getElementById("edit-l2Coding").value.trim(),
+      nivel2:         document.getElementById("edit-nivel2").value.trim(),
+      primaryLeadL2:  document.getElementById("edit-primaryLeadL2").value.trim(),
+      type2:          document.getElementById("edit-type2").value.trim(),
+
+      nivel3:         document.getElementById("edit-nivel3").value.trim(),
+      l3Code:         document.getElementById("edit-l3Code").value.trim(),
+      primaryLeadL3:  document.getElementById("edit-primaryLeadL3").value.trim(),
+      type:           document.getElementById("edit-type").value.trim(),
+
+      concatenate:    document.getElementById("edit-concatenate").value.trim(),
+      presented:      document.getElementById("edit-presented").value.trim(),
+      target:         document.getElementById("edit-target").value.trim(),
+      dateProject:    document.getElementById("edit-dateProject").value,
+      forum:          document.getElementById("edit-forum").value.trim(),
+      projectStatus:  document.getElementById("edit-projectStatus").value.trim(),
+
+      year:           Number(document.getElementById("edit-year").value) || ANIO_DEFAULT,
+      site:           (document.getElementById("edit-site").value.trim() || SITE_DEFAULT).toUpperCase(),
+      savings:        Number(document.getElementById("edit-savings").value) || 0,
+      framework:      document.getElementById("edit-framework").value.trim(),
+    };
+
+    if (!datos.nombre) return notif("El nombre es obligatorio", true);
+
+    // Actualizar en Firestore
     await db.collection("proyectos").doc(_editandoId).update(datos);
+
+    // Actualizar en STATE local
     const idx = STATE.proyectos.findIndex(p => p.id === _editandoId);
     if (idx !== -1) STATE.proyectos[idx] = { ...STATE.proyectos[idx], ...datos };
+
+    renderTabla();
+    poblarFiltrosHistorial();
     cerrarModalEditar();
-    refrescarAdmin();
     notif("Proyecto actualizado ✅");
+
   } catch (err) {
     console.error(err);
     notif("Error: " + err.message, true);
@@ -2397,7 +2419,6 @@ async function guardarEdicionProyecto() {
     btn.textContent = "💾 Guardar cambios";
   }
 }
-
 
 /* ============================================================
    COMENTARIOS
@@ -2621,4 +2642,4 @@ function logout() {
 init();
 </script>
 </body>
-</html>
+</html>
