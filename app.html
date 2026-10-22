@@ -1078,6 +1078,7 @@ async function init() {
         syncChampionMS();
         renderTabla();
         poblarFiltrosHistorial();
+        publicarResumenCI();   // actualiza el panel Central CI con el historial ya cargado
       } else {
         document.getElementById("vista-user").style.display = "block";
         poblarSelectUser();
@@ -1085,6 +1086,84 @@ async function init() {
     } catch(err) { console.error(err); notif("Error al cargar: " + err.message, true); }
     finally { setLoading(false); }
   });
+}
+
+/* ============================================================
+   RESUMEN PARA EL PANEL CENTRAL CI
+   Se guarda en el proyecto qrqc-maturity → tableroCI/resumen,
+   que es el único documento que lee la página Central CI.
+   - Al guardar una evaluación: suma 1 a la semana y al evaluador.
+   - Cuando un admin abre esta página: recalcula todo con el
+     historial que ya se cargó (no hace lecturas extra del historial).
+============================================================ */
+const dbCentralCI = firebase.initializeApp({
+  apiKey: "AIzaSyAxgVTBhEcgv38cFX4vLJfDKiMaZXYNKIA",
+  authDomain: "qrqc-maturity.firebaseapp.com",
+  projectId: "qrqc-maturity"
+}, "centralCI").firestore();
+const RESUMEN_CI = dbCentralCI.collection("tableroCI").doc("resumen");
+
+// Semana ISO (lunes a domingo), igual que en la página Central CI.
+function semanaISO_CI(fecha) {
+  const t = new Date(fecha.getFullYear(), fecha.getMonth(), fecha.getDate());
+  t.setDate(t.getDate() + 3 - ((t.getDay() + 6) % 7));
+  const anio = t.getFullYear(), enero4 = new Date(anio, 0, 4);
+  const n = 1 + Math.round(((t - enero4) / 864e5 - 3 + ((enero4.getDay() + 6) % 7)) / 7);
+  return anio + "-W" + String(n).padStart(2, "0");
+}
+
+async function registrarEvaluacionCI(fecha, proyectoId) {
+  try {
+    const FV = firebase.firestore.FieldValue;
+    const base = "proyectos.semanas." + semanaISO_CI(fecha);
+    const uid = STATE.uid || "sin-usuario";
+    const cambios = {
+      [base + ".total"]: FV.increment(1),
+      [base + ".evaluadores." + uid + ".nombre"]: STATE.nombre || "–",
+      "actualizado.proyectos": Date.now()
+    };
+    if (proyectoId) cambios[base + ".evaluadores." + uid + ".proyectos"] = FV.arrayUnion(proyectoId);
+    await RESUMEN_CI.update(cambios);
+  } catch (e) {
+    console.warn("No se pudo actualizar el panel Central CI:", e);
+  }
+}
+
+async function publicarResumenCI() {
+  if (STATE.rol !== "admin" || !STATE.historial.length) return;
+  try {
+    // Nombres de los evaluadores (colección pequeña).
+    const nombres = {};
+    (await db.collection("users").get()).forEach(u => { nombres[u.id] = u.data().nombre || ""; });
+
+    const semanas = {};
+    let masAntigua = null;
+    STATE.historial.forEach(h => {
+      const f = h.fecha?.toDate ? h.fecha.toDate() : new Date(h.fecha || 0);
+      if (isNaN(f) || !+f) return;
+      if (!masAntigua || f < masAntigua) masAntigua = f;
+      const s = semanaISO_CI(f);
+      const w = semanas[s] || (semanas[s] = { total: 0, evaluadores: {} });
+      w.total++;
+      const uid = h.usuario || "sin-usuario";
+      const ev = w.evaluadores[uid] || (w.evaluadores[uid] = { nombre: nombres[uid] || h.usuarioNombre || "–", proyectos: [] });
+      if (h.proyectoId && !ev.proyectos.includes(h.proyectoId)) ev.proyectos.push(h.proyectoId);
+    });
+
+    const campos = { "actualizado.proyectos": Date.now() };
+    if (STATE.historial.length < 1000) {
+      campos.proyectos = { semanas };
+    } else {
+      // Se alcanzó el límite de 1000 registros: la semana más antigua puede estar incompleta,
+      // así que se conservan las semanas anteriores ya guardadas.
+      const desde = semanaISO_CI(masAntigua);
+      for (const [s, v] of Object.entries(semanas)) if (s > desde) campos["proyectos.semanas." + s] = v;
+    }
+    try { await RESUMEN_CI.update(campos); }
+    catch (e) { if (campos.proyectos) await RESUMEN_CI.set({ proyectos: campos.proyectos, actualizado: { proyectos: Date.now() } }, { merge: true }); else throw e; }
+  } catch (e) {
+    console.warn("No se pudo publicar el resumen en el panel Central CI:", e);
+  }
 }
 
 /* ============================================================
@@ -2076,6 +2155,7 @@ async function guardar() {
       comentariosKPI:ev.comentarios.kpi, comentariosGANTT:ev.comentarios.gantt, comentariosPDCA:ev.comentarios.pdca
     };
     await db.collection("historial").add(histEntry);
+    registrarEvaluacionCI(now, STATE.proyectoActualId);   // suma esta evaluación al panel Central CI
     const idx = STATE.proyectos.findIndex(p=>p.id===STATE.proyectoActualId);
       if (idx !== -1) {
         STATE.proyectos[idx].evaluacion      = JSON.parse(JSON.stringify(ev));
