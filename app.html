@@ -1125,16 +1125,24 @@ async function registrarEvaluacionCI(fecha, proyectoId) {
     if (proyectoId) cambios[base + ".evaluadores." + uid + ".proyectos"] = FV.arrayUnion(proyectoId);
     await RESUMEN_CI.update(cambios);
   } catch (e) {
-    console.warn("No se pudo actualizar el panel Central CI:", e);
+    console.error("No se pudo actualizar el panel Central CI:", e);
+    notif("Evaluación guardada, pero no se actualizó Central CI (" + (e.code || e.message) + ")", true);
   }
 }
 
 async function publicarResumenCI() {
-  if (STATE.rol !== "admin" || !STATE.historial.length) return;
+  if (STATE.rol !== "admin") return;
+  if (!STATE.historial.length) { notif("Central CI: no se cargó historial para publicar", true); return; }
   try {
-    // Nombres de los evaluadores (colección pequeña).
+    // Nombres de los evaluadores. Si las reglas no permiten leer la lista de usuarios,
+    // se usa el nombre guardado en cada evaluación.
     const nombres = {};
-    (await db.collection("users").get()).forEach(u => { nombres[u.id] = u.data().nombre || ""; });
+    if (STATE.uid) nombres[STATE.uid] = STATE.nombre || "";
+    try {
+      (await db.collection("users").get()).forEach(u => { nombres[u.id] = u.data().nombre || ""; });
+    } catch (e) {
+      console.info("Central CI: sin acceso a la lista de usuarios; se usan los nombres del historial.");
+    }
 
     const semanas = {};
     let masAntigua = null;
@@ -1161,8 +1169,10 @@ async function publicarResumenCI() {
     }
     try { await RESUMEN_CI.update(campos); }
     catch (e) { if (campos.proyectos) await RESUMEN_CI.set({ proyectos: campos.proyectos, actualizado: { proyectos: Date.now() } }, { merge: true }); else throw e; }
+    console.info("Central CI: resumen de proyectos publicado (" + STATE.historial.length + " evaluaciones).");
   } catch (e) {
-    console.warn("No se pudo publicar el resumen en el panel Central CI:", e);
+    console.error("No se pudo publicar el resumen en el panel Central CI:", e);
+    notif("Central CI: no se pudo publicar el resumen (" + (e.code || e.message) + ")", true);
   }
 }
 
